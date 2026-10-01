@@ -531,8 +531,8 @@ creds: state.creds,
     
     tohid.ev.on('messages.upsert', async chatUpdate => {
     try {
-        const tohidMessage = chatUpdate.messages[0];
-        if (!tohidMessage.message || !Object.keys(tohidMessage.message).length) return;
+        const tohidMessage = chatUpdate?.messages?.[0];
+        if (!tohidMessage?.message || !Object.keys(tohidMessage.message).length) return;
             tohidMessage.message = (Object.keys(tohidMessage.message)[0] === 'ephemeralMessage') ? tohidMessage.message.ephemeralMessage.message : tohidMessage.message;
             let botNumber = await tohid.decodeJid(tohid.user.id);
             let antiswview = global.db?.data?.settings?.[botNumber]?.antiswview || false;
@@ -546,16 +546,7 @@ creds: state.creds,
             if (tohidMessage.key.id.startsWith('BAE5') && tohidMessage.key.id.length === 16) return;
             const tohidConnect = tohid;
             const mek = smsg(tohidConnect, tohidMessage, store);
-            console.log('[WA] Incoming message:', {
-                from: mek?.sender || mek?.chat || tohidMessage?.key?.remoteJid,
-                type: mek?.mtype || 'unknown',
-                text: mek?.body || mek?.text || ''
-            });
-            try {
-                await require("./MrTohid")(tohidConnect, mek, chatUpdate, store);
-            } catch (handlerError) {
-                console.error('[WA] MrTohid handler error:', handlerError?.stack || handlerError);
-            }
+            await require("./MrTohid")(tohidConnect, mek, chatUpdate, store);
         } catch (err) {
             console.log(err);
         }
