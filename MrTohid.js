@@ -15413,15 +15413,10 @@ case 'xnxx': {
                     return reply("❌ *Invalid phone number format*");
                 }
 
-                // Check if number exists on WhatsApp
-                try {
-                    const contactInfo = await devtrust.onWhatsApp(cleanNumber + '@s.whatsapp.net');
-                    if (!contactInfo || contactInfo.length === 0) {
-                        return reply("❌ *Number not registered on WhatsApp*");
-                    }
-                } catch (e) {
-                    console.log('WhatsApp check error:', e);
-                }
+                // Do not pre-check with onWhatsApp().
+                // Baileys pairing-code generation handles the WhatsApp registration
+                // check itself. This keeps .pair available to every user and avoids
+                // false "Number not registered" errors with different Baileys versions.
 
                 // Create pairing directory if it doesn't exist
                 const WHATSAPP_PAIRING_DIR = './database/pairing/';
