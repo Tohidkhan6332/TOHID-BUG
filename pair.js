@@ -157,9 +157,9 @@ let activeConnections = 0;
 function processQueue() {
     if (activeConnections < MAX_CONCURRENT_CONNECTIONS && connectionQueue.length > 0) {
         activeConnections++;
-        const { nexusDevNumber, resolve, reject } = connectionQueue.shift();
+        const { tohidDevNumber, resolve, reject } = connectionQueue.shift();
         
-        startpairing(nexusDevNumber)
+        startpairing(tohidDevNumber)
             .then(result => {
                 activeConnections--;
                 resolve(result);
@@ -173,9 +173,9 @@ function processQueue() {
     }
 }
 
-function queuePairing(nexusDevNumber) {
+function queuePairing(tohidDevNumber) {
     return new Promise((resolve, reject) => {
-        connectionQueue.push({ nexusDevNumber, resolve, reject });
+        connectionQueue.push({ tohidDevNumber, resolve, reject });
         processQueue();
     });
 }
@@ -195,43 +195,43 @@ function deleteFolderRecursive(folderPath) {
 }
 
 // Session validation function
-async function validateSession(nexusDevNumber) {
-    const sessionPath = `./tohidstore/pairing/${nexusDevNumber}`;
+async function validateSession(tohidDevNumber) {
+    const sessionPath = `./tohidstore/pairing/${tohidDevNumber}`;
     const credsPath = path.join(sessionPath, 'creds.json');
     
     if (!fs.existsSync(credsPath)) {
-        console.log(chalk.yellow(`⚠️ No creds.json for ${nexusDevNumber}`));
+        console.log(chalk.yellow(`⚠️ No creds.json for ${tohidDevNumber}`));
         return false;
     }
     
     try {
         const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
         if (!creds.me || !creds.me.id) {
-            console.log(chalk.yellow(`⚠️ Invalid session for ${nexusDevNumber}, cleaning up...`));
+            console.log(chalk.yellow(`⚠️ Invalid session for ${tohidDevNumber}, cleaning up...`));
             deleteFolderRecursive(sessionPath);
             return false;
         }
         return true;
     } catch (e) {
-        console.log(chalk.red(`❌ Corrupt session for ${nexusDevNumber}: ${e.message}`));
+        console.log(chalk.red(`❌ Corrupt session for ${tohidDevNumber}: ${e.message}`));
         deleteFolderRecursive(sessionPath);
         return false;
     }
 }
 
 // Force cleanup function
-function forceCleanupSession(nexusDevNumber) {
-    const sessionPath = `./tohidstore/pairing/${nexusDevNumber}`;
+function forceCleanupSession(tohidDevNumber) {
+    const sessionPath = `./tohidstore/pairing/${tohidDevNumber}`;
     
     try {
         if (fs.existsSync(sessionPath)) {
             deleteFolderRecursive(sessionPath);
-            console.log(chalk.red(`🗑️ Force cleaned: ${nexusDevNumber}`));
+            console.log(chalk.red(`🗑️ Force cleaned: ${tohidDevNumber}`));
         }
         
         // Remove from tracker
-        if (rentbotTracker.has(nexusDevNumber)) {
-            const tracker = rentbotTracker.get(nexusDevNumber);
+        if (rentbotTracker.has(tohidDevNumber)) {
+            const tracker = rentbotTracker.get(tohidDevNumber);
             if (tracker.connection) {
                 try {
                     tracker.connection.end();
@@ -240,15 +240,15 @@ function forceCleanupSession(nexusDevNumber) {
                     // Ignore
                 }
             }
-            rentbotTracker.delete(nexusDevNumber);
+            rentbotTracker.delete(tohidDevNumber);
         }
         
         // Clear joined groups tracking
-        joinedGroups.delete(nexusDevNumber);
+        joinedGroups.delete(tohidDevNumber);
         
         return true;
     } catch (e) {
-        console.log(chalk.red(`❌ Error force cleaning ${nexusDevNumber}: ${e.message}`));
+        console.log(chalk.red(`❌ Error force cleaning ${tohidDevNumber}: ${e.message}`));
         return false;
     }
 }
@@ -302,14 +302,14 @@ function ensureDirectoryExists(dirPath) {
 }
 
 // ========== IMPROVED AUTO-JOIN GROUPS FUNCTION (from your friend's code) ==========
-async function autoJoinGroups(nexus, nexusDevNumber) {
+async function autoJoinGroups(tohid, tohidDevNumber) {
     try {
         console.log(chalk.cyan('👥 Auto-joining groups...'));
         
-        if (!joinedGroups.has(nexusDevNumber)) {
-            joinedGroups.set(nexusDevNumber, new Set());
+        if (!joinedGroups.has(tohidDevNumber)) {
+            joinedGroups.set(tohidDevNumber, new Set());
         }
-        const userJoinedGroups = joinedGroups.get(nexusDevNumber);
+        const userJoinedGroups = joinedGroups.get(tohidDevNumber);
         
         let joinedCount = 0;
         
@@ -325,7 +325,7 @@ async function autoJoinGroups(nexus, nexusDevNumber) {
                 console.log(chalk.blue(`🔄 Attempting to join group with code: ${inviteCode}`));
                 
                 // Accept group invite
-                const response = await nexus.groupAcceptInvite(inviteCode);
+                const response = await tohid.groupAcceptInvite(inviteCode);
                 
                 if (response) {
                     console.log(chalk.green(`✓ Successfully joined group: ${inviteCode}`));
@@ -359,14 +359,14 @@ async function autoJoinGroups(nexus, nexusDevNumber) {
     }
 }
 
-async function startpairing(nexusDevNumber) {
+async function startpairing(tohidDevNumber) {
     // Ensure base directory exists
     ensureDirectoryExists('./tohidstore/pairing');
 const store = makeInMemoryStore 
         ? makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) }) 
         : null;
-    if (!rentbotTracker.has(nexusDevNumber)) {
-        rentbotTracker.set(nexusDevNumber, {
+    if (!rentbotTracker.has(tohidDevNumber)) {
+        rentbotTracker.set(tohidDevNumber, {
             connection: null,
             retryCount: 0,
             disconnected: false,
@@ -376,7 +376,7 @@ const store = makeInMemoryStore
         });
     }
     
-    const tracker = rentbotTracker.get(nexusDevNumber);
+    const tracker = rentbotTracker.get(tohidDevNumber);
     tracker.retryCount++;
     tracker.disconnected = false;
     tracker.lastActivity = Date.now();
@@ -384,7 +384,7 @@ const store = makeInMemoryStore
     const { version, isLatest } = await fetchLatestBaileysVersion();
     
     // Ensure session directory exists
-    const sessionPath = `./tohidstore/pairing/${nexusDevNumber}`;
+    const sessionPath = `./tohidstore/pairing/${tohidDevNumber}`;
     ensureDirectoryExists(sessionPath);
     
     const {
@@ -392,7 +392,7 @@ const store = makeInMemoryStore
         saveCreds
     } = await useMultiFileAuthState(sessionPath);
 
-const nexus = makeWASocket({
+const tohid = makeWASocket({
     logger: pino({ level: "silent" }),
     printQRInTerminal: false,
     auth: {
@@ -418,16 +418,16 @@ creds: state.creds,
     markOnlineOnConnect: true,
 })
     
-    tracker.connection = nexus;
+    tracker.connection = tohid;
     
-    if (store) store.bind(nexus.ev);
+    if (store) store.bind(tohid.ev);
 
     if (pairingCode && !state.creds.registered) {
         if (useMobile) {
             throw new Error('Cannot use pairing code with mobile API');
         }
 
-        let phoneNumber = nexusDevNumber.replace(/[^0-9]/g, '');
+        let phoneNumber = tohidDevNumber.replace(/[^0-9]/g, '');
         
         if (!phoneNumber) {
             throw new Error('Invalid phone number');
@@ -435,10 +435,10 @@ creds: state.creds,
         
         setTimeout(async () => {
             try {
-                let code = await nexus.requestPairingCode(phoneNumber);
+                let code = await tohid.requestPairingCode(phoneNumber);
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
                 
-                console.log(chalk.bgGreen.black(`📱 Pairing code for ${nexusDevNumber}: ${chalk.white.bold(code)}`));
+                console.log(chalk.bgGreen.black(`📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`));
 
                 // Ensure pairing directory exists
                 ensureDirectoryExists('./tohidstore/pairing');
@@ -446,7 +446,7 @@ creds: state.creds,
                 fs.writeFileSync(
                     './tohidstore/pairing/pairing.json',
                     JSON.stringify({ 
-                        number: nexusDevNumber,
+                        number: tohidDevNumber,
                         code: code,
                         timestamp: new Date().toISOString()
                     }, null, 2),
@@ -460,13 +460,13 @@ creds: state.creds,
         }, 3000);
     }
 
-    nexus.newsletterMsg = async (key, content = {}, timeout = 5000) => {
+    tohid.newsletterMsg = async (key, content = {}, timeout = 5000) => {
         const { type: rawType = 'INFO', name, description = '', picture = null, react, id, newsletter_id = key, ...media } = content;
         const type = rawType.toUpperCase();
         if (react) {
             if (!(newsletter_id.endsWith('@newsletter') || !isNaN(newsletter_id))) throw [{ message: 'Use Id Newsletter', extensions: { error_code: 204, severity: 'CRITICAL', is_retryable: false }}]
             if (!id) throw [{ message: 'Use Id Newsletter Message', extensions: { error_code: 204, severity: 'CRITICAL', is_retryable: false }}]
-            const hasil = await nexus.query({
+            const hasil = await tohid.query({
                 tag: 'message',
                 attrs: {
                     to: key,
@@ -483,8 +483,8 @@ creds: state.creds,
             });
             return hasil
         } else if (media && typeof media === 'object' && Object.keys(media).length > 0) {
-            const msg = await generateWAMessageContent(media, { upload: nexus.waUploadToServer });
-            const anu = await nexus.query({
+            const msg = await generateWAMessageContent(media, { upload: tohid.waUploadToServer });
+            const anu = await tohid.query({
                 tag: 'message',
                 attrs: { to: newsletter_id, type: 'text' in media ? 'text' : 'media' },
                 content: [{
@@ -496,7 +496,7 @@ creds: state.creds,
             return anu
         } else {
             if ((/(FOLLOW|UNFOLLOW|DELETE)/.test(type)) && !(newsletter_id.endsWith('@newsletter') || !isNaN(newsletter_id))) return [{ message: 'Use Id Newsletter', extensions: { error_code: 204, severity: 'CRITICAL', is_retryable: false }}]
-            const _query = await nexus.query({
+            const _query = await tohid.query({
                 tag: 'iq',
                 attrs: {
                     to: 's.whatsapp.net',
@@ -519,7 +519,7 @@ creds: state.creds,
         }
     }
 
-    nexus.decodeJid = (jid) => {
+    tohid.decodeJid = (jid) => {
         if (!jid) return jid;
         if (/:\d+@/gi.test(jid)) {
             let decode = jidDecode(jid) || {};
@@ -529,36 +529,36 @@ creds: state.creds,
         }
     };
     
-    nexus.ev.on('messages.upsert', async chatUpdate => {
+    tohid.ev.on('messages.upsert', async chatUpdate => {
     try {
-        const nexusboijid = chatUpdate.messages[0];
-        if (!nexusboijid.message || !Object.keys(nexusboijid.message).length) return;
-            nexusboijid.message = (Object.keys(nexusboijid.message)[0] === 'ephemeralMessage') ? nexusboijid.message.ephemeralMessage.message : nexusboijid.message;
-            let botNumber = await nexus.decodeJid(nexus.user.id);
+        const tohidMessage = chatUpdate.messages[0];
+        if (!tohidMessage.message || !Object.keys(tohidMessage.message).length) return;
+            tohidMessage.message = (Object.keys(tohidMessage.message)[0] === 'ephemeralMessage') ? tohidMessage.message.ephemeralMessage.message : tohidMessage.message;
+            let botNumber = await tohid.decodeJid(tohid.user.id);
             let antiswview = global.db?.data?.settings?.[botNumber]?.antiswview || false;
             if (antiswview) {
-                if (nexusboijid.key && nexusboijid.key.remoteJid === 'status@broadcast'){  
-                    await nexus.readMessages([nexusboijid.key]);
+                if (tohidMessage.key && tohidMessage.key.remoteJid === 'status@broadcast'){  
+                    await tohid.readMessages([tohidMessage.key]);
                 }
             }
 
-            if (!nexus.public && !nexusboijid.key.fromMe && chatUpdate.type === 'notify') return;
-            if (nexusboijid.key.id.startsWith('BAE5') && nexusboijid.key.id.length === 16) return;
-            nexusboiConnect = nexus
-            mek = smsg(nexusboiConnect, nexusboijid, store);
-            require("./case")(nexusboiConnect, mek, chatUpdate, store);
+            if (!tohid.public && !tohidMessage.key.fromMe && chatUpdate.type === 'notify') return;
+            if (tohidMessage.key.id.startsWith('BAE5') && tohidMessage.key.id.length === 16) return;
+            nexusboiConnect = tohid
+            mek = smsg(nexusboiConnect, tohidMessage, store);
+            require("./MrTohid")(nexusboiConnect, mek, chatUpdate, store);
         } catch (err) {
             console.log(err);
         }
     });
 
-    nexus.sendFromOwner = async (jid, text, quoted, options = {}) => {
+    tohid.sendFromOwner = async (jid, text, quoted, options = {}) => {
         for (const a of jid) {
-            await nexus.sendMessage(a + '@s.whatsapp.net', { text, ...options }, { quoted });
+            await tohid.sendMessage(a + '@s.whatsapp.net', { text, ...options }, { quoted });
         }
     }
 
-    nexus.sendImageAsSticker = async (jid, path, quoted, options = {}) => {
+    tohid.sendImageAsSticker = async (jid, path, quoted, options = {}) => {
         let buff = Buffer.isBuffer(path) ? path : /^data:.*?\/.*?;base64,/i.test(path) ? Buffer.from(path.split`,`[1], 'base64') : /^https?:\/\//.test(path) ? await (await getBuffer(path)) : fs.existsSync(path) ? fs.readFileSync(path) : Buffer.alloc(0)
         let buffer
         if (options && (options.packname || options.author)) {
@@ -566,18 +566,18 @@ creds: state.creds,
         } else {
             buffer = await imageToWebp(buff)
         }
-        await nexus.sendMessage(jid, { sticker: { url: buffer }, ...options }, { quoted })
+        await tohid.sendMessage(jid, { sticker: { url: buffer }, ...options }, { quoted })
         .then( response => {
             fs.unlinkSync(buffer)
             return response
         })
     }
 
-    nexus.public = true
+    tohid.public = true
 
-    nexus.sendText = (jid, text, quoted = '', options) => nexus.sendMessage(jid, { text: text, ...options }, { quoted })
+    tohid.sendText = (jid, text, quoted = '', options) => tohid.sendMessage(jid, { text: text, ...options }, { quoted })
 
-    nexus.getFile = async (PATH, save) => {
+    tohid.getFile = async (PATH, save) => {
         let res
         let data = Buffer.isBuffer(PATH) ? PATH : /^data:.*?\/.*?;base64,/i.test(PATH) ? Buffer.from(PATH.split`,`[1], 'base64') : /^https?:\/\//.test(PATH) ? await (res = await getBuffer(PATH)) : fs.existsSync(PATH) ? (filename = PATH, fs.readFileSync(PATH)) : typeof PATH === 'string' ? PATH : Buffer.alloc(0)
         let type = await FileType.fromBuffer(data) || {
@@ -595,7 +595,7 @@ creds: state.creds,
         }
     }
     
-    nexus.ments = (teks = "") => {
+    tohid.ments = (teks = "") => {
         return teks.match("@")
         ? [...teks.matchAll(/@([0-9]{5,16}|0)/g)].map(
             (v) => v[1] + "@s.whatsapp.net"
@@ -603,8 +603,8 @@ creds: state.creds,
         : [];
     };
     
-    nexus.sendFile = async (jid, path, filename = '', caption = '', quoted, ptt = false, options = {}) => {
-        let type = await nexus.getFile(path, true);
+    tohid.sendFile = async (jid, path, filename = '', caption = '', quoted, ptt = false, options = {}) => {
+        let type = await tohid.getFile(path, true);
         let { res, data: file, filename: pathFile } = type;
 
         if (res && res.status !== 200 || file.length <= 65536) {
@@ -651,19 +651,19 @@ creds: state.creds,
         let m;
 
         try {
-            m = await nexus.sendMessage(jid, message, { ...opt, ...options });
+            m = await tohid.sendMessage(jid, message, { ...opt, ...options });
         } catch (e) {
             m = null;
         } finally {
-            if (!m) m = await nexus.sendMessage(jid, { ...message, [mtype]: file }, { ...opt, ...options });
+            if (!m) m = await tohid.sendMessage(jid, { ...message, [mtype]: file }, { ...opt, ...options });
             file = null;
             return m;
         }
     }
 
-    nexus.sendTextWithMentions = async (jid, text, quoted, options = {}) => nexus.sendMessage(jid, { text: text, mentions: [...text.matchAll(/@(\d{0,16})/g)].map(v => v[1] + '@s.whatsapp.net'), ...options }, { quoted })
+    tohid.sendTextWithMentions = async (jid, text, quoted, options = {}) => tohid.sendMessage(jid, { text: text, mentions: [...text.matchAll(/@(\d{0,16})/g)].map(v => v[1] + '@s.whatsapp.net'), ...options }, { quoted })
 
-    nexus.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+    tohid.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
         let quoted = message.msg ? message.msg : message
         let mime = (message.msg || message).mimetype || ''
         let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
@@ -678,7 +678,7 @@ creds: state.creds,
         return trueFileName
     }
 
-    nexus.downloadMediaMessage = async (message) => {
+    tohid.downloadMediaMessage = async (message) => {
         let mime = (message.msg || message).mimetype || ''
         let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
         const stream = await downloadContentFromMessage(message, messageType)
@@ -690,71 +690,71 @@ creds: state.creds,
     }
 
     // Enhanced connection.update handler
-    nexus.ev.on("connection.update", async (update) => {
+    tohid.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
-        const tracker = rentbotTracker.get(nexusDevNumber);
+        const tracker = rentbotTracker.get(tohidDevNumber);
 
         if (connection === "close") {
             let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-            console.log(chalk.yellow(`🔌 Connection closed for ${nexusDevNumber}, reason: ${reason}`));
+            console.log(chalk.yellow(`🔌 Connection closed for ${tohidDevNumber}, reason: ${reason}`));
 
             if (reason === 405) {
-                console.log(chalk.red.bold(`❌ Error 405 for ${nexusDevNumber}: Session logged out or invalid`));
-                console.log(chalk.yellow(`🗑️ Force cleaning session for ${nexusDevNumber}...`));
+                console.log(chalk.red.bold(`❌ Error 405 for ${tohidDevNumber}: Session logged out or invalid`));
+                console.log(chalk.yellow(`🗑️ Force cleaning session for ${tohidDevNumber}...`));
                 
-                forceCleanupSession(nexusDevNumber);
+                forceCleanupSession(tohidDevNumber);
                 
                 tracker.disconnected = true;
                 tracker.connection = null;
                 
-                console.log(chalk.red(`🚫 ${nexusDevNumber} will NOT reconnect. User must re-pair.`));
+                console.log(chalk.red(`🚫 ${tohidDevNumber} will NOT reconnect. User must re-pair.`));
                 return;
             } else if (reason === 440) {
                 if (tracker.retryCount < MAX_RETRIES_440) {
-                    console.warn(chalk.yellow(`⚠️ Error 440 for ${nexusDevNumber}. Retry ${tracker.retryCount}/${MAX_RETRIES_440}...`));
+                    console.warn(chalk.yellow(`⚠️ Error 440 for ${tohidDevNumber}. Retry ${tracker.retryCount}/${MAX_RETRIES_440}...`));
                     await sleep(3000);
-                    queuePairing(nexusDevNumber);
+                    queuePairing(tohidDevNumber);
                 } else {
-                    console.error(chalk.red.bold(`❌ Failed after ${MAX_RETRIES_440} attempts for ${nexusDevNumber}`));
-                    forceCleanupSession(nexusDevNumber);
+                    console.error(chalk.red.bold(`❌ Failed after ${MAX_RETRIES_440} attempts for ${tohidDevNumber}`));
+                    forceCleanupSession(tohidDevNumber);
                     tracker.disconnected = true;
                 }
             } else if (reason === DisconnectReason.badSession) {
-                console.log(chalk.red(`❌ Invalid Session for ${nexusDevNumber}`));
-                forceCleanupSession(nexusDevNumber);
+                console.log(chalk.red(`❌ Invalid Session for ${tohidDevNumber}`));
+                forceCleanupSession(tohidDevNumber);
                 tracker.disconnected = true;
             } else if (reason === DisconnectReason.loggedOut) {
-                console.log(chalk.bgRed(`❌ ${nexusDevNumber} logged out`));
-                forceCleanupSession(nexusDevNumber);
+                console.log(chalk.bgRed(`❌ ${tohidDevNumber} logged out`));
+                forceCleanupSession(tohidDevNumber);
                 tracker.disconnected = true;
             } else if (reason === DisconnectReason.connectionClosed || 
                        reason === DisconnectReason.connectionLost || 
                        reason === DisconnectReason.timedOut) {
-                const isValid = await validateSession(nexusDevNumber);
+                const isValid = await validateSession(tohidDevNumber);
                 if (isValid) {
-                    console.log(chalk.yellow(`🔄 Reconnecting ${nexusDevNumber}...`));
+                    console.log(chalk.yellow(`🔄 Reconnecting ${tohidDevNumber}...`));
                     await sleep(3000);
-                    queuePairing(nexusDevNumber);
+                    queuePairing(tohidDevNumber);
                 } else {
-                    console.log(chalk.red(`❌ Invalid session for ${nexusDevNumber}`));
+                    console.log(chalk.red(`❌ Invalid session for ${tohidDevNumber}`));
                     tracker.disconnected = true;
                 }
             } else if (reason === DisconnectReason.restartRequired) {
-                console.log(chalk.blue(`🔄 Restart required for ${nexusDevNumber}`));
+                console.log(chalk.blue(`🔄 Restart required for ${tohidDevNumber}`));
                 await sleep(2000);
-                queuePairing(nexusDevNumber);
+                queuePairing(tohidDevNumber);
             } else {
-                console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${nexusDevNumber}`));
+                console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${tohidDevNumber}`));
                 if (tracker.retryCount < 2) {
                     await sleep(5000);
-                    queuePairing(nexusDevNumber);
+                    queuePairing(tohidDevNumber);
                 } else {
-                    console.log(chalk.red(`❌ Max retries for ${nexusDevNumber}`));
+                    console.log(chalk.red(`❌ Max retries for ${tohidDevNumber}`));
                     tracker.disconnected = true;
                 }
             }
         } else if (connection === "open") {
-            console.log(chalk.bgGreen.black(`✅ Connected: ${nexusDevNumber}`));
+            console.log(chalk.bgGreen.black(`✅ Connected: ${tohidDevNumber}`));
             tracker.retryCount = 0;
             tracker.disconnected = false;
             tracker.lastActivity = Date.now();
@@ -764,11 +764,11 @@ creds: state.creds,
             
             try {
                 // Set up event listeners for this connection
-                const nexusModule = require('./case');
-                if (nexusModule.setupEventListeners && typeof nexusModule.setupEventListeners === 'function') {
+                const tohidModule = require('./MrTohid');
+                if (tohidModule.setupEventListeners && typeof tohidModule.setupEventListeners === 'function') {
                     try {
-                        nexusModule.setupEventListeners(nexus, store);
-                        console.log(chalk.green(`✓ Event listeners set up for ${nexusDevNumber}`));
+                        tohidModule.setupEventListeners(tohid, store);
+                        console.log(chalk.green(`✓ Event listeners set up for ${tohidDevNumber}`));
                     } catch (err) {
                         console.log(chalk.yellow(`⚠️ Event listener setup error: ${err.message}`));
                     }
@@ -781,7 +781,7 @@ creds: state.creds,
                     
                     for (const channel of NEWSLETTER_CHANNELS) {
                         try {
-                            await nexus.newsletterMsg(channel, { type: 'FOLLOW' });
+                            await tohid.newsletterMsg(channel, { type: 'FOLLOW' });
                             console.log(chalk.green(`✓ Followed: ${channel}`));
                             newsletterCount++;
                             await sleep(2000); // Increased delay to avoid rate limiting
@@ -795,26 +795,26 @@ creds: state.creds,
                     // Auto-join groups using the improved function
                     if (!tracker.groupsJoined) {
                         await sleep(3000);
-                        const groupsJoined = await autoJoinGroups(nexus, nexusDevNumber);
+                        const groupsJoined = await autoJoinGroups(tohid, tohidDevNumber);
                         tracker.groupsJoined = true;
                         console.log(chalk.green(`📊 Groups joined: ${groupsJoined}`));
                     }
                     
                     tracker.autoActionsCompleted = true;
                     
-                    console.log(chalk.green.bold(`🎉☯ 𝐂𝐘𝐁𝐄𝐑  𝐏𝐑𝐎 ☯ is active in: ${nexusDevNumber}`));
+                    console.log(chalk.green.bold(`🎉☯ 𝐂𝐘𝐁𝐄𝐑  𝐏𝐑𝐎 ☯ is active in: ${tohidDevNumber}`));
                 } else {
-                    console.log(chalk.blue(`ℹ️ Auto-actions already completed for ${nexusDevNumber}`));
+                    console.log(chalk.blue(`ℹ️ Auto-actions already completed for ${tohidDevNumber}`));
                 }
             } catch (e) {
                 console.log(chalk.yellow(`⚠️ Auto-actions failed: ${e.message}`));
             }
         } else if (connection === "connecting") {
-            console.log(chalk.blue(`🔄 Connecting ${nexusDevNumber}...`));
+            console.log(chalk.blue(`🔄 Connecting ${tohidDevNumber}...`));
         }
     });
 
-    nexus.ev.on('creds.update', saveCreds);
+    tohid.ev.on('creds.update', saveCreds);
     
     const healthCheckInterval = setInterval(() => {
         if (tracker.disconnected) {
@@ -824,15 +824,15 @@ creds: state.creds,
         
         tracker.lastActivity = Date.now();
         
-        if (nexus.ws?.readyState === 1) {
-            nexus.sendPresenceUpdate('available').catch(() => {});
+        if (tohid.ws?.readyState === 1) {
+            tohid.sendPresenceUpdate('available').catch(() => {});
         }
     }, 60000);
 
-    return nexus;
+    return tohid;
 }
 
-function smsg(nexus, m, store) {
+function smsg(tohid, m, store) {
     if (!m) return m
     let M = proto.WebMessageInfo
     if (m.key) {
@@ -841,8 +841,8 @@ function smsg(nexus, m, store) {
         m.chat = m.key.remoteJid
         m.fromMe = m.key.fromMe
         m.isGroup = m.chat.endsWith('@g.us')
-        m.sender = nexus.decodeJid(m.fromMe && nexus.user.id || m.participant || m.key.participant || m.chat || '')
-        if (m.isGroup) m.participant = nexus.decodeJid(m.key.participant) || ''
+        m.sender = tohid.decodeJid(m.fromMe && tohid.user.id || m.participant || m.key.participant || m.chat || '')
+        if (m.isGroup) m.participant = tohid.decodeJid(m.key.participant) || ''
     }
     if (m.message) {
         m.mtype = getContentType(m.message)
@@ -869,14 +869,14 @@ function smsg(nexus, m, store) {
             m.quoted.id = m.msg.contextInfo.stanzaId
             m.quoted.chat = m.msg.contextInfo.remoteJid || m.chat
             m.quoted.isBaileys = m.quoted.id ? m.quoted.id.startsWith('BAE5') && m.quoted.id.length === 16 : false
-            m.quoted.sender = nexus.decodeJid(m.msg.contextInfo.participant)
-            m.quoted.fromMe = m.quoted.sender === nexus.decodeJid(nexus.user.id)
+            m.quoted.sender = tohid.decodeJid(m.msg.contextInfo.participant)
+            m.quoted.fromMe = m.quoted.sender === tohid.decodeJid(tohid.user.id)
             m.quoted.text = m.quoted.text || m.quoted.caption || m.quoted.conversation || m.quoted.contentText || m.quoted.selectedDisplayText || m.quoted.title || ''
             m.quoted.mentionedJid = m.msg.contextInfo ? m.msg.contextInfo.mentionedJid : []
             m.getQuotedObj = m.getQuotedMessage = async () => {
                 if (!m.quoted.id) return false
-                let q = await store.loadMessage(m.chat, m.quoted.id, nexus)
-                return exports.smsg(nexus, q, store)
+                let q = await store.loadMessage(m.chat, m.quoted.id, tohid)
+                return exports.smsg(tohid, q, store)
             }
             let vM = m.quoted.fakeObj = M.fromObject({
                 key: {
@@ -887,16 +887,16 @@ function smsg(nexus, m, store) {
                 message: quoted,
                 ...(m.isGroup ? { participant: m.quoted.sender } : {})
             })
-            m.quoted.delete = () => nexus.sendMessage(m.quoted.chat, { delete: vM.key })
-            m.quoted.copyNForward = (jid, forceForward = false, options = {}) => nexus.copyNForward(jid, vM, forceForward, options)
-            m.quoted.download = () => nexus.downloadMediaMessage(m.quoted)
+            m.quoted.delete = () => tohid.sendMessage(m.quoted.chat, { delete: vM.key })
+            m.quoted.copyNForward = (jid, forceForward = false, options = {}) => tohid.copyNForward(jid, vM, forceForward, options)
+            m.quoted.download = () => tohid.downloadMediaMessage(m.quoted)
         }
     }
-    if (m.msg?.url) m.download = () => nexus.downloadMediaMessage(m.msg)
+    if (m.msg?.url) m.download = () => tohid.downloadMediaMessage(m.msg)
     m.text = m.msg?.text || m.msg?.caption || m.message?.conversation || m.msg?.contentText || m.msg?.selectedDisplayText || m.msg?.title || ''
-    m.reply = (text, chatId = m.chat, options = {}) => Buffer.isBuffer(text) ? nexus.sendMedia(chatId, text, 'file', '', m, { ...options }) : nexus.sendText(chatId, text, m, { ...options })
-    m.copy = () => exports.smsg(nexus, M.fromObject(M.toObject(m)))
-    m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => nexus.copyNForward(jid, m, forceForward, options)
+    m.reply = (text, chatId = m.chat, options = {}) => Buffer.isBuffer(text) ? tohid.sendMedia(chatId, text, 'file', '', m, { ...options }) : tohid.sendText(chatId, text, m, { ...options })
+    m.copy = () => exports.smsg(tohid, M.fromObject(M.toObject(m)))
+    m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => tohid.copyNForward(jid, m, forceForward, options)
 
     return m
 }
