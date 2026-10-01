@@ -4684,23 +4684,76 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         // ============ MENU COMMAND ============
       if (isCmd) {
         switch (command) {
-            case 'devinstagram': {
-                await devtrust.sendMessage(m.chat, { text: '📸 *INSTAGRAM — MR TOHID*\\nhttps://instagram.com/Tohidkhan6332' }, { quoted: m });
-            }
-            break;
+            case 'devcontact': {
+                const developerImages = [
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
+                ];
+                const developerImage = developerImages[Math.floor(Math.random() * developerImages.length)];
 
-            case 'devtelegram': {
-                await devtrust.sendMessage(m.chat, { text: '✈️ *TELEGRAM — MR TOHID*\\nhttps://t.me/Tohidkhan6332' }, { quoted: m });
-            }
-            break;
+                try {
+                    const media = await prepareWAMessageMedia(
+                        { image: { url: developerImage } },
+                        { upload: devtrust.waUploadToServer }
+                    );
 
-            case 'devgithub': {
-                await devtrust.sendMessage(m.chat, { text: '💻 *GITHUB — MR TOHID*\\nhttps://github.com/Tohidkhan6332' }, { quoted: m });
-            }
-            break;
-
-            case 'devwhatsapp': {
-                await devtrust.sendMessage(m.chat, { text: '📱 *WHATSAPP — MR TOHID*\\nhttps://wa.me/917849917350' }, { quoted: m });
+                    await devtrust.relayMessage(m.chat, {
+                        interactiveMessage: {
+                            header: {
+                                title: "👨‍💻 𝐌𝐑 𝐓𝐎𝐇𝐈𝐃",
+                                subtitle: "TOHID-AI DEVELOPER",
+                                hasMediaAttachment: true,
+                                ...media
+                            },
+                            body: {
+                                text: "✨ *MR TOHID — DEVELOPER*\\n\\n🤖 Building TOHID-AI and WhatsApp automation projects.\\n⚡ Bot Developer • AI Projects • Automation\\n🛠️ Creating and maintaining TOHID-AI."
+                            },
+                            nativeFlowMessage: {
+                                buttons: [
+                                    {
+                                        name: "cta_url",
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: "📸 INSTAGRAM",
+                                            url: "https://instagram.com/Tohidkhan6332",
+                                            merchant_url: "https://instagram.com/Tohidkhan6332"
+                                        })
+                                    },
+                                    {
+                                        name: "cta_url",
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: "✈️ TELEGRAM",
+                                            url: "https://t.me/Tohidkhan6332",
+                                            merchant_url: "https://t.me/Tohidkhan6332"
+                                        })
+                                    },
+                                    {
+                                        name: "cta_url",
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: "💻 GITHUB",
+                                            url: "https://github.com/Tohidkhan6332",
+                                            merchant_url: "https://github.com/Tohidkhan6332"
+                                        })
+                                    },
+                                    {
+                                        name: "cta_url",
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: "📱 WHATSAPP",
+                                            url: "https://wa.me/917849917350",
+                                            merchant_url: "https://wa.me/917849917350"
+                                        })
+                                    }
+                                ]
+                            }
+                        }
+                    }, {});
+                } catch (err) {
+                    console.log("❌ ERROR DEVELOPER CONTACT:", err);
+                    await devtrust.sendMessage(m.chat, {
+                        text: "👨‍💻 *MR TOHID — DEVELOPER*\\n\\n🤖 TOHID-AI Developer & Bot Creator\\n\\n📸 Instagram: https://instagram.com/Tohidkhan6332\\n✈️ Telegram: https://t.me/Tohidkhan6332\\n💻 GitHub: https://github.com/Tohidkhan6332\\n📱 WhatsApp: https://wa.me/917849917350"
+                    }, { quoted: m });
+                }
             }
             break;
 
@@ -5461,35 +5514,18 @@ try {
             })
           },
           {
-            name: "cta_url",
+            name: "single_select",
             buttonParamsJson: JSON.stringify({
-              display_text: "📸 INSTAGRAM",
-              url: "https://instagram.com/Tohidkhan6332",
-              merchant_url: "https://instagram.com/Tohidkhan6332"
-            })
-          },
-          {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-              display_text: "✈️ TELEGRAM",
-              url: "https://t.me/Tohidkhan6332",
-              merchant_url: "https://t.me/Tohidkhan6332"
-            })
-          },
-          {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-              display_text: "💻 GITHUB",
-              url: "https://github.com/Tohidkhan6332",
-              merchant_url: "https://github.com/Tohidkhan6332"
-            })
-          },
-          {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-              display_text: "📱 WHATSAPP",
-              url: "https://wa.me/917849917350",
-              merchant_url: "https://wa.me/917849917350"
+              title: "👨‍💻 DEVELOPER CONTACT",
+              sections: [
+                {
+                  title: "✨ CONTACT MR TOHID",
+                  highlight_label: "DEVELOPER",
+                  rows: [
+                    { title: "👨‍💻 DEVELOPER CONTACT", description: "Profile, projects & social links", id: "devcontact" }
+                  ]
+                }
+              ]
             })
           },
           {
@@ -5503,7 +5539,7 @@ try {
           {
             name: "cta_url",
             buttonParamsJson: JSON.stringify({
-              display_text: "👥 GC",
+              display_text: "👥 GROUP",
               url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud",
               merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
             })
