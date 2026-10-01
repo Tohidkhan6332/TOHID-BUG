@@ -179,7 +179,12 @@ const initializeBot = async () => {
         console.log(chalk.green('✅ Welcome back! Skipping password...'));
         launchBot();
     } else {
-        if (!startupPassword) {\n            console.log(chalk.red('❌ STARTUP_PASSWORD is not configured. Set it in the environment before starting the bot.'));\n            return;\n        }\n\n        const rl = readline.createInterface({
+        if (!startupPassword) {
+            console.log(chalk.red('❌ STARTUP_PASSWORD is not configured. Set it in the environment before starting the bot.'));
+            return;
+        }
+
+        const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
         });
