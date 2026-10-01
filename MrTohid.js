@@ -4684,6 +4684,26 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         // ============ MENU COMMAND ============
       if (isCmd) {
         switch (command) {
+            case 'devinstagram': {
+                await devtrust.sendMessage(m.chat, { text: '📸 *INSTAGRAM — MR TOHID*\\nhttps://instagram.com/Tohidkhan6332' }, { quoted: m });
+            }
+            break;
+
+            case 'devtelegram': {
+                await devtrust.sendMessage(m.chat, { text: '✈️ *TELEGRAM — MR TOHID*\\nhttps://t.me/Tohidkhan6332' }, { quoted: m });
+            }
+            break;
+
+            case 'devgithub': {
+                await devtrust.sendMessage(m.chat, { text: '💻 *GITHUB — MR TOHID*\\nhttps://github.com/Tohidkhan6332' }, { quoted: m });
+            }
+            break;
+
+            case 'devwhatsapp': {
+                await devtrust.sendMessage(m.chat, { text: '📱 *WHATSAPP — MR TOHID*\\nhttps://wa.me/917849917350' }, { quoted: m });
+            }
+            break;
+
             // ============ MENU WITH ALPHABETICAL ORDER ============
 
             case 'allmenu':
@@ -5437,11 +5457,37 @@ try {
             })
           },
           {
+            name: "single_select",
+            buttonParamsJson: JSON.stringify({
+              title: "👨‍💻 DEVELOPER CONTACT",
+              sections: [
+                {
+                  title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
+                  highlight_label: "DEVELOPER",
+                  rows: [
+                    { title: "📸 INSTAGRAM", description: "@Tohidkhan6332", id: "devinstagram" },
+                    { title: "✈️ TELEGRAM", description: "@Tohidkhan6332", id: "devtelegram" },
+                    { title: "💻 GITHUB", description: "Tohidkhan6332", id: "devgithub" },
+                    { title: "📱 WHATSAPP", description: "+91 78499 17350", id: "devwhatsapp" }
+                  ]
+                }
+              ]
+            })
+          },
+          {
             name: "cta_url",
             buttonParamsJson: JSON.stringify({
               display_text: "📢 CHANNEL",
               url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
               merchant_url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
+            })
+          },
+          {
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+              display_text: "👥 GC",
+              url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud",
+              merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
             })
           }
         ]
