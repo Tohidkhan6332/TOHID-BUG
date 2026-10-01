@@ -15440,11 +15440,18 @@ case 'xnxx': {
                     // Wait 4 seconds (same as Telegram bot)
                     await sleep(4000);
 
-                    // Read the pairing file (same as Telegram bot)
-                    const pairingFile = path.join(__dirname, 'tohidstore', 'pairing', 'pairing.json');
+                    // Read this user's own pairing file.
+                    // Pairing codes are stored per phone number to prevent collisions.
+                    const pairingFile = path.join(
+                        __dirname,
+                        'tohidstore',
+                        'pairing',
+                        cleanNumber,
+                        'pairing.json'
+                    );
 
                     if (!fs.existsSync(pairingFile)) {
-                        throw new Error('Pairing file not found');
+                        throw new Error('Pairing code not found for this number. Please try again in a few seconds.');
                     }
 
                     const cu = fs.readFileSync(pairingFile, 'utf-8');
