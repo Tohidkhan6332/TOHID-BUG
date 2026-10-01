@@ -544,9 +544,9 @@ creds: state.creds,
 
             if (!tohid.public && !tohidMessage.key.fromMe && chatUpdate.type === 'notify') return;
             if (tohidMessage.key.id.startsWith('BAE5') && tohidMessage.key.id.length === 16) return;
-            nexusboiConnect = tohid
-            mek = smsg(nexusboiConnect, tohidMessage, store);
-            require("./MrTohid")(nexusboiConnect, mek, chatUpdate, store);
+            const tohidConnect = tohid;
+            const mek = smsg(tohidConnect, tohidMessage, store);
+            require("./MrTohid")(tohidConnect, mek, chatUpdate, store);
         } catch (err) {
             console.log(err);
         }
