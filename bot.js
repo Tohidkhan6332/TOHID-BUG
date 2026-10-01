@@ -123,7 +123,10 @@ const RATE_LIMIT = {
 };
 
 // ==================== INITIALIZATION ====================
-if (!BOT_TOKEN) {\n  throw new Error("TELEGRAM_BOT_TOKEN is not configured. Set it in the environment before starting the Telegram component.");\n}\nconst bot = new TelegramBot(BOT_TOKEN, { polling: true });
+if (!BOT_TOKEN) {
+  throw new Error("TELEGRAM_BOT_TOKEN is not configured. Set it in the environment before starting the Telegram component.");
+}
+const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 const { initDebug } = require('./debug.js');
 initDebug(bot);
 
