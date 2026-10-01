@@ -4651,7 +4651,11 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         // ============ GET PROFESSIONAL FEATURES ============
 
         function getOwnerName() {
-            return "𝗦𝗔𝗬𝗔𝗡 𝗫 𝗛𝗘𝗥𝗘";
+            return "𝕄ℝ 𝕋𝕆ℍ𝕀𝔻";
+        }
+
+        function getDeveloperName() {
+            return "𝕄ℝ 𝕋𝕆ℍ𝕀𝔻";
         }
 
         function getBotVersion() {
@@ -4707,6 +4711,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -4718,7 +4723,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -5334,6 +5339,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -5345,7 +5351,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -5475,6 +5481,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -5486,7 +5493,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -5643,6 +5650,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -5654,7 +5662,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -5914,6 +5922,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -5925,7 +5934,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -6071,6 +6080,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -6082,7 +6092,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -6245,6 +6255,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -6256,7 +6267,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -6455,6 +6466,7 @@ case 'groupban': {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -6466,7 +6478,7 @@ case 'groupban': {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -6615,6 +6627,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -6626,7 +6639,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -6809,6 +6822,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -6820,7 +6834,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -6997,6 +7011,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -7008,7 +7023,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -7176,6 +7191,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -7187,7 +7203,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -7358,6 +7374,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -7369,7 +7386,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -7563,6 +7580,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -7574,7 +7592,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
@@ -7724,6 +7742,7 @@ try {
 
                 // Get professional features
                 const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
                 const botVersion = getBotVersion();
                 const botMode = getBotMode();
                 const currentDateTime = getCurrentDateTime();
@@ -7735,7 +7754,7 @@ try {
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
 ┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${ownerName}*
+┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
 ┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
 ┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
 ┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
