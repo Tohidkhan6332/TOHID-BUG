@@ -109,7 +109,6 @@ const SOCIAL = {
   whatsapp: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
   telegram: {
     primary: 'https://t.me/Tohidtech6332',
-    primary2: 'https://t.me/Tohidtech6332',
     group: 'https://t.me/Tohidtech6333',
   },
   developer: 'https://t.me/Tohidkhan6332'
