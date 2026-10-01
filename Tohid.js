@@ -63,7 +63,7 @@ const OWNERS = {
 // Developer Contact Information
 const DEVELOPER_CONTACTS = {
   telegram: 'https://t.me/Tohidkhan6332',
-  whatsapp: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
+  whatsapp: 'https://wa.me/message/O6KWTGOGTVTYO1',
   email: 'Tohidkhan9050482152@gmail.com',
   support: '@Tohidkhan6332'
 };
@@ -102,7 +102,6 @@ const ASSETS = {
 const REQUIRED_CHANNELS = [
   { id: -1003686512726, name: 'Primary Channel', link: 'https://t.me/Tohidtech6332' },
   { id: -1003867874741, name: 'Community Group', link: 'https://t.me/Tohidtech6333' },
-  { id: -1003686512726, name: 'Primary Channel2', link: 'https://t.me/Tohidtech6332' },
 ];
 
 // Social Links
