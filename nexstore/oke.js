@@ -5,7 +5,16 @@ const axios = require('axios');
 const Jimp = require('jimp');
 const path = require('path');
 const FileType = require("file-type");
-const getExtensionFromMime = (contentType = "") => {\n  const type = String(contentType).split(";")[0].trim().toLowerCase();\n  const map = {\n    "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp",\n    "video/mp4": "mp4", "video/webm": "webm", "audio/mpeg": "mp3", "audio/ogg": "ogg",\n    "audio/wav": "wav", "application/pdf": "pdf", "application/json": "json",\n    "text/plain": "txt", "text/html": "html", "application/zip": "zip", "application/javascript": "js"\n  };\n  return map[type] || (type.includes("/") ? type.split("/")[1] : "bin");\n};\n\n
+const getExtensionFromMime = (contentType = "") => {
+  const type = String(contentType).split(";")[0].trim().toLowerCase();
+  const map = {
+    "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp",
+    "video/mp4": "mp4", "video/webm": "webm", "audio/mpeg": "mp3", "audio/ogg": "ogg",
+    "audio/wav": "wav", "application/pdf": "pdf", "application/json": "json",
+    "text/plain": "txt", "text/html": "html", "application/zip": "zip", "application/javascript": "js"
+  };
+  return map[type] || (type.includes("/") ? type.split("/")[1] : "bin");
+};
 module.exports = (connection, store)  => {
 	global.ephemeral = { 
 		ephemeralExpiration: config.WA_DEFAULT_EPHEMERAL
