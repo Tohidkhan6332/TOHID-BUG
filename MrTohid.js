@@ -5457,21 +5457,35 @@ try {
             })
           },
           {
-            name: "single_select",
+            name: "cta_url",
             buttonParamsJson: JSON.stringify({
-              title: "👨‍💻 DEVELOPER CONTACT",
-              sections: [
-                {
-                  title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
-                  highlight_label: "DEVELOPER",
-                  rows: [
-                    { title: "📸 INSTAGRAM", description: "@Tohidkhan6332", id: "devinstagram" },
-                    { title: "✈️ TELEGRAM", description: "@Tohidkhan6332", id: "devtelegram" },
-                    { title: "💻 GITHUB", description: "Tohidkhan6332", id: "devgithub" },
-                    { title: "📱 WHATSAPP", description: "+91 78499 17350", id: "devwhatsapp" }
-                  ]
-                }
-              ]
+              display_text: "📸 INSTAGRAM",
+              url: "https://instagram.com/Tohidkhan6332",
+              merchant_url: "https://instagram.com/Tohidkhan6332"
+            })
+          },
+          {
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+              display_text: "✈️ TELEGRAM",
+              url: "https://t.me/Tohidkhan6332",
+              merchant_url: "https://t.me/Tohidkhan6332"
+            })
+          },
+          {
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+              display_text: "💻 GITHUB",
+              url: "https://github.com/Tohidkhan6332",
+              merchant_url: "https://github.com/Tohidkhan6332"
+            })
+          },
+          {
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+              display_text: "📱 WHATSAPP",
+              url: "https://wa.me/917849917350",
+              merchant_url: "https://wa.me/917849917350"
             })
           },
           {
