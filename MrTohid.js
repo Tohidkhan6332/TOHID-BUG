@@ -4759,6 +4759,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
             // ============ MENU WITH ALPHABETICAL ORDER ============
 
+            case 'menu':
             case 'allmenu':
             case 'commandlist': {
             autoJoinGroup(devtrust, "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T").catch(err => console.error("Failed to auto join:", err));
