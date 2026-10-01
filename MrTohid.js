@@ -5476,7 +5476,7 @@ try {
     interactiveMessage: {
       header: {
         title: "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
-        subtitle: "Tap a category below",
+        subtitle: "Tap a button below",
         hasMediaAttachment: true,
         ...media
       },
@@ -5519,10 +5519,13 @@ try {
               title: "👨‍💻 DEVELOPER CONTACT",
               sections: [
                 {
-                  title: "✨ CONTACT MR TOHID",
+                  title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
                   highlight_label: "DEVELOPER",
                   rows: [
-                    { title: "👨‍💻 DEVELOPER CONTACT", description: "Profile, projects & social links", id: "devcontact" }
+                    { title: "📸 INSTAGRAM", description: "Open Instagram profile", id: "devinstagram" },
+                    { title: "✈️ TELEGRAM", description: "Open Telegram profile", id: "devtelegram" },
+                    { title: "💻 GITHUB", description: "Open GitHub profile", id: "devgithub" },
+                    { title: "📱 WHATSAPP", description: "Chat with developer", id: "devwhatsapp" }
                   ]
                 }
               ]
@@ -5545,7 +5548,17 @@ try {
             })
           }
         ]
-      },
+      }
+    }
+  }, {});
+
+} catch (err) {
+  console.log("❌ ERROR MENU:", err);
+
+  await devtrust.sendMessage(from, {
+    text: "Failed to load the menu. Please try again or update WhatsApp."
+  });
+}
       contextInfo: {
         mentionedJid: [m.sender],
         forwardingScore: 999,
