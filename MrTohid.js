@@ -10224,7 +10224,8 @@ break;
                 const waChannel = "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T";
 
                 let caption = `📂 * 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Repository *\n\n` +
-                    `🤖 Telegram: https://t.me/TohidAi_bot\n` +\n                    `👨‍💻 Developer: @Tohidkhan6332` +
+                    `🤖 Telegram: https://t.me/TohidAi_bot\n` +
+                    `👨‍💻 Developer: @Tohidkhan6332\n` +
                     `📢 Updates:\n${tgChannel}\n${waChannel}`;
 
                 await devtrust.sendMessage(m.chat,
