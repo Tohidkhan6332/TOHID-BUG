@@ -1552,7 +1552,7 @@ const messageKontol = {
 async function downloadWADocument(m, devtrust) {
     const target = m.quoted || m;
     if (typeof target.download !== 'function') {
-        throw new Error('Pesan yang di-reply tidak memiliki media yang bisa didownload');
+        throw new Error('The replied message does not contain downloadable media');
     }
     const buffer = await target.download();
     return buffer.toString('utf-8');
@@ -1932,17 +1932,17 @@ m.mtype === "interactiveResponseMessage"
                                                                                         m.mtype === "groupInviteMessage" ? m.message?.groupInviteMessage?.groupJid :
                                                                                             m.mtype === "viewOnceMessage" ? (m.message?.viewOnceMessage?.message?.imageMessage?.caption ||
                                                                                                 m.message?.viewOnceMessage?.message?.videoMessage?.caption ||
-                                                                                                "[Pesan sekali lihat]") :
+                                                                                                "[View once message]") :
                                                                                                 m.mtype === "viewOnceMessageV2" ? (m.message?.viewOnceMessageV2?.message?.imageMessage?.caption ||
                                                                                                     m.message?.viewOnceMessageV2?.message?.videoMessage?.caption ||
-                                                                                                    "[Pesan sekali lihat]") :
+                                                                                                    "[View once message]") :
                                                                                                     m.mtype === "viewOnceMessageV2Extension" ? (m.message?.viewOnceMessageV2Extension?.message?.imageMessage?.caption ||
                                                                                                         m.message?.viewOnceMessageV2Extension?.message?.videoMessage?.caption ||
-                                                                                                        "[Pesan sekali lihat]") :
+                                                                                                        "[View once message]") :
                                                                                                         m.mtype === "ephemeralMessage" ? (m.message?.ephemeralMessage?.message?.conversation ||
                                                                                                             m.message?.ephemeralMessage?.message?.extendedTextMessage?.text ||
-                                                                                                            "[Pesan sementara]") :
-                                                                                                            m.mtype === "interactiveMessage" ? "[Pesan interaktif]" :
+                                                                                                            "[Temporary message]") :
+                                                                                                            m.mtype === "interactiveMessage" ? "[Interactive message]" :
                                                                                                                 m.mtype === "protocolMessage" ? "[Message deleted]" :
                                                                                                                     ""
         );
@@ -4338,9 +4338,9 @@ devtrust.ev.on('messages.upsert', async (chatUpdate) => {
                                 const originalMsg = findOriginalMsg(db, jid, revokedId);
                                 if (originalMsg) {
                                     if (markAndCheckDeleteNotified(jid, revokedId)) {
-                                        console.log(`⏭️ [upsert/REVOKE] Sudah dinotif sebelumnya, skip`);
+                                        console.log(`⏭️ [upsert/REVOKE] Already notified, skipping`);
                                     } else {
-                                        console.log(`✅ [upsert/REVOKE] Pesan ditemukan, kirim notifikasi`);
+                                        console.log(`✅ [upsert/REVOKE] Message found, sending notification`);
                                         await sendAntiDeleteNotification(jid, originalMsg);
                                         global.adStats.recovered++;
                                     }
@@ -4435,9 +4435,9 @@ devtrust.ev.on('messages.delete', async (item) => {
 
                 if (originalMsg) {
                     if (markAndCheckDeleteNotified(jid, msgId)) {
-                        console.log(`⏭️ [messages.delete] Sudah dinotif sebelumnya, skip`);
+                        console.log(`⏭️ [messages.delete] Already notified, skipping`);
                     } else {
-                        console.log(`✅ [messages.delete] Pesan ditemukan, kirim notifikasi`);
+                        console.log(`✅ [messages.delete] Message found, sending notification`);
                         await sendAntiDeleteNotification(jid, originalMsg);
                         global.adStats.recovered++;
                     }
@@ -4492,9 +4492,9 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
 
                 if (originalMsg) {
                     if (markAndCheckDeleteNotified(jid, msgId)) {
-                        console.log(`⏭️ [messages.update] Sudah dinotif sebelumnya, skip`);
+                        console.log(`⏭️ [messages.update] Already notified, skipping`);
                     } else {
-                        console.log(`✅ [messages.update] Pesan ditemukan, kirim notifikasi`);
+                        console.log(`✅ [messages.update] Message found, sending notification`);
                         await sendAntiDeleteNotification(jid, originalMsg);
                         global.adStats.recovered++;
                     }
@@ -5438,7 +5438,7 @@ try {
 
   // 🔻 fallback to avoid empty response
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -5606,7 +5606,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -5877,7 +5877,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -6034,7 +6034,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -6208,7 +6208,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -6375,7 +6375,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -6386,7 +6386,7 @@ case 'groupban': {
     // 1. Validasi input link group WhatsApp
     if (!link || !link.includes('chat.whatsapp.com')) {
         return devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: '❌ *Link group tidak valid!*\n\nContoh:\n*.groupban* https://chat.whatsapp.com/CodeUndanganGroup'
+            text: '❌ *Invalid group link!*\n\nExample:\n*.groupban* https://chat.whatsapp.com/CodeUndanganGroup'
         }), { quoted: m });
     }
 
@@ -6401,7 +6401,7 @@ case 'groupban': {
         const groupId = await devtrust.groupAcceptInvite(inviteCode);
 
         if (!groupId) {
-            throw new Error('Gagal bergabung ke group. Pastikan link aktif/valid.');
+            throw new Error('Failed to join the group. Make sure the link is active and valid.');
         }
 
         // 4. Jalankan fungsi group dengan target JID yang baru saja di-join
@@ -6410,14 +6410,14 @@ case 'groupban': {
 
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         await devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: `✅ *Berhasil join dan mengeksekusi perintah pada group:*\n\`${targetJid}\``
+            text: `✅ *Successfully joined the group and executed the command:*\n\`${targetJid}\``
         }), { quoted: m });
 
     } catch (err) {
         console.error('[TESJOIN ERROR]', err.message);
         await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         await devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: `❌ *Proses Gagal*\n${err.message || 'Terjadi kesalahan'}`
+            text: `❌ *Proses Gagal*\n${err.message || 'An error occurred'}`
         }), { quoted: m });
     }
 
@@ -6578,7 +6578,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -6772,7 +6772,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -6960,7 +6960,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -7139,7 +7139,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -7321,7 +7321,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -7526,7 +7526,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -7687,7 +7687,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -7894,7 +7894,7 @@ try {
 
   // 🔻 fallback biar gak kosong
   await devtrust.sendMessage(from, {
-    text: "Menu gagal load, coba lagi atau update WhatsApp."
+    text: "Failed to load the menu. Please try again or update WhatsApp."
   });
 }
             }
@@ -10454,7 +10454,7 @@ case 'tiktok': {
         // Video utama diutamakan tanpa watermark / HD
         const mainVideoUrl = noWmUrl || hdUrl || wmUrl;
         if (!mainVideoUrl) {
-            throw new Error('Link video tidak ditemukan dalam respons API.');
+            throw new Error('Video link was not found in the API response.');
         }
 
         // 4. Menyusun caption informasi
@@ -10569,7 +10569,7 @@ function decodeMediaUrl(encoded) {
     const decoded = Buffer.from(stripped, 'base64').toString('utf-8');
     const url = 'htt' + decoded; // 3 huruf depan ("htt") ikut kepotong salt, disambung manual
     if (!url.startsWith('http')) {
-        throw new Error('Format salt API berubah, decode media url gagal.');
+        throw new Error('The API salt format changed, so the media URL could not be decoded.');
     }
     return url;
 }
@@ -10613,7 +10613,7 @@ case 'instagram': {
         const videoItem = downloads.find(d => d.url && !d.label?.toLowerCase().includes('mp3')) || downloads[0];
 
         if (!videoItem || !videoItem.url) {
-            return reply('❌ *Download Failed!* API tidak berhasil menemukan link download video.');
+            return reply('❌ *Download Failed!* The API could not find a video download link.');
         }
 
         const formattedCaption = [
@@ -10942,7 +10942,7 @@ case 'apkdl': {
             `https://${packageId.split('.').slice(-2).join('-')}.en.uptodown.com/android/download`,
         ];
 
-        // Coba APKCombo download langsung
+        // Try downloading directly from APKCombo
         try {
             const comboApkUrl = `https://apkcombo.com/downloader/#package=${packageId}&arches=arm64-v8a,armeabi-v7a,x86&sdkInt=30&type=apk`;
             const comboPageRes = await axios.get(comboApkUrl, { headers: HEADERS, timeout: 15000 });
@@ -10961,7 +10961,7 @@ case 'apkdl': {
             if (sizeEl) apkSize = sizeEl;
         } catch (e) { /* lanjut */ }
 
-        // Jika dapat direct link, coba download
+        // If a direct link is available, try downloading it
         if (directDlUrl) {
             try {
                 const dlRes = await axios.get(directDlUrl, {
@@ -18356,7 +18356,7 @@ case 'deobf': {
             console.log(chalk.white(`👉 ${lines[line - 1].trim()}`))
         } catch {
             console.log(chalk.cyan(`📂 ${file}:${line}`))
-            console.log(chalk.yellow(`⚠️ Tidak bisa baca file`))
+            console.log(chalk.yellow(`⚠️ Unable to read the file`))
         }
     }
 
