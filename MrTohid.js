@@ -1924,7 +1924,19 @@ const Premium = getPremium();
                                             m.mtype === "listResponseMessage" ? m.message?.listResponseMessage?.singleSelectReply?.selectedRowId :
 m.mtype === "templateButtonReplyMessage" ? m.message?.templateButtonReplyMessage?.selectedId :
 m.mtype === "interactiveResponseMessage"
-    ? (() => { try { return JSON.parse(m.msg?.nativeFlowResponseMessage?.paramsJson || '{}').id || ''; } catch { return ''; } })() :
+    ? (() => {
+        try {
+            const params =
+                m.msg?.nativeFlowResponseMessage?.paramsJson ||
+                m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
+                m.message?.viewOnceMessage?.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
+                '';
+            const parsed = JSON.parse(params || '{}');
+            return parsed.id || parsed.rowId || parsed.selectedRowId || parsed.buttonId || '';
+        } catch {
+            return '';
+        }
+    })() :
     m.mtype === "messageContextInfo" ? message?.buttonsResponseMessage?.selectedButtonId ||
 
                                                             m.message?.listResponseMessage?.singleSelectReply?.selectedRowId || m.text :
@@ -14771,7 +14783,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
             case 'runtime':
             case 'alive': {
-                reply(`⚡ *𝗦𝗔𝗬𝗔𝗡 𝗠𝗗 𝗕𝗨𝗚 Uptime*\n\n⏱️ ${runtime(process.uptime())}`);
+                reply(`⚡ *𝗧𝗢𝗛𝗜𝗗-𝗔𝗜 Uptime*\n\n⏱️ ${runtime(process.uptime())}`);
             }
                 break;
 
