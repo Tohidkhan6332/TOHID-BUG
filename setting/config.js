@@ -15,7 +15,7 @@ global.creatorName = "𝕄ℝ 𝕋𝕆ℍ𝕀𝔻™"
 global.ownernumber = '917849917350'  //creator number
 global.location = "Asia/Kolkata"
 global.prefa = ['','!','.','#','&']
-// Config - Sayan Bots Official
+// Config - TOHID-AI Official
 global.footer = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈" //footer section
 global.link = "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
 global.autobio = false//auto update bio
