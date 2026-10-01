@@ -4601,7 +4601,7 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
         function getLagosTime() {
             try {
                 const options = {
-                    timeZone: 'Africa/Lagos',
+                    timeZone: 'Asia/Kolkata',
                     hour12: false,
                     hour: 'numeric',
                     minute: 'numeric'
@@ -4611,8 +4611,8 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
                 const hour = parts.find(part => part.type === 'hour').value;
                 const minute = parts.find(part => part.type === 'minute').value;
                 const now = new Date();
-                const lagosDate = new Date(now.toLocaleString('en-US', { timeZone: 'Africa/Lagos' }));
-                return lagosDate;
+                const indiaDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+                return indiaDate;
             } catch (error) {
                 const now = new Date();
                 const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
@@ -4669,7 +4669,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         function getCurrentDateTime() {
             const date = new Date();
             const options = {
-                timeZone: 'Africa/Lagos',
+                timeZone: 'Asia/Kolkata',
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -4679,7 +4679,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                 second: '2-digit',
                 hour12: false
             };
-            return date.toLocaleString('en-US', options) + ' WAT';
+            return date.toLocaleString('en-IN', options) + ' IST';
         }
         // ============ MENU COMMAND ============
       if (isCmd) {
@@ -4738,7 +4738,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈* ◆━━┓
@@ -5364,7 +5364,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *ᴩᴀɪʀ:* _https://t.me/TohidAi_bot
+📱 *ᴩᴀɪʀ TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 - 𝐌𝐄𝐍𝐔 𝐂𝐀𝐓𝐄𝐆𝐎𝐑𝐈𝐄𝐒* ◆━━┓
@@ -5508,7 +5508,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈* ◆━━┓
@@ -5677,7 +5677,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄* ◆━━┓
@@ -5949,7 +5949,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
  ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆* ◆━━┓
@@ -6282,7 +6282,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍* ◆━━┓
@@ -6493,7 +6493,7 @@ case 'groupban': {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒* ◆━━┓
@@ -6654,7 +6654,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏* ◆━━┓
@@ -6849,7 +6849,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎* ◆━━┓
@@ -7038,7 +7038,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑* ◆━━┓
@@ -7218,7 +7218,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑* ◆━━┓
@@ -7401,7 +7401,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒* ◆━━┓
@@ -7607,7 +7607,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄* ◆━━┓
@@ -7769,7 +7769,7 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
 *ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair Tohid Ai:* _https://t.me/TohidAi_bot
+📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑* ◆━━┓
@@ -10192,7 +10192,7 @@ break;
                 break;
 
             case "owner": {
-                const ownerName = "*Mr Tohid*";
+                const ownerName = "*𝕄ℝ 𝕋𝕆ℍ𝕀𝔻*";
                 const ownerNumber = "917849917350";
                 const displayTag = "𝐓𝐎𝐇𝐈𝐃 𝐀𝐈";
 
@@ -10219,13 +10219,12 @@ break;
                 break;
 
             case "repo": {
-                const tgUsername = "t.me/Mrdarkomeh";
-                const tgChannel = "https://t.me/";
+                const tgUsername = "t.me/Tohidkhan6332";
+                const tgChannel = "https://t.me/Tohidtech6332";
                 const waChannel = "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T";
 
                 let caption = `📂 * 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Repository *\n\n` +
-                    `🤖 Bot 1: https://t.me/TohidAi_bot\n` +
-                    `🤖 Bot 2: https://t.me/TohidAi_bot` +
+                    `🤖 Telegram: https://t.me/TohidAi_bot\n` +\n                    `👨‍💻 Developer: @Tohidkhan6332` +
                     `📢 Updates:\n${tgChannel}\n${waChannel}`;
 
                 await devtrust.sendMessage(m.chat,
