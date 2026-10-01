@@ -24,7 +24,7 @@ TOHID-BUG/
 ├── allfunc/              # Shared bot utilities and helpers
 ├── database/             # JSON database files
 ├── media/                # Bot media assets
-├── nexstore/             # Pairing, bot data and helper modules
+├── tohidstore/             # Pairing, bot data and helper modules
 ├── setting/              # Bot configuration
 ├── src/media/            # Media data
 ├── sticker/              # Sticker assets
@@ -100,7 +100,7 @@ Known items that should be fixed before deployment include:
 
 - The original command-handler syntax issue has been repaired.
 - The missing `utils/process-guard` module has been added.
-- The obsolete `./serialize` dependency in `nexstore/oke.js` has been removed from the runtime path.
+- The obsolete `./serialize` dependency in `tohidstore/oke.js` has been removed from the runtime path.
 - Dependencies are installed with `npm install`; the repository currently uses `npm install` because the Baileys dependency is a GitHub source and the lockfile is intentionally not committed.
 - Authentication/session and credential files need production-safe handling.
 - The project has multiple JSON/database storage locations that should be reviewed for consistency.
