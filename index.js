@@ -1,80 +1,3 @@
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  useSingleFileAuthState,
-  makeInMemoryStore,
-  initInMemoryKeyStore,
-  downloadContentFromMessage,
-  downloadAndSaveMediaMessage,
-  downloadMediaMessage,
-  generateWAMessage,
-  generateWAMessageContent,
-  generateWAMessageFromContent,
-  prepareWAMessageMedia,
-  relayWAMessage,
-  getContentType,
-  getStream,
-  jidDecode,
-  encodeWAMessage,
-  encodeSignedDeviceIdentity,
-  areJidsSameUser,
-  isBaileys,
-  processTime,
-  mentionedJid,
-  WA_DEFAULT_EPHEMERAL,
-  WA_MESSAGE_STATUS_TYPE,
-  WA_MESSAGE_STUB_TYPES,
-  Browsers,
-  Browser,
-  DisconnectReason,
-  ReconnectMode,
-  Presence,
-  GroupSettingChange,
-  ProxyAgent,
-  URL_REGEX,
-  MediaType,
-  MediaConnInfo,
-  MediaPathMap,
-  Mimetype,
-  MimetypeMap,
-  MessageType,
-  MessageOptions,
-  MessageTypeProto,
-  WAMessageStatus,
-  WAFlag,
-  WAMetric,
-  WANode,
-  ChatModification,
-  WAContextInfo,
-  WAUrlInfo,
-  WAProto,
-  WAGroupMetadata,
-  GroupMetadata,
-  AuthenticationState,
-  MiscMessageGenerationOptions,
-  AnyMessageContent,
-  WAMediaUpload,
-  WALocationMessage,
-  WAContactMessage,
-  WAContactsArrayMessage,
-  WAGroupInviteMessage,
-  WATextMessage,
-  WAMessageContent,
-  WAMessage,
-  WAMessageProto,
-  templateMessage,
-  InteractiveMessage,
-  Header,
-  BaileysError,
-  BufferJSON,
-  waChatKey,
-  fetchLatestBaileysVersion,
-  emitGroupParticipantsUpdate,
-  emitGroupUpdate,
-  proto, 
-  makeCacheableSignalKeyStore
-} = require("@whiskeysockets/baileys");
-
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
@@ -226,7 +149,7 @@ function launchBot() {
     if (fs.existsSync(botPath)) {
         try {
             console.log(chalk.blue('📱 Loading Telegram pairing system...'));
-            require('./bot');
+            require('./Tohid.js');
             telegramLoaded = true;
             console.log(chalk.green('✅ ᴛᴏʜɪᴅ ᴀɪ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴀᴄᴛɪᴠᴇ'));
         } catch (error) {
@@ -246,7 +169,7 @@ function launchBot() {
     if (fs.existsSync(tohidPath)) {
         try {
             console.log(chalk.blue('💬 Loading WhatsApp commands system...'));
-            require('./case');
+            require('./MrTohid.js');
             whatsappLoaded = true;
             console.log(chalk.green('✅ WhatsApp commands loaded successfully!'));
         } catch (error) {
