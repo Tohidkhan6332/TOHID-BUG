@@ -5522,10 +5522,7 @@ try {
                   title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
                   highlight_label: "DEVELOPER",
                   rows: [
-                    { title: "📸 INSTAGRAM", description: "Open Instagram profile", id: "devinstagram" },
-                    { title: "✈️ TELEGRAM", description: "Open Telegram profile", id: "devtelegram" },
-                    { title: "💻 GITHUB", description: "Open GitHub profile", id: "devgithub" },
-                    { title: "📱 WHATSAPP", description: "Chat with developer", id: "devwhatsapp" }
+                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: "devcontact" }
                   ]
                 }
               ]
