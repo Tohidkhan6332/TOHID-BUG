@@ -486,7 +486,8 @@ async function safeObfuscate(code, config) {
 const { Boom } = require("@hapi/boom");
 const googleTTS = require('google-tts-api')
 const ffmpeg = require('fluent-ffmpeg')
-const speed = require('performance-now')
+const { performance } = require('node:perf_hooks')
+const speed = () => performance.now()
 const { spawn: spawn, spawnSync, exec } = require('child_process');
 const timestampp = speed();
 const jimp = require("jimp")
@@ -10198,7 +10199,7 @@ break;
                 const waChannel = "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T";
 
                 let caption = `📂 * 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Repository *\n\n` +
-                    `🤖 Bot 1: https://t.me/TohidAi_bot +
+                    `🤖 Bot 1: https://t.me/TohidAi_bot\n` +
                     `🤖 Bot 2: https://t.me/TohidAi_bot` +
                     `📢 Updates:\n${tgChannel}\n${waChannel}`;
 
@@ -14716,8 +14717,8 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
             case 'ping':
             case 'speed': {
-                const speed = require('performance-now');
-                const timestampp = speed();
+                const { performance } = require('node:perf_hooks');
+                const timestampp = performance.now();
                 const latensi = speed() - timestampp;
 
                 reply(`⚡ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Ping*\n\n📡 ${latensi.toFixed(4)} ms`);
