@@ -1,9 +1,6 @@
 const fs = require('fs')
 
-global.owner = "917849917350" //owner number
-global.footer = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈" //footer section
 global.status = false //"self/public" section of the bot
-global.prefa = ['','!','.',',','🐤','🗿']
 global.owner = ['917849917350']
 global.xprefix = '.'
 global.gambar = "https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg"
@@ -18,11 +15,9 @@ global.prefa = ['','!','.','#','&']
 // Config - TOHID-AI Official
 global.footer = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈" //footer section
 global.link = "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
-global.autobio = false//auto update bio
 global.botName = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈"
 global.version = "1.0.1"
 global.botname = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈"
-global.author = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈™"
 global.themeemoji = "🥷"
 global.wagc = 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
 global.thumbnail = 'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
@@ -61,7 +56,7 @@ global.hituet = 0
 //false=disable and true=enable
 global.autoviewstatus = true
 global.autoread = true //auto read messages
-global.autobio = true //auto update bio
+global.autobio = true // auto update bio
 global.anti92 = false //auto block +92 
 global.autoswview = true //auto view status/story
 
