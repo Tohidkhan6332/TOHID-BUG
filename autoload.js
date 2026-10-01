@@ -114,7 +114,7 @@ module.exports = {
     console.log(chalk.yellow('🔄 Auto-loading all paired users...'));
 
     try {
-      const pairingDir = path.join(__dirname, 'nexstore', 'pairing');
+      const pairingDir = path.join(__dirname, 'tohidstore', 'pairing');
       
       // Check if pairing directory exists
       try {
