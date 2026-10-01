@@ -126,7 +126,7 @@ const OBFUSCATE_WORKER_SOURCE = `'use strict';
 // OBFUSCATE WORKER — menjalankan JsConfuser di thread terpisah
 // supaya event loop utama (koneksi WhatsApp) tidak terblokir
 // saat memproses file besar / config berat (controlFlowFlattening, dll).
-// All configs are IDENTICAL to those in case.js — unchanged.
+// All configs are IDENTICAL to those in MrTohid.js — unchanged.
 // ================================================================
 const { parentPort, workerData } = require('worker_threads');
 let JsConfuser;
@@ -152,7 +152,7 @@ async function safeObfuscate(code, config) {
     throw new Error('Too many invalid options in obfuscation config');
 }
 
-// ── Konfigurasi (identik dengan case.js, JANGAN diubah) ──
+// ── Konfigurasi (identik dengan MrTohid.js, JANGAN diubah) ──
 function getBaseConfig() {
     return {
         target: "node", compact: true, renameVariables: true, renameGlobals: true,
@@ -504,7 +504,7 @@ const shortJid = j => j.replace('@newsletter', '');
 const { smsg, tanggal, getTime, isUrl, sleep, clockString, runtime, fetchJson, getBuffer, jsonformat, format, parseMention, getRandom, generateProfilePicture } = require('./allfunc/storage')
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid, addExif } = require('./allfunc/exif.js')
 let richpic;
-try { richpic = fs.readFileSync('./media/image1.jpg'); } catch { richpic = null; }
+try { richpic = fs.readFileSync('./media/Tohid.jpg'); } catch { richpic = null; }
 const numberEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"];
 _ownerCache = null;
     _premiumCache = null;
@@ -537,7 +537,7 @@ const getGroupAdmins = (participants) => {
 
 //AUTO DELETE
 // ================================================================
-// REPLACE THIS ENTIRE BLOCK IN case.js
+// REPLACE THIS ENTIRE BLOCK IN MrTohid.js
 // Mulai dari baris ~139 (//AUTO DELETE) sampai fungsi-fungsi
 // helper + ketiga event listener di bawahnya
 // ================================================================
@@ -4226,7 +4226,7 @@ async function sendAntiDeleteNotification(jid, originalMsg) {
 const hansRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // ============================================================
-// OPTIMIZED EVENT LISTENERS — case.js
+// OPTIMIZED EVENT LISTENERS — MrTohid.js
 // ============================================================
 
 // Cache delete session di memory, bukan baca file tiap event
@@ -15261,7 +15261,7 @@ case 'xnxx': {
                     await sleep(4000);
 
                     // Read the pairing file (same as Telegram bot)
-                    const pairingFile = path.join(__dirname, 'nexstore', 'pairing', 'pairing.json');
+                    const pairingFile = path.join(__dirname, 'tohidstore', 'pairing', 'pairing.json');
 
                     if (!fs.existsSync(pairingFile)) {
                         throw new Error('Pairing file not found');
@@ -15338,7 +15338,7 @@ case 'xnxx': {
 
                 try {
                     const WHATSAPP_PAIRING_DIR = './database/pairing/';
-                    const TELEGRAM_PAIRING_DIR = './nexstore/pairing/';
+                    const TELEGRAM_PAIRING_DIR = './tohidstore/pairing/';
                     let allPairs = [];
 
                     // Read from WhatsApp pairing directory
@@ -15439,7 +15439,7 @@ case 'xnxx': {
 
                 const cleanNumber = q.replace(/[^0-9]/g, '');
                 const WHATSAPP_PAIRING_DIR = './database/pairing/';
-                const TELEGRAM_PAIRING_DIR = './nexstore/pairing/';
+                const TELEGRAM_PAIRING_DIR = './tohidstore/pairing/';
                 let deleted = false;
                 let message = '';
                 let isOwnerDeleting = isCreator || isSudo; // Check if owner/sudo

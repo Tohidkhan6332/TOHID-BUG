@@ -35,8 +35,8 @@ const path = require('path');
 const chalk = require('chalk');
 const { performance } = require('perf_hooks');
 const os = require('os');
-const { BOT_TOKEN } = require('./nexstore/token');
-const { sleep } = require('./nexstore/utils');
+const { BOT_TOKEN } = require('./tohidstore/token');
+const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
 
 // ==================== SYSTEM CONFIGURATION ====================
@@ -382,7 +382,7 @@ const ensureDirectories = async () => {
     PATHS.base,
     PATHS.sessions,
     PATHS.backups,
-    path.join(__dirname, 'nexstore', 'pairing'),
+    path.join(__dirname, 'tohidstore', 'pairing'),
     path.join(__dirname, 'allfunc')
   ];
   
@@ -1168,7 +1168,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
     
     clearInterval(loadingInterval);
 
-    const pairingFile = path.join(__dirname, 'nexstore', 'pairing', 'pairing.json');
+    const pairingFile = path.join(__dirname, 'tohidstore', 'pairing', 'pairing.json');
     
     if (!await fileExists(pairingFile)) {
       throw new Error('ᴘᴀɪʀɪɴɢ.json ɴᴏᴛ ғᴏᴜɴᴅ');
