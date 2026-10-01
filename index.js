@@ -242,8 +242,8 @@ function launchBot() {
     }
 
     // Load WhatsApp commands (MrTohid.js)
-    const nexusPath = path.join(__dirname, 'MrTohid.js');
-    if (fs.existsSync(nexusPath)) {
+    const tohidPath = path.join(__dirname, 'MrTohid.js');
+    if (fs.existsSync(tohidPath)) {
         try {
             console.log(chalk.blue('💬 Loading WhatsApp commands system...'));
             require('./case');
