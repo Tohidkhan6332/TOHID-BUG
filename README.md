@@ -39,13 +39,14 @@ TOHID-BUG/
 ├── ecosystem.config.js   # PM2 configuration
 ├── package.json          # Node.js dependencies/scripts
 └── package-lock.json     # Dependency lockfile
+├── .env.example          # Environment variable template
 ```
 
 ## 🚀 Installation
 
 ### Requirements
 
-- Node.js 18+
+- Node.js 20+
 - npm
 - FFmpeg for media-related features
 - A WhatsApp account for pairing
@@ -56,7 +57,7 @@ TOHID-BUG/
 ```bash
 git clone https://github.com/Tohidkhan6332/TOHID-BUG.git
 cd TOHID-BUG
-npm install
+npm ci
 npm start
 ```
 
@@ -97,13 +98,14 @@ However, the source should be treated as **under active repair/testing**, not as
 
 Known items that should be fixed before deployment include:
 
-- `case.js` contains a JavaScript syntax error in the repository version.
-- `index.js` references `utils/process-guard`, which is not present in the supplied source tree.
-- `nexstore/oke.js` references a missing `./serialize` module.
-- `package.json` and `package-lock.json` need to be synchronized before relying on `npm ci`.
+- The original `case.js` syntax error has been repaired.
+- The missing `utils/process-guard` module has been added.
+- The obsolete `./serialize` dependency in `nexstore/oke.js` has been removed from the runtime path.
+- Dependency metadata has been synchronized; `npm ci` can now validate/install from the lockfile.
 - Authentication/session and credential files need production-safe handling.
 - The project has multiple JSON/database storage locations that should be reviewed for consistency.
-- Baileys compatibility should be verified against the exact package revision used by the project.
+- Baileys is pinned to `7.0.0-rc.9` and the project now requires Node.js 20+.
+- Obfuscation/deobfuscation packages that were absent from the lockfile are treated as optional features rather than installation blockers.
 
 ## 🔐 Security
 
@@ -116,7 +118,7 @@ Never publish:
 - Private pairing information
 - Personal access tokens
 
-If a credential has already been committed to a public repository, revoke/rotate it and replace it with an environment variable.
+If a credential was previously committed to a public repository, revoke/rotate it because changing the current file does not erase old Git history. The current runtime reads secrets from environment variables.
 
 ## 🛠️ Useful Commands
 
