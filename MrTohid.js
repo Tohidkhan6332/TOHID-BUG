@@ -1971,28 +1971,30 @@ m.mtype === "interactiveResponseMessage"
         // Get user-specific prefix from the new system
         let prefix = getUserPrefix(m.sender) || '.';
 
-        // STRICT command detection - ONLY detect if message STARTS WITH user's prefix
-        const isCmd = body && typeof body === 'string' && body.startsWith(prefix);
+        // Command detection: normal commands require the user's prefix.
+        // Native-flow menu actions can arrive without a prefix, so explicitly
+        // allow the Developer Contact action.
+        const normalizedBody = body && typeof body === 'string' ? body.trim() : '';
+        const isInteractiveDeveloperContact =
+            normalizedBody === 'devcontact' || normalizedBody === '.devcontact';
+        const isCmd =
+            (normalizedBody.startsWith(prefix) && normalizedBody.length > prefix.length) ||
+            isInteractiveDeveloperContact;
 
         let command = '';
         let args = [];
         let text = '';
 
         if (isCmd) {
-            // Extract command ONLY if it starts with user's prefix
-            const afterPrefix = body.slice(prefix.length).trim();
+            const afterPrefix = isInteractiveDeveloperContact
+                ? 'devcontact'
+                : normalizedBody.slice(prefix.length).trim();
             const parts = afterPrefix.split(/ +/);
             command = parts[0].toLowerCase();
             args = parts.slice(1);
             text = args.join(' ');
 
             console.log('✅ Command detected for user:', command);
-        }
-
-        // SPECIAL CHECK: If user types ONLY the default "." - show THEIR current prefix
-        if (body && body.trim() === '.') {
-            reply(`🔧 *Your current prefix:* \`${prefix}\`\n_You can change it using_ \`${prefix}setprefix [new]\``);
-            return;
         }
 
         const qtext = args.join(" ");
