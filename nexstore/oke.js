@@ -2,11 +2,10 @@ const config = require("@whiskeysockets/baileys");
 const fs = require('node:fs');
 const PhoneNumber = require("awesome-phonenumber");
 const axios = require('axios');
-const mime = require('mime-types');
 const Jimp = require('jimp');
 const path = require('path');
 const FileType = require("file-type");
-
+const getExtensionFromMime = (contentType = "") => {\n  const type = String(contentType).split(";")[0].trim().toLowerCase();\n  const map = {\n    "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp",\n    "video/mp4": "mp4", "video/webm": "webm", "audio/mpeg": "mp3", "audio/ogg": "ogg",\n    "audio/wav": "wav", "application/pdf": "pdf", "application/json": "json",\n    "text/plain": "txt", "text/html": "html", "application/zip": "zip", "application/javascript": "js"\n  };\n  return map[type] || (type.includes("/") ? type.split("/")[1] : "bin");\n};\n\n
 module.exports = (connection, store)  => {
 	global.ephemeral = { 
 		ephemeralExpiration: config.WA_DEFAULT_EPHEMERAL
@@ -192,7 +191,7 @@ sock.sendButtonMessage = async (jid, array, quoted, json = {}, options = {}) => 
     if (!Buffer.isBuffer(data.data || data)) throw new TypeError("Result is not a buffer");
     const type = res ? {
       mime: res.headers["content-type"], 
-      ext: mime.extension(res.headers["content-type"]),
+      ext: getExtensionFromMime(res.headers["content-type"]),
     } : (await FileType.fromBuffer(data)) || {
     mime: "application/bin",
     ext: ".bin"
@@ -427,9 +426,8 @@ let isSticker = false
     // <iq to="s.whatsapp.net" type="set" xmlns="status" id="21168.6213-69"><status>"Hai, saya menggunakan WhatsApp"</status></iq>
   };
   
-  sock.serializeM = (m) => {
-    return require("./serialize")(m, sock, store);
-  };
+  // Legacy compatibility helper; serializeM is not used internally.
+  sock.serializeM = (m) => m;
   
   Object.defineProperty(sock, "name", {
     value: "WASocket",
