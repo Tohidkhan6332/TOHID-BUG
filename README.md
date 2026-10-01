@@ -30,8 +30,8 @@ TOHID-BUG/
 ├── sticker/              # Sticker assets
 ├── utils/                # Runtime utility files
 ├── autoload.js           # Session/autoload logic
-├── bot.js                # Telegram bot component
-├── case.js               # WhatsApp command handlers
+├── Tohid.js                # Telegram bot component
+├── MrTohid.js               # WhatsApp command handlers
 ├── debug.js              # Debug utilities
 ├── index.js              # Main entry point
 ├── pair.js               # Pairing/session logic
@@ -98,7 +98,7 @@ However, the source should be treated as **under active repair/testing**, not as
 
 Known items that should be fixed before deployment include:
 
-- The original `case.js` syntax error has been repaired.
+- The original command-handler syntax issue has been repaired.
 - The missing `utils/process-guard` module has been added.
 - The obsolete `./serialize` dependency in `nexstore/oke.js` has been removed from the runtime path.
 - Dependencies are installed with `npm install`; the repository currently uses `npm install` because the Baileys dependency is a GitHub source and the lockfile is intentionally not committed.
