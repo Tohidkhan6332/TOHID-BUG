@@ -530,25 +530,23 @@ creds: state.creds,
     };
     
     tohid.ev.on('messages.upsert', async chatUpdate => {
-    try {
-        const tohidMessage = chatUpdate?.messages?.[0];
-        if (!tohidMessage?.message || !Object.keys(tohidMessage.message).length) return;
-            tohidMessage.message = (Object.keys(tohidMessage.message)[0] === 'ephemeralMessage') ? tohidMessage.message.ephemeralMessage.message : tohidMessage.message;
-            let botNumber = await tohid.decodeJid(tohid.user.id);
-            let antiswview = global.db?.data?.settings?.[botNumber]?.antiswview || false;
-            if (antiswview) {
-                if (tohidMessage.key && tohidMessage.key.remoteJid === 'status@broadcast'){  
-                    await tohid.readMessages([tohidMessage.key]);
-                }
+        try {
+            const tohidMessage = chatUpdate?.messages?.[0];
+            if (!tohidMessage?.message || !Object.keys(tohidMessage.message).length) return;
+
+            const messageKeys = Object.keys(tohidMessage.message);
+            if (messageKeys[0] === 'ephemeralMessage') {
+                tohidMessage.message = tohidMessage.message.ephemeralMessage.message || {};
             }
 
-            if (!tohid.public && !tohidMessage.key.fromMe && chatUpdate.type === 'notify') return;
-            if (tohidMessage.key.id.startsWith('BAE5') && tohidMessage.key.id.length === 16) return;
-            const tohidConnect = tohid;
-            const mek = smsg(tohidConnect, tohidMessage, store);
-            await require("./MrTohid")(tohidConnect, mek, chatUpdate, store);
+            if (tohidMessage.key?.id?.startsWith('BAE5') && tohidMessage.key.id.length === 16) return;
+
+            const mek = smsg(tohid, tohidMessage, store);
+            if (!mek?.chat) return;
+
+            await require("./MrTohid")(tohid, mek, chatUpdate, store);
         } catch (err) {
-            console.log(err);
+            console.error('❌ WhatsApp message handler error:', err);
         }
     });
 
