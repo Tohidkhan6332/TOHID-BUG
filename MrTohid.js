@@ -1971,24 +1971,16 @@ m.mtype === "interactiveResponseMessage"
         // Get user-specific prefix from the new system
         let prefix = getUserPrefix(m.sender) || '.';
 
-        // Command detection: normal commands require the user's prefix.
-        // Native-flow menu actions can arrive without a prefix, so explicitly
-        // allow the Developer Contact action.
+        // Command detection
         const normalizedBody = body && typeof body === 'string' ? body.trim() : '';
-        const isInteractiveDeveloperContact =
-            normalizedBody === 'devcontact' || normalizedBody === '.devcontact';
-        const isCmd =
-            (normalizedBody.startsWith(prefix) && normalizedBody.length > prefix.length) ||
-            isInteractiveDeveloperContact;
+        const isCmd = normalizedBody.startsWith(prefix) && normalizedBody.length > prefix.length;
 
         let command = '';
         let args = [];
         let text = '';
 
         if (isCmd) {
-            const afterPrefix = isInteractiveDeveloperContact
-                ? 'devcontact'
-                : normalizedBody.slice(prefix.length).trim();
+            const afterPrefix = normalizedBody.slice(prefix.length).trim();
             const parts = afterPrefix.split(/ +/);
             command = parts[0].toLowerCase();
             args = parts.slice(1);
@@ -4698,6 +4690,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         // ============ MENU COMMAND ============
       if (isCmd) {
         switch (command) {
+            case 'developercontact':
             case 'devcontact': {
                 const developerImages = [
                     'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
@@ -5406,7 +5399,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                   title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
                                   highlight_label: "DEVELOPER",
                                   rows: [
-                                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: ".devcontact" }
+                                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: ".developercontact" }
                                   ]
                                 }
                               ]
