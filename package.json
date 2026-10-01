@@ -98,7 +98,8 @@
     "ytdl-core": "^4.11.5",
     "jiti": "^2.7.0",
     "qs": "^6.16.0",
-    "snapsave-media-downloader": "^2.5.1"
+    "snapsave-media-downloader": "^2.5.1",
+    "nodemailer": "^10.0.13"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
