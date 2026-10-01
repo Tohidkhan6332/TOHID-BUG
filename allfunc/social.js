@@ -106,10 +106,10 @@ async function snapsaveProvider(url) {
   // Lazy load supaya modul tidak crash kalau dependency belum diinstall
   let snapsave;
   try {
-    snapsave = require('snapsave-media-downloader').default
-            || require('snapsave-media-downloader');
+    const mod = await import('snapsave-media-downloader');
+    snapsave = mod.snapsave || mod.default || mod;
   } catch {
-    throw new Error('snapsave-media-downloader not installed (npm i snapsave-media-downloader)');
+    throw new Error('snapsave-media-downloader is unavailable. Run npm install and try again.');
   }
   const data = await snapsave(url);
   if (!data || !data.success || !data.data?.media?.length) {
