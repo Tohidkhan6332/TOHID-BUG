@@ -103,9 +103,10 @@ const {
   emitGroupUpdate,
   proto, 
   makeCacheableSignalKeyStore
-} = require("@whiskeysockets/baileys");
+} = require('./tohidstore/baileys-compat');
 
 const fs = require('fs')
+const FileType = require('file-type')
 const path = require('path')
 const qrcode = require("qrcode-terminal");
 const util = require('util')
@@ -118,6 +119,24 @@ let JsConfuser;
 try { JsConfuser = require('js-confuser'); } catch (e) { console.error('⚠️ Module js-confuser belum terinstall! Jalankan: npm install js-confuser'); }
 
 const { Worker } = require('worker_threads');
+async function downloadAndSaveMediaMessage(message, filename = 'tohid-media', attachExtension = true) {
+    const quoted = message?.msg ? message.msg : message;
+    const mime = (message?.msg || message)?.mimetype || '';
+    const messageType = message?.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+    const stream = await downloadContentFromMessage(quoted, messageType);
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    const buffer = Buffer.concat(chunks);
+    let ext = 'bin';
+    try { ext = (await FileType.fromBuffer(buffer))?.ext || ext; } catch {}
+    const dir = './sticker';
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const output = attachExtension ? path.join(dir, filename + '.' + ext) : path.join(dir, filename);
+    fs.writeFileSync(output, buffer);
+    return output;
+}
+
+
 
 // Obfuscate worker source is inlined (not a separate file) so it doesn't
 // tergantung struktur folder eksternal. Dijalankan via eval:true.
