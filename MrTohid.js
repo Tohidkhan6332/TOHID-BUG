@@ -497,7 +497,13 @@ const yts = require('yt-search');
 const ytdl = require('ytdl-core');
 const FormData = require('form-data');
 const fetch = (...args) => import('node-fetch').then(m => m.default(...args));
-const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+let Sticker = null;
+let StickerTypes = null;
+try {
+    ({ Sticker, StickerTypes } = require('wa-sticker-formatter'));
+} catch (error) {
+    console.warn('⚠️ wa-sticker-formatter/sharp unavailable. Sticker commands will be disabled on this runtime.');
+}
 const channelReact = require('./allfunc/channel-react.js');
 const toJid = s => (!s ? '' : s.includes('@newsletter') ? s : `${s}@newsletter`);
 const shortJid = j => j.replace('@newsletter', '');
