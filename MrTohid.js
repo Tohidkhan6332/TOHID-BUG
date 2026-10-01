@@ -4712,8 +4712,10 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -5340,8 +5342,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -5546,8 +5550,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -5715,8 +5721,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -5987,8 +5995,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -6145,8 +6155,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -6320,8 +6332,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -6531,8 +6545,10 @@ case 'groupban': {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -6692,8 +6708,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -6887,8 +6905,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -7076,8 +7096,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -7256,8 +7278,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -7439,8 +7463,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -7645,8 +7671,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -7807,8 +7835,10 @@ try {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
