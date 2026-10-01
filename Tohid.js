@@ -57,7 +57,7 @@ const OWNERS = {
   primary: 8582350365,
   secondary: 8582350365,
   dev: 8582350365,
-  all: [8582350365, 8582350365]
+  all: [8582350365]
 };
 
 // Developer Contact Information
@@ -790,7 +790,10 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
     menu = `┌ ❏ ◆ *⌜𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨⌟* ◆
 │
 ├◆ ${greeting.emoji} ɢᴏᴏᴅ ${greeting.text}, ${userName}
-├◆ ᴇɴᴛᴇʀᴘʀɪsᴇ ᴡʜᴀᴛsᴀᴘᴘ ᴘᴀɪʀɪɴɢ sʏsᴛᴇᴍ
+├◆ ᴛᴏʜɪᴅ-ᴀɪ • ᴡʜᴀᴛsᴀᴘᴘ ᴘᴀɪʀɪɴɢ sʏsᴛᴇᴍ
+├◆ ᴏᴡɴᴇʀ: 𝕄ℝ 𝕋𝕆ℍ𝕀𝔻
+├◆ ᴅᴇᴠᴇʟᴏᴘᴇʀ: 𝕄ℝ 𝕋𝕆ℍ𝕀𝔻
+├◆ sᴜᴘᴘᴏʀᴛ: @Tohidkhan6332
 ├◆ sᴇᴄᴜʀᴇ • ғᴀsᴛ • ʀᴇʟɪᴀʙʟᴇ
 │
 └ ❏
