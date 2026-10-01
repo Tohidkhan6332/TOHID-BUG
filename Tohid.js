@@ -895,12 +895,6 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
         }] : [])
       ],
       [
-        ...(safeUrl(SOCIAL?.telegram?.primary2) ? [{
-          text: '📢 ᴄʜᴀɴɴᴇʟ 𝟸',
-          url: safeUrl(SOCIAL.telegram.primary2)
-        }] : [])
-      ],
-      [
         ...(safeUrl(SOCIAL?.telegram?.group) ? [{
           text: '👥 ɢʀᴏᴜᴘ',
           url: safeUrl(SOCIAL.telegram.group)
@@ -957,9 +951,6 @@ ${missingList}
     inline_keyboard: [
       [
         { text: '📢 ᴄʜᴀɴɴᴇʟ 1', url: SOCIAL.telegram.primary },
-      ],
-      [
-        { text: '📢 ᴄʜᴀɴɴᴇʟ 𝟸', url: SOCIAL.telegram.primary2 },
       ],
       [
         { text: '👥 ɢʀᴏᴜᴘ', url: SOCIAL.telegram.group },
