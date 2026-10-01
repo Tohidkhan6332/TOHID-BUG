@@ -5411,10 +5411,10 @@ try {
           {
             name: "single_select",
             buttonParamsJson: JSON.stringify({
-              title: "📋 MENU 1",
+              title: "📋 OPEN MENU",
               sections: [
                 {
-                  title: "✨ 𝗠𝗔𝗜𝗡 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦",
+                  title: "✨ 𝗧𝗢𝗛𝗜𝗗-𝗔𝗜 𝗠𝗘𝗡𝗨 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦",
                   highlight_label: "TOHID-AI",
                   rows: [
                     { title: "📚 ALL MENU", description: "All bot commands", id: ".allmenu" },
@@ -5423,21 +5423,7 @@ try {
                     { title: "🐛 BUG MENU", description: "Bug commands", id: ".bugmenu" },
                     { title: "📥 DOWNLOAD MENU", description: "Downloader commands", id: ".downloadmenu" },
                     { title: "😂 FUN MENU", description: "Fun commands", id: ".funmenu" },
-                    { title: "🎮 GAME MENU", description: "Game commands", id: ".gamemenu" }
-                  ]
-                }
-              ]
-            })
-          },
-          {
-            name: "single_select",
-            buttonParamsJson: JSON.stringify({
-              title: "📋 MENU 2",
-              sections: [
-                {
-                  title: "✨ 𝗠𝗢𝗥𝗘 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦",
-                  highlight_label: "TOHID-AI",
-                  rows: [
+                    { title: "🎮 GAME MENU", description: "Game commands", id: ".gamemenu" },
                     { title: "👥 GROUP MENU", description: "Group commands", id: ".groupmenu" },
                     { title: "🎨 LOGO MENU", description: "Logo commands", id: ".logomenu" },
                     { title: "👑 OWNER MENU", description: "Owner commands", id: ".ownermenu" },
