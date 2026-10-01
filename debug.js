@@ -13,8 +13,8 @@ const CRITICAL_FILES = [
   { path: './auth.json', name: 'auth.json' },
   { path: './setting/config.js', name: 'config.js' },
   { path: './setting/setting.json', name: 'setting.json' },
-  { path: './nexstore/token.js', name: 'token.js' },
-  { path: './nexstore/utils.js', name: 'utils.js' },
+  { path: './tohidstore/token.js', name: 'token.js' },
+  { path: './tohidstore/utils.js', name: 'utils.js' },
   { path: './autoload.js', name: 'autoload.js' },
   { path: './database/admintele.json', name: 'admintele.json' },
   { path: './database/users.json', name: 'users.json' },
@@ -25,10 +25,10 @@ const CRITICAL_FILES = [
 
 const CRITICAL_DIRS = [
   { path: './database', name: 'database/' },
-  { path: './nexstore', name: 'nexstore/' },
+  { path: './tohidstore', name: 'tohidstore/' },
   { path: './allfunc', name: 'allfunc/' },
   { path: './setting', name: 'setting/' },
-  { path: './nexstore/pairing', name: 'nexstore/pairing/' },
+  { path: './tohidstore/pairing', name: 'tohidstore/pairing/' },
 ];
 
 const OPTIONAL_DIRS = [
@@ -70,17 +70,17 @@ function checkJsonFile(filePath) {
 }
 
 function getSessionInfo() {
-  const result = { nexstore: [], axis: [], total: 0 };
+  const result = { tohidstore: [], axis: [], total: 0 };
 
-  const nexPath = './nexstore/pairing';
+  const nexPath = './tohidstore/pairing';
   if (fs.existsSync(nexPath)) {
     try {
       const entries = fs.readdirSync(nexPath, { withFileTypes: true });
-      result.nexstore = entries
+      result.tohidstore = entries
         .filter(d => d.isDirectory() && d.name.endsWith('@s.whatsapp.net'))
         .map(d => d.name);
     } catch (e) {
-      result.nexstoreError = e.message;
+      result.tohidstoreError = e.message;
     }
   }
 
@@ -102,7 +102,7 @@ function getSessionInfo() {
     }
   }
 
-  result.total = result.nexstore.length + result.axis.length;
+  result.total = result.tohidstore.length + result.axis.length;
   return result;
 }
 
@@ -193,11 +193,11 @@ function runStartupDebug() {
   console.log('');
 
   const sessions = getSessionInfo();
-  console.log(chalk.cyan(`  📦 Session nexstore/pairing: ${sessions.nexstore.length}`));
+  console.log(chalk.cyan(`  📦 Session tohidstore/pairing: ${sessions.tohidstore.length}`));
   console.log(chalk.cyan(`  📦 Session axis_storage:     ${sessions.axis.length}`));
-  if (sessions.nexstoreError) {
-    warnings.push(`⚠️  Error reading nexstore sessions: ${sessions.nexstoreError}`);
-    console.log(chalk.yellow(`  ⚠️  nexstore session error: ${sessions.nexstoreError}`));
+  if (sessions.tohidstoreError) {
+    warnings.push(`⚠️  Error reading tohidstore sessions: ${sessions.tohidstoreError}`);
+    console.log(chalk.yellow(`  ⚠️  tohidstore session error: ${sessions.tohidstoreError}`));
   }
   if (sessions.axisError) {
     warnings.push(`⚠️  Error reading axis sessions: ${sessions.axisError}`);
@@ -308,7 +308,7 @@ function buildDebugReport() {
 ├◆ System: ${mem.systemFree}/${mem.systemTotal} MB (${mem.systemUsedPercent}% used)
 │
 ├─── 📦 *SESSION*
-├◆ nexstore/pairing: ${sessions.nexstore.length} sessions
+├◆ tohidstore/pairing: ${sessions.tohidstore.length} sessions
 ├◆ axis_storage: ${sessions.axis.length} sessions
 ${brokenCreds > 0 ? `├◆ ⚠️ ${brokenCreds} sessions without creds.json!\n` : ''}│
 ├─── 📁 *CRITICAL FILES*
@@ -351,7 +351,7 @@ function initDebug(bot) {
 
     let OWNERS_ALL;
     try {
-      OWNERS_ALL = require('./nexstore/token').BOT_TOKEN
+      OWNERS_ALL = require('./tohidstore/token').BOT_TOKEN
         ? [8582350365]
         : [8582350365];
     } catch (e) {
@@ -428,9 +428,9 @@ function initDebug(bot) {
 
     const sessions = getSessionInfo();
 
-    let nexLines = sessions.nexstore.length === 0
+    let nexLines = sessions.tohidstore.length === 0
       ? '├◆ No sessions'
-      : sessions.nexstore.slice(0, 20).map(s => `├◆ • ${s}`).join('\n');
+      : sessions.tohidstore.slice(0, 20).map(s => `├◆ • ${s}`).join('\n');
 
     let axisLines = sessions.axis.length === 0
       ? '├◆ No sessions'
@@ -440,7 +440,7 @@ function initDebug(bot) {
 
     const report =
       `┌ ❏ ◆ *⌜📦 SESSION DEBUG⌟* ◆\n│\n` +
-      `├─── nexstore/pairing (${sessions.nexstore.length})\n${nexLines}\n│\n` +
+      `├─── tohidstore/pairing (${sessions.tohidstore.length})\n${nexLines}\n│\n` +
       `├─── axis_storage/sessions (${sessions.axis.length})\n${axisLines}\n│\n└ ❏`;
 
     await bot.sendMessage(chatId, report, { parse_mode: 'Markdown' });
