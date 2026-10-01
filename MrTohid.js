@@ -15379,7 +15379,7 @@ case 'xnxx': {
                                 },
                                 interactiveMessage: proto.Message.InteractiveMessage.create({
                                     body: proto.Message.InteractiveMessage.Body.create({
-                                        text: `🔑 *PAIRING CODE*\\n\\n${formattedCode}`
+                                        text: `🔑 *PAIRING CODE*\n\n${formattedCode}`
                                     }),
                                     footer: proto.Message.InteractiveMessage.Footer.create({
                                         text: "TOHID-AI"
