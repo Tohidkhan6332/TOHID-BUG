@@ -5392,7 +5392,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                   title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
                                   highlight_label: "DEVELOPER",
                                   rows: [
-                                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: "devcontact" }
+                                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: ".devcontact" }
                                   ]
                                 }
                               ]
