@@ -4201,13 +4201,13 @@ async function sendAntiDeleteNotification(jid, originalMsg) {
         }
 
         //LOADING FUNCTION
-        async function nexusLoading() {
-            const nexusMylove = [`Loading menu...`];
+        async function tohidLoading() {
+            const tohidMylove = [`Loading menu...`];
             let msg = await devtrust.sendMessage(from, { text: "*Connecting to Tohid Ai server*....." });
 
-            for (let i = 0; i < nexusMylove.length; i++) {
+            for (let i = 0; i < tohidMylove.length; i++) {
                 await devtrust.sendMessage(from, {
-                    text: nexusMylove[i],
+                    text: tohidMylove[i],
                     edit: msg.key
                 });
                 await new Promise(resolve => setTimeout(resolve, 200));
