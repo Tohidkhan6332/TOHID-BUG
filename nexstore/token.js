@@ -1,4 +1,6 @@
+require("dotenv").config();
+
 module.exports = {
-  BOT_TOKEN: '8549805870:AAE-4Re8BXNSF3WWJzDGiJ9EIGkQdnSiXAw',  
-  startupPassword: '1'
+  BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || "",
+  startupPassword: process.env.STARTUP_PASSWORD || ""
 };
