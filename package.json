@@ -1,0 +1,13 @@
+{
+  "name": "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
+  "version": "1.0.0",
+  "description": "Tohid Ai whatsapp bot",
+  "main": "index.js",
+  "scripts": {"start":"node index.js","dev":"nodemon index.js","bot":"node bot.js","test":"node --check index.js"},
+  "keywords":["whiskeysockets","multi-device","whatsapp-bot","telegram-bot","multi-session","pairing-bot"],
+  "author":"Tohid Bots Official",
+  "license":"MIT",
+  "engines":{"node":">=18.0.0"},
+  "repository":{"type":"git","url":"https://t.me/TohidAi_bot"},
+  "bugs":{"url":"https://t.me/TohidAi_bot"}
+}
