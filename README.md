@@ -46,7 +46,7 @@ TOHID-BUG/
 
 ### Requirements
 
-- Node.js 18+
+- Node.js 20+
 - npm
 - FFmpeg for media-related features
 - A WhatsApp account for pairing
@@ -101,10 +101,10 @@ Known items that should be fixed before deployment include:
 - The original `case.js` syntax error has been repaired.
 - The missing `utils/process-guard` module has been added.
 - The obsolete `./serialize` dependency in `nexstore/oke.js` has been removed from the runtime path.
-- Dependencies are installed with `npm install`; the lockfile is intentionally regenerated for the legacy Baileys line.
+- Dependencies are installed with `npm install`; the repository currently uses `npm install` because the Baileys dependency is a GitHub source and the lockfile is intentionally not committed.
 - Authentication/session and credential files need production-safe handling.
 - The project has multiple JSON/database storage locations that should be reviewed for consistency.
-- Baileys is pinned to legacy `6.7.24` and the project supports Node.js 18+.
+- Baileys is pinned to legacy `6.7.24` and the project supports Node.js 20+.
 - Obfuscation/deobfuscation packages that were absent from the lockfile are treated as optional features rather than installation blockers.
 
 ## 🔐 Security
