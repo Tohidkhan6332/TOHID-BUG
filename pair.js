@@ -546,7 +546,16 @@ creds: state.creds,
             if (tohidMessage.key.id.startsWith('BAE5') && tohidMessage.key.id.length === 16) return;
             const tohidConnect = tohid;
             const mek = smsg(tohidConnect, tohidMessage, store);
-            require("./MrTohid")(tohidConnect, mek, chatUpdate, store);
+            console.log('[WA] Incoming message:', {
+                from: mek?.sender || mek?.chat || tohidMessage?.key?.remoteJid,
+                type: mek?.mtype || 'unknown',
+                text: mek?.body || mek?.text || ''
+            });
+            try {
+                await require("./MrTohid")(tohidConnect, mek, chatUpdate, store);
+            } catch (handlerError) {
+                console.error('[WA] MrTohid handler error:', handlerError?.stack || handlerError);
+            }
         } catch (err) {
             console.log(err);
         }
