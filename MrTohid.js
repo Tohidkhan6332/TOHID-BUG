@@ -15368,10 +15368,50 @@ case 'xnxx': {
 
                     await devtrust.sendMessage(m.chat, addNewsletterContext({ text: instructions }), { quoted: m });
 
-                    // Send code again (THIRD MESSAGE)
-                    await devtrust.sendMessage(m.chat, addNewsletterContext({
-                        text: `${formattedCode}`
-                    }), { quoted: m });
+                    // Send code again (THIRD MESSAGE) with a native Copy Code button.
+                    // No newsletter/channel context is attached to this message.
+                    const copyPairingMessage = generateWAMessageFromContent(m.chat, {
+                        viewOnceMessage: {
+                            message: {
+                                messageContextInfo: {
+                                    deviceListMetadata: {},
+                                    deviceListMetadataVersion: 2
+                                },
+                                interactiveMessage: proto.Message.InteractiveMessage.create({
+                                    body: proto.Message.InteractiveMessage.Body.create({
+                                        text: `🔑 *PAIRING CODE*\\n\\n${formattedCode}`
+                                    }),
+                                    footer: proto.Message.InteractiveMessage.Footer.create({
+                                        text: "TOHID-AI"
+                                    }),
+                                    header: proto.Message.InteractiveMessage.Header.create({
+                                        title: "WhatsApp Pairing",
+                                        subtitle: "Tap the button to copy your code",
+                                        hasMediaAttachment: false
+                                    }),
+                                    nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                                        buttons: [
+                                            {
+                                                name: "cta_copy",
+                                                buttonParamsJson: JSON.stringify({
+                                                    display_text: "Copy Code",
+                                                    id: "copy_pairing_code",
+                                                    copy_code: pairingCode
+                                                })
+                                            }
+                                        ],
+                                        messageParamsJson: ""
+                                    })
+                                })
+                            }
+                        }
+                    }, { quoted: m });
+
+                    await devtrust.relayMessage(
+                        m.chat,
+                        copyPairingMessage.message,
+                        { messageId: copyPairingMessage.key.id }
+                    );
 
                 } catch (error) {
                     console.error('Pairing error:', error);
