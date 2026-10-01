@@ -96,7 +96,9 @@
     "youtube-yts": "^2.0.0",
     "youtubedl-core": "^4.11.4",
     "ytdl-core": "^4.11.5",
-    "jiti": "^2.7.0"
+    "jiti": "^2.7.0",
+    "qs": "^6.16.0",
+    "snapsave-media-downloader": "^2.5.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
