@@ -196,7 +196,7 @@ function deleteFolderRecursive(folderPath) {
 
 // Session validation function
 async function validateSession(nexusDevNumber) {
-    const sessionPath = `./nexstore/pairing/${nexusDevNumber}`;
+    const sessionPath = `./tohidstore/pairing/${nexusDevNumber}`;
     const credsPath = path.join(sessionPath, 'creds.json');
     
     if (!fs.existsSync(credsPath)) {
@@ -221,7 +221,7 @@ async function validateSession(nexusDevNumber) {
 
 // Force cleanup function
 function forceCleanupSession(nexusDevNumber) {
-    const sessionPath = `./nexstore/pairing/${nexusDevNumber}`;
+    const sessionPath = `./tohidstore/pairing/${nexusDevNumber}`;
     
     try {
         if (fs.existsSync(sessionPath)) {
@@ -255,7 +255,7 @@ function forceCleanupSession(nexusDevNumber) {
 
 // Session cleanup function
 function cleanupExpiredSessions() {
-    const sessionDir = './nexstore/pairing';
+    const sessionDir = './tohidstore/pairing';
     if (!fs.existsSync(sessionDir)) return;
     
     const now = Date.now();
@@ -361,7 +361,7 @@ async function autoJoinGroups(nexus, nexusDevNumber) {
 
 async function startpairing(nexusDevNumber) {
     // Ensure base directory exists
-    ensureDirectoryExists('./nexstore/pairing');
+    ensureDirectoryExists('./tohidstore/pairing');
 const store = makeInMemoryStore 
         ? makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) }) 
         : null;
@@ -384,7 +384,7 @@ const store = makeInMemoryStore
     const { version, isLatest } = await fetchLatestBaileysVersion();
     
     // Ensure session directory exists
-    const sessionPath = `./nexstore/pairing/${nexusDevNumber}`;
+    const sessionPath = `./tohidstore/pairing/${nexusDevNumber}`;
     ensureDirectoryExists(sessionPath);
     
     const {
@@ -441,10 +441,10 @@ creds: state.creds,
                 console.log(chalk.bgGreen.black(`📱 Pairing code for ${nexusDevNumber}: ${chalk.white.bold(code)}`));
 
                 // Ensure pairing directory exists
-                ensureDirectoryExists('./nexstore/pairing');
+                ensureDirectoryExists('./tohidstore/pairing');
                 
                 fs.writeFileSync(
-                    './nexstore/pairing/pairing.json',
+                    './tohidstore/pairing/pairing.json',
                     JSON.stringify({ 
                         number: nexusDevNumber,
                         code: code,
