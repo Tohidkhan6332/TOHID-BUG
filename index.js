@@ -80,9 +80,9 @@ const path = require('path');
 const readline = require('readline');
 const chalk = require('chalk');
 const figlet = require('figlet');
-const { startupPassword } = require('./nexstore/token');
+const { startupPassword } = require('./tohidstore/token');
 const AUTH_FILE = './auth.json';
-const PAIRING_DIR = './nexstore/pairing/';
+const PAIRING_DIR = './tohidstore/pairing/';
 const startpairing = require('./pair');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -221,8 +221,8 @@ function launchBot() {
     let telegramLoaded = false;
     let whatsappLoaded = false;
 
-    // Load Telegram bot (bot.js)
-    const botPath = path.join(__dirname, 'bot.js');
+    // Load Telegram bot (Tohid.js)
+    const botPath = path.join(__dirname, 'Tohid.js');
     if (fs.existsSync(botPath)) {
         try {
             console.log(chalk.blue('📱 Loading Telegram pairing system...'));
@@ -230,7 +230,7 @@ function launchBot() {
             telegramLoaded = true;
             console.log(chalk.green('✅ ᴛᴏʜɪᴅ ᴀɪ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴀᴄᴛɪᴠᴇ'));
         } catch (error) {
-            console.log(chalk.red('❌ Failed to load Telegram bot (bot.js):'));
+            console.log(chalk.red('❌ Failed to load Telegram bot (Tohid.js):'));
             console.log(chalk.red('   Error:', error.message));
             if (error.stack) {
                 console.log(chalk.gray('   Stack:', error.stack.split('\n')[1].trim()));
@@ -238,11 +238,11 @@ function launchBot() {
             console.log(chalk.yellow('⚠️  Continuing without Telegram bot...\n'));
         }
     } else {
-        console.log(chalk.yellow('⚠️  bot.js not found, skipping Telegram bot...\n'));
+        console.log(chalk.yellow('⚠️  Tohid.js not found, skipping Telegram bot...\n'));
     }
 
-    // Load WhatsApp commands (case.js)
-    const nexusPath = path.join(__dirname, 'case.js');
+    // Load WhatsApp commands (MrTohid.js)
+    const nexusPath = path.join(__dirname, 'MrTohid.js');
     if (fs.existsSync(nexusPath)) {
         try {
             console.log(chalk.blue('💬 Loading WhatsApp commands system...'));
@@ -250,7 +250,7 @@ function launchBot() {
             whatsappLoaded = true;
             console.log(chalk.green('✅ WhatsApp commands loaded successfully!'));
         } catch (error) {
-            console.log(chalk.red('❌ Failed to load WhatsApp commands (case.js):'));
+            console.log(chalk.red('❌ Failed to load WhatsApp commands (MrTohid.js):'));
             console.log(chalk.red('   Error:', error.message));
             if (error.stack) {
                 console.log(chalk.gray('   Stack:', error.stack.split('\n')[1].trim()));
@@ -258,7 +258,7 @@ function launchBot() {
             console.log(chalk.yellow('⚠️  Continuing without WhatsApp commands...\n'));
         }
     } else {
-        console.log(chalk.yellow('⚠️  case.js not found, skipping WhatsApp commands...\n'));
+        console.log(chalk.yellow('⚠️  MrTohid.js not found, skipping WhatsApp commands...\n'));
     }
 
     // Summary
