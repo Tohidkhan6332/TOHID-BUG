@@ -5368,8 +5368,20 @@ try {
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━━◆ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 - 𝐌𝐄𝐍𝐔 𝐂𝐀𝐓𝐄𝐆𝐎𝐑𝐈𝐄𝐒* ◆━━┓
+│❖ ${prefix}ᴀʟʟᴍᴇɴᴜ
+│❖ ${prefix}ᴀɪᴍᴇɴᴜ
+│❖ ${prefix}ᴀɴɪᴍᴇᴍᴇɴᴜ
 │❖ ${prefix}ʙᴜɢᴍᴇɴᴜ
+│❖ ${prefix}ᴅᴏᴡɴʟᴏᴀᴅᴍᴇɴᴜ
+│❖ ${prefix}ғᴜɴᴍᴇɴᴜ
+│❖ ${prefix}ɢᴀᴍᴇᴍᴇɴᴜ
+│❖ ${prefix}ɢʀᴏᴜᴘᴍᴇɴᴜ
+│❖ ${prefix}ʟᴏɢᴏᴍᴇɴᴜ
 │❖ ${prefix}ᴏᴡɴᴇʀᴍᴇɴᴜ
+│❖ ${prefix}sᴛɪᴄᴋᴇʀᴍᴇɴᴜ
+│❖ ${prefix}ᴛᴏᴏʟsᴍᴇɴᴜ
+│❖ ${prefix}ᴠᴏɪᴄᴇᴍᴇɴᴜ
+│❖ ${prefix}ᴏᴛʜᴇʀᴍᴇɴᴜ
 ┗━━━━━━━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
@@ -5399,14 +5411,40 @@ try {
           {
             name: "single_select",
             buttonParamsJson: JSON.stringify({
-              title: "📋 Open Menu",
+              title: "📋 MENU 1",
               sections: [
                 {
-                  title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
-                  highlight_label: "Menu",
+                  title: "✨ 𝗠𝗔𝗜𝗡 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦",
+                  highlight_label: "TOHID-AI",
                   rows: [
-                    { title: "🐛 𝐁ᴜɢ 𝐌ᴇɴᴜ", description: "Bug commands", id: ".bugmenu" },
-                    { title: "👑 𝐎ᴡɴᴇʀ 𝐌ᴇɴᴜ", description: "Owner commands", id: ".ownermenu" }
+                    { title: "📚 ALL MENU", description: "All bot commands", id: ".allmenu" },
+                    { title: "🤖 AI MENU", description: "AI commands", id: ".aimenu" },
+                    { title: "🎌 ANIME MENU", description: "Anime commands", id: ".animemenu" },
+                    { title: "🐛 BUG MENU", description: "Bug commands", id: ".bugmenu" },
+                    { title: "📥 DOWNLOAD MENU", description: "Downloader commands", id: ".downloadmenu" },
+                    { title: "😂 FUN MENU", description: "Fun commands", id: ".funmenu" },
+                    { title: "🎮 GAME MENU", description: "Game commands", id: ".gamemenu" }
+                  ]
+                }
+              ]
+            })
+          },
+          {
+            name: "single_select",
+            buttonParamsJson: JSON.stringify({
+              title: "📋 MENU 2",
+              sections: [
+                {
+                  title: "✨ 𝗠𝗢𝗥𝗘 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦",
+                  highlight_label: "TOHID-AI",
+                  rows: [
+                    { title: "👥 GROUP MENU", description: "Group commands", id: ".groupmenu" },
+                    { title: "🎨 LOGO MENU", description: "Logo commands", id: ".logomenu" },
+                    { title: "👑 OWNER MENU", description: "Owner commands", id: ".ownermenu" },
+                    { title: "🏷️ STICKER MENU", description: "Sticker commands", id: ".stickermenu" },
+                    { title: "🛠️ TOOLS MENU", description: "Tools commands", id: ".toolsmenu" },
+                    { title: "🎙️ VOICE MENU", description: "Voice commands", id: ".voicemenu" },
+                    { title: "📦 OTHER MENU", description: "Other commands", id: ".othermenu" }
                   ]
                 }
               ]
