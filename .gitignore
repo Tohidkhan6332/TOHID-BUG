@@ -11,8 +11,8 @@ tmp/
 cache/
 axis_storage/
 auth_info*/
-nexstore/pairing/*
-!nexstore/pairing/.gitkeep
+tohidstore/pairing/*
+!tohidstore/pairing/.gitkeep
 *.session
 *.session.json
 *.auth
