@@ -102,7 +102,7 @@ const {
   emitGroupUpdate,
   proto, 
   makeCacheableSignalKeyStore
-} = require("@whiskeysockets/baileys");
+} = require('./tohidstore/baileys-compat');
 const NodeCache = require("node-cache");
 const _ = require('lodash')
 const {
