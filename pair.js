@@ -440,20 +440,24 @@ creds: state.creds,
                 
                 console.log(chalk.bgGreen.black(`📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`));
 
-                // Ensure pairing directory exists
-                ensureDirectoryExists('./tohidstore/pairing');
-                
+                // Store each user's pairing code separately.
+                // This prevents one user's code from overwriting another user's code.
+                const pairingNumber = phoneNumber;
+                const userPairingDir = path.join('./tohidstore/pairing', pairingNumber);
+                ensureDirectoryExists(userPairingDir);
+
+                const userPairingFile = path.join(userPairingDir, 'pairing.json');
                 fs.writeFileSync(
-                    './tohidstore/pairing/pairing.json',
-                    JSON.stringify({ 
+                    userPairingFile,
+                    JSON.stringify({
                         number: tohidDevNumber,
                         code: code,
                         timestamp: new Date().toISOString()
                     }, null, 2),
                     'utf8'
                 );
-                
-                console.log(chalk.green(`✓ Pairing code saved to pairing.json`));
+
+                console.log(chalk.green(`✓ Pairing code saved for +${pairingNumber}`));
             } catch (err) {
                 console.log(chalk.red(`❌ Error requesting pairing code: ${err.message}`));
             }
