@@ -187,7 +187,8 @@ exports.generateProfilePicture = async (buffer) => {
 
 exports.sendGmail = async (senderEmail, message) => {
   try {
-      const nodemailer = require("nodemailer")
+      let nodemailer;
+      try { nodemailer = require("nodemailer"); } catch { throw new Error("Gmail support is not installed. Install nodemailer to enable sendGmail."); }
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       host: 'smtp.gmail.com',
