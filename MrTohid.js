@@ -5334,259 +5334,117 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
 
-                // TRY-CATCH for image sending with fallback to text only
-try {
-    const mediaContent = await prepareWAMessageMedia(
-        { image: { url: randomImage } },
-        { upload: devtrust.waUploadToServer }
-    );
+                // Send menu image + interactive buttons
+                try {
+                  const media = await prepareWAMessageMedia(
+                    { image: { url: randomImage } },
+                    { upload: devtrust.waUploadToServer }
+                  );
 
-    const menuMsg = generateWAMessageFromContent(from, {
-        viewOnceMessage: {
-            message: {
-                interactiveMessage: proto.Message.InteractiveMessage.create({
-                    header: proto.Message.InteractiveMessage.Header.create({
+                  await devtrust.relayMessage(from, {
+                    interactiveMessage: {
+                      header: {
+                        title: "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
+                        subtitle: "Tap a button below",
                         hasMediaAttachment: true,
-                        ...mediaContent
-                    }),
-                    body: proto.Message.InteractiveMessage.Body.create({
+                        ...media
+                      },
+                      body: {
                         text: menuText
-                    }),
-                    footer: proto.Message.InteractiveMessage.Footer.create({
-                        text: '© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈'
-                    }),
-                    nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                      },
+                      nativeFlowMessage: {
                         buttons: [
-                            proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
-                                name: 'cta_url',
-                                buttonParamsJson: JSON.stringify({
-                                    display_text: '📢 𝗖𝗛𝗔𝗡𝗡𝗘𝗟',
-                                    url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
-                                })
+                          {
+                            name: "single_select",
+                            buttonParamsJson: JSON.stringify({
+                              title: "📋 OPEN MENU",
+                              sections: [
+                                {
+                                  title: "✨ 𝗧𝗢𝗛𝗜𝗗-𝗔𝗜 𝗠𝗘𝗡𝗨 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦",
+                                  highlight_label: "TOHID-AI",
+                                  rows: [
+                                    { title: "📚 ALL MENU", description: "All bot commands", id: ".allmenu" },
+                                    { title: "🤖 AI MENU", description: "AI commands", id: ".aimenu" },
+                                    { title: "🎌 ANIME MENU", description: "Anime commands", id: ".animemenu" },
+                                    { title: "🐛 BUG MENU", description: "Bug commands", id: ".bugmenu" },
+                                    { title: "📥 DOWNLOAD MENU", description: "Downloader commands", id: ".downloadmenu" },
+                                    { title: "😂 FUN MENU", description: "Fun commands", id: ".funmenu" },
+                                    { title: "🎮 GAME MENU", description: "Game commands", id: ".gamemenu" },
+                                    { title: "👥 GROUP MENU", description: "Group commands", id: ".groupmenu" },
+                                    { title: "🎨 LOGO MENU", description: "Logo commands", id: ".logomenu" },
+                                    { title: "👑 OWNER MENU", description: "Owner commands", id: ".ownermenu" },
+                                    { title: "🏷️ STICKER MENU", description: "Sticker commands", id: ".stickermenu" },
+                                    { title: "🛠️ TOOLS MENU", description: "Tools commands", id: ".toolsmenu" },
+                                    { title: "🎙️ VOICE MENU", description: "Voice commands", id: ".voicemenu" },
+                                    { title: "📦 OTHER MENU", description: "Other commands", id: ".othermenu" }
+                                  ]
+                                }
+                              ]
                             })
+                          },
+                          {
+                            name: "single_select",
+                            buttonParamsJson: JSON.stringify({
+                              title: "👨‍💻 DEVELOPER CONTACT",
+                              sections: [
+                                {
+                                  title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
+                                  highlight_label: "DEVELOPER",
+                                  rows: [
+                                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: "devcontact" }
+                                  ]
+                                }
+                              ]
+                            })
+                          },
+                          {
+                            name: "cta_url",
+                            buttonParamsJson: JSON.stringify({
+                              display_text: "📢 CHANNEL",
+                              url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
+                              merchant_url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
+                            })
+                          },
+                          {
+                            name: "cta_url",
+                            buttonParamsJson: JSON.stringify({
+                              display_text: "👥 GROUP",
+                              url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud",
+                              merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
+                            })
+                          }
                         ]
-                    }),
-                    contextInfo: proto.ContextInfo.create({
+                      },
+                      contextInfo: {
+                        mentionedJid: [m.sender],
                         forwardingScore: 999,
                         isForwarded: true,
-                        forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
-                            newsletterJid: '120363207624903731@newsletter',
-                            newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
-                            serverMessageId: -1
-                        })
-                    })
-                })
-            }
-        }
-    }, { quoted: m, userJid: devtrust.user.jid });
+                        forwardedNewsletterMessageInfo: {
+                          newsletterJid: "120363207624903731@newsletter",
+                          newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
+                          serverMessageId: -1
+                        },
+                        externalAdReply: {
+                          showAdAttribution: true,
+                          title: "© 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
+                          body: "Tap to open the menu",
+                          thumbnailUrl: randomImage,
+                          mediaUrl: randomImage,
+                          sourceUrl: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
+                          mediaType: 1,
+                          renderLargerThumbnail: true
+                        }
+                      }
+                    }
+                  }, {});
 
-    await devtrust.relayMessage(from, menuMsg.message, { messageId: menuMsg.key.id });
+                } catch (err) {
+                  console.log("❌ ERROR MENU:", err);
 
-} catch (imageError) {
-    console.log('❌ Menu failed:', imageError.message);
-    await devtrust.sendMessage(from, { text: menuText }, { quoted: m });
-}
-            }
-                break;
-
-            case 'menu':
-            case '𝐓𝐎𝐇𝐈𝐃 𝐀𝐈': {
-            autoJoinGroup(devtrust, "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud").catch(err => console.error("Failed to auto join:", err));
-                await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
-
-                const menuImages = [
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
-                ];
-
-                const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
-                const uptime = formatUptime(process.uptime());
-                const totalMem = os.totalmem();
-                const freeMem = os.freemem();
-                const platform = os.platform();
-                const date = getLagosTime();
-                const readmore = String.fromCharCode(8206).repeat(4001);
-                const ramInfo = formatRam(totalMem, freeMem);
-                const moodEmoji = getMoodEmoji();
-                const totalCommands = countCommands();
-                const hour = date.getHours();
-                let greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
-
-                // Get professional features
-                const ownerName = getOwnerName();
-                const developerName = getDeveloperName();
-                const botVersion = getBotVersion();
-                const botMode = getBotMode();
-                const currentDateTime = getCurrentDateTime();
-
-                // ALPHABETICAL SECTIONS
-                const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
-┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
-┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈* 」
-┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
-┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
-┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
-┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
-┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
-┃ ⧎ ᴘʟᴀᴛғᴏʀᴍ : ${platform}
-┃ ⧎ ᴄᴏᴍᴍᴀɴᴅs : ${totalCommands} total
-┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
-┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
-
-❖═━═══𖠁𐂃𖠁══━═❖
-♱  ${greeting}, *${pushname}*
-*ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *ᴩᴀɪʀ TOHID-AI:* _https://t.me/TohidAi_bot
-❖═━═══𖠁𐂃𖠁══━═❖
-
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 - 𝐌𝐄𝐍𝐔 𝐂𝐀𝐓𝐄𝐆𝐎𝐑𝐈𝐄𝐒* ◆━━┓
-│❖ ${prefix}ᴀʟʟᴍᴇɴᴜ
-│❖ ${prefix}ᴀɪᴍᴇɴᴜ
-│❖ ${prefix}ᴀɴɪᴍᴇᴍᴇɴᴜ
-│❖ ${prefix}ʙᴜɢᴍᴇɴᴜ
-│❖ ${prefix}ᴅᴏᴡɴʟᴏᴀᴅᴍᴇɴᴜ
-│❖ ${prefix}ғᴜɴᴍᴇɴᴜ
-│❖ ${prefix}ɢᴀᴍᴇᴍᴇɴᴜ
-│❖ ${prefix}ɢʀᴏᴜᴘᴍᴇɴᴜ
-│❖ ${prefix}ʟᴏɢᴏᴍᴇɴᴜ
-│❖ ${prefix}ᴏᴡɴᴇʀᴍᴇɴᴜ
-│❖ ${prefix}sᴛɪᴄᴋᴇʀᴍᴇɴᴜ
-│❖ ${prefix}ᴛᴏᴏʟsᴍᴇɴᴜ
-│❖ ${prefix}ᴠᴏɪᴄᴇᴍᴇɴᴜ
-│❖ ${prefix}ᴏᴛʜᴇʀᴍᴇɴᴜ
-┗━━━━━━━━━━━━━━━━━━━━┛
-
-⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
-`;
-
-                // TRY-CATCH for image sending with fallback to text only
-// TRY-CATCH for image sending with fallback to text only
-try {
-  const media = await prepareWAMessageMedia(
-    { image: { url: randomImage } },
-    { upload: devtrust.waUploadToServer }
-  );
-
-  await devtrust.relayMessage(from, {
-    interactiveMessage: {
-      header: {
-        title: "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
-        subtitle: "Tap a button below",
-        hasMediaAttachment: true,
-        ...media
-      },
-      body: {
-        text: menuText
-      },
-      nativeFlowMessage: {
-        buttons: [
-          {
-            name: "single_select",
-            buttonParamsJson: JSON.stringify({
-              title: "📋 OPEN MENU",
-              sections: [
-                {
-                  title: "✨ 𝗧𝗢𝗛𝗜𝗗-𝗔𝗜 𝗠𝗘𝗡𝗨 𝗖𝗔𝗧𝗘𝗚𝗢𝗥𝗜𝗘𝗦",
-                  highlight_label: "TOHID-AI",
-                  rows: [
-                    { title: "📚 ALL MENU", description: "All bot commands", id: ".allmenu" },
-                    { title: "🤖 AI MENU", description: "AI commands", id: ".aimenu" },
-                    { title: "🎌 ANIME MENU", description: "Anime commands", id: ".animemenu" },
-                    { title: "🐛 BUG MENU", description: "Bug commands", id: ".bugmenu" },
-                    { title: "📥 DOWNLOAD MENU", description: "Downloader commands", id: ".downloadmenu" },
-                    { title: "😂 FUN MENU", description: "Fun commands", id: ".funmenu" },
-                    { title: "🎮 GAME MENU", description: "Game commands", id: ".gamemenu" },
-                    { title: "👥 GROUP MENU", description: "Group commands", id: ".groupmenu" },
-                    { title: "🎨 LOGO MENU", description: "Logo commands", id: ".logomenu" },
-                    { title: "👑 OWNER MENU", description: "Owner commands", id: ".ownermenu" },
-                    { title: "🏷️ STICKER MENU", description: "Sticker commands", id: ".stickermenu" },
-                    { title: "🛠️ TOOLS MENU", description: "Tools commands", id: ".toolsmenu" },
-                    { title: "🎙️ VOICE MENU", description: "Voice commands", id: ".voicemenu" },
-                    { title: "📦 OTHER MENU", description: "Other commands", id: ".othermenu" }
-                  ]
+                  await devtrust.sendMessage(from, {
+                    text: "Failed to load the menu. Please try again or update WhatsApp."
+                  });
                 }
-              ]
-            })
-          },
-          {
-            name: "single_select",
-            buttonParamsJson: JSON.stringify({
-              title: "👨‍💻 DEVELOPER CONTACT",
-              sections: [
-                {
-                  title: "✨ 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗",
-                  highlight_label: "DEVELOPER",
-                  rows: [
-                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: "devcontact" }
-                  ]
-                }
-              ]
-            })
-          },
-          {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-              display_text: "📢 CHANNEL",
-              url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
-              merchant_url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
-            })
-          },
-          {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-              display_text: "👥 GROUP",
-              url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud",
-              merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
-            })
-          }
-        ]
-      }
-    }
-  }, {});
-
-} catch (err) {
-  console.log("❌ ERROR MENU:", err);
-
-  await devtrust.sendMessage(from, {
-    text: "Failed to load the menu. Please try again or update WhatsApp."
-  });
-}
-      contextInfo: {
-        mentionedJid: [m.sender],
-        forwardingScore: 999,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid: "120363207624903731@newsletter",
-          newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
-          serverMessageId: -1
-        },
-        externalAdReply: {
-          showAdAttribution: true,
-          title: "© 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
-          body: "Tap to open the menu",
-          thumbnailUrl: randomImage,
-          mediaUrl: randomImage,
-          sourceUrl: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
-          mediaType: 1,
-          renderLargerThumbnail: true
-        }
-      }
-    }
-  }, {});
-
-} catch (err) {
-  console.log("❌ ERROR MENU:", err);
-
-  // 🔻 fallback to avoid empty response
-  await devtrust.sendMessage(from, {
-    text: "Failed to load the menu. Please try again or update WhatsApp."
-  });
-}
             }
                 break;
 
