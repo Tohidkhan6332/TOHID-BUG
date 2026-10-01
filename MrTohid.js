@@ -1861,7 +1861,7 @@ module.exports = async (devtrust, m, chatUpdate, store) => {
 
         // Newsletter configuration
         const NEWSLETTER_JID = '120363207624903731@newsletter';
-        const NEWSLETTER_NAME = "© ＴＯＨＩＤ ＴＥＣＨ";
+        const NEWSLETTER_NAME = "ＴＯＨＩＤ ＴＥＣＨ";
 
         const addNewsletterContext = (messageContent) => {
             if (messageContent.contextInfo) {
@@ -3353,7 +3353,7 @@ console.log(chalk.blue("𝗦𝗬𝗦𝗧𝗘𝗠 𝗕𝗨𝗚 𝗥𝗨𝗡!"));
             if (!text) throw "❌ Target information required";
 
             let pepec = args[0].replace(/[^0-9]/g, "");
-            let thumbnailUrl = "https://i.ibb.co/1fP4H6Vp/upload-1790713262724-1aa72aa7-jpg.jpg";
+            let thumbnailUrl = "https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg";
 
             let ressdone = `
 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 — Operation Complete*
@@ -4701,8 +4701,8 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                 await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
 
                 const menuImages = [
-                    'https://i.ibb.co/1fP4H6Vp/upload-1790713262724-1aa72aa7-jpg.jpg',
-                    'https://i.ibb.co/1fP4H6Vp/upload-1790713262724-1aa72aa7-jpg.jpg'
+                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
+                    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg'
                 ];
 
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
@@ -5304,7 +5304,7 @@ try {
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                             newsletterJid: '120363207624903731@newsletter',
-                            newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                            newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                             serverMessageId: -1
                         })
                     })
@@ -5435,7 +5435,7 @@ try {
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
           newsletterJid: "120363207624903731@newsletter",
-          newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+          newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
           serverMessageId: -1
         },
         externalAdReply: {
@@ -5603,7 +5603,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -5874,7 +5874,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -6031,7 +6031,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -6205,7 +6205,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -6372,7 +6372,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -6575,7 +6575,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -6769,7 +6769,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -6957,7 +6957,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -7136,7 +7136,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -7318,7 +7318,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -7523,7 +7523,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -7684,7 +7684,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -7891,7 +7891,7 @@ try {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
               newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "© ＴＯＨＩＤ ＴＥＣＨ",
+              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
               serverMessageId: -1
             },
             externalAdReply: {
@@ -8527,7 +8527,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                                 isForwarded: true,
                                 forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                     newsletterJid: '120363207624903731@newsletter',
-                                    newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                    newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                     serverMessageId: -1
                                 })
                             })
@@ -8567,7 +8567,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                                 isForwarded: true,
                                 forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                     newsletterJid: '120363207624903731@newsletter',
-                                    newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                    newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                     serverMessageId: -1
                                 })
                             })
@@ -8649,7 +8649,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             })
                         })
@@ -8722,7 +8722,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             })
                         })
@@ -8793,7 +8793,7 @@ tohidSetSession(uid, {
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             })
                         })
@@ -8853,7 +8853,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             })
                         })
@@ -8903,7 +8903,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             })
                         })
@@ -8954,7 +8954,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             })
                         })
@@ -9002,7 +9002,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             })
                         })
@@ -10802,7 +10802,7 @@ case 'cnic': {
                                 isForwarded: true,
                                 forwardedNewsletterMessageInfo: proto.Message.InteractiveMessage.create({
                                     newsletterJid: '120363207624903731@newsletter',
-                                    newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                    newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                     serverMessageId: -1
                                 })
                             })
@@ -11079,7 +11079,7 @@ case 'apkdl': {
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: {
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             }
                         })
@@ -11134,7 +11134,7 @@ case 'apkdl': {
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: {
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             }
                         })
@@ -12744,7 +12744,7 @@ case 'rch': {
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
                   newsletterJid: '120363207624903731@newsletter',
-                  newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                  newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                   serverMessageId: -1
                 }
               }
@@ -16437,7 +16437,7 @@ case 'fb': {
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: {
                                 newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© ＴＯＨＩＤ ＴＥＣＨ',
+                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
                                 serverMessageId: -1
                             },
                             externalAdReply: {
