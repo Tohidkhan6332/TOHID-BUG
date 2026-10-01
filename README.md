@@ -24,14 +24,14 @@ TOHID-BUG/
 ├── allfunc/              # Shared bot utilities and helpers
 ├── database/             # JSON database files
 ├── media/                # Bot media assets
-├── tohidstore/             # Pairing, bot data and helper modules
+├── tohidstore/          # Pairing, bot data and helper modules
 ├── setting/              # Bot configuration
 ├── src/media/            # Media data
 ├── sticker/              # Sticker assets
 ├── utils/                # Runtime utility files
 ├── autoload.js           # Session/autoload logic
-├── Tohid.js                # Telegram bot component
-├── MrTohid.js               # WhatsApp command handlers
+├── Tohid.js             # Telegram bot component
+├── MrTohid.js           # WhatsApp command handlers
 ├── debug.js              # Debug utilities
 ├── index.js              # Main entry point
 ├── pair.js               # Pairing/session logic
@@ -92,7 +92,7 @@ Add `.env` to `.gitignore`.
 
 ## 🧪 Project Status
 
-The repository currently contains the project files from the supplied TOHID-AI ZIP. A structural comparison shows the main source tree and media files are present in the repository.
+The repository contains the current TOHID-AI source tree. A structural comparison shows the main source tree and media files are present in the repository.
 
 However, the source should be treated as **under active repair/testing**, not as a guaranteed production-ready build.
 
@@ -104,8 +104,75 @@ Known items that should be fixed before deployment include:
 - Dependencies are installed with `npm install`; the repository currently uses `npm install` because the Baileys dependency is a GitHub source and the lockfile is intentionally not committed.
 - Authentication/session and credential files need production-safe handling.
 - The project has multiple JSON/database storage locations that should be reviewed for consistency.
-- Baileys is pinned to legacy `6.7.24` and the project supports Node.js 20+.
+- Baileys uses the PouCode GitHub fork (`github:pou-code/Baileys`) through the CommonJS compatibility bridge; Node.js 20+ is required.
 - Obfuscation/deobfuscation packages that were absent from the lockfile are treated as optional features rather than installation blockers.
+
+## 📱 Termux Deployment
+
+> Recommended: Node.js 20+ and a Termux installation with access to the official package repositories.
+
+### 1. Install Termux packages
+
+```bash
+pkg update -y && pkg upgrade -y
+pkg install git nodejs-lts ffmpeg -y
+```
+
+Check versions:
+
+```bash
+node -v
+npm -v
+```
+
+Node.js must satisfy the project's `>=20.0.0` requirement.
+
+### 2. Clone and install
+
+```bash
+git clone https://github.com/Tohidkhan6332/TOHID-BUG.git
+cd TOHID-BUG
+npm install
+```
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Set at least:
+
+```env
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+STARTUP_PASSWORD=your_secure_startup_password
+```
+
+Then start:
+
+```bash
+npm start
+```
+
+### 4. Keep the bot running with PM2
+
+```bash
+npm install -g pm2
+pm2 start index.js --name TOHID-AI
+pm2 save
+pm2 status
+```
+
+Useful commands:
+
+```bash
+pm2 logs TOHID-AI
+pm2 restart TOHID-AI
+pm2 stop TOHID-AI
+```
+
+Do not commit `.env` or WhatsApp session/authentication files.
 
 ## 🔐 Security
 
@@ -149,7 +216,7 @@ This project is distributed under the license declared in `package.json`.
 
 GitHub: [@Tohidkhan6332](https://github.com/Tohidkhan6332)
 
-Telegram: [TOHID-AI](https://t.me/TohidAi_bot)
+Telegram: [@Tohidkhan6332](https://t.me/Tohidkhan6332)
 
 ---
 
