@@ -802,7 +802,7 @@ creds: state.creds,
                     
                     tracker.autoActionsCompleted = true;
                     
-                    console.log(chalk.green.bold(`🎉☯ 𝐂𝐘𝐁𝐄𝐑  𝐏𝐑𝐎 ☯ is active in: ${tohidDevNumber}`));
+                    console.log(chalk.green.bold(`🎉☯ 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 ☯ is active in: ${tohidDevNumber}`));
                 } else {
                     console.log(chalk.blue(`ℹ️ Auto-actions already completed for ${tohidDevNumber}`));
                 }
