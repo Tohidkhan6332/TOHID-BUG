@@ -246,18 +246,8 @@ function launchBot() {
     console.log(chalk.gray('Press Ctrl+C to stop the bot\n'));
 }
 
-(() => {
-  const noop = () => {};
-  const methods = ['log','info','warn','error','debug','trace','dir','dirxml','table','group','groupEnd'];
-
-  methods.forEach(m => {
-    if (console[m]) console[m] = noop;
-  });
-
-  process.stdout.write = noop;
-  process.stderr.write = noop;
-})();
-
+// Keep terminal output enabled so startup, password prompts, pairing,
+// and runtime errors remain visible in Termux and VPS logs.
 // Graceful shutdown
 process.on('SIGINT', () => {
     console.log(chalk.yellow('\n\n⚠️  Shutting down gracefully...'));
