@@ -210,7 +210,8 @@ function restartProcess() {
         process.env.pm_id ||
         process.env.PM2_HOME ||
         process.env.PTERODACTYL_CONTAINER ||
-        process.env.RENDER
+        process.env.RENDER ||
+        process.env.HEROKU_APP_NAME
     );
 
     if (supervised) {
