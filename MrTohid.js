@@ -4915,7 +4915,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                 ];
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
 
-                const categoryMenu = `┏━━━━━━━━━━━━━━━━━━━┓
+                const categoryMenu = `┏━━━━━━━━━━━━━━━━━━┓
 ┃ ❖ *COMMANDS : ${totalCommands} total*
 ┃ ❖ *BOT NAME : TOHID-AI*
 ┃ ❖ *VERSION : ${botVersion}*
@@ -5118,7 +5118,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈◆━┓
 │❖ ${prefix}ai
 │❖ ${prefix}codeai
 │❖ ${prefix}deepseek
@@ -5139,7 +5139,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}triviaai
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄◆━┓
 │❖ ${prefix}akiyama
 │❖ ${prefix}ana
 │❖ ${prefix}animebite
@@ -5267,7 +5267,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}yumeko
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 𝐁𝐔𝐆*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 𝐁𝐔𝐆◆━┓
 │❖ ${prefix}tohid-invis
 │❖ ${prefix}tohid-fcnew
 │❖ ${prefix}tohid-bulldozer
@@ -5280,7 +5280,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}xgroup
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃◆━┓
 │❖ ${prefix}apk
 │❖ ${prefix}apkdl
 │❖ ${prefix}facebook
@@ -5309,7 +5309,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}yts
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍◆━┓
 │❖ ${prefix}8ball
 │❖ ${prefix}advice
 │❖ ${prefix}ascii
@@ -5332,7 +5332,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}wouldyou
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒◆━┓
 │❖ ${prefix}coin
 │❖ ${prefix}coinbattle
 │❖ ${prefix}dice
@@ -5349,7 +5349,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}tictactoe
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏◆━┓
 │❖ ${prefix}add
 │❖ ${prefix}antibot
 │❖ ${prefix}antibadword
@@ -5399,7 +5399,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}unmutemember
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎◆━┓
 │❖ ${prefix}advancedglow
 │❖ ${prefix}blackpinklogo
 │❖ ${prefix}blackpinkstyle
@@ -5444,7 +5444,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}writetext
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑◆━┓
 │❖ .
 │❖ ${prefix}addsudo
 │❖ ${prefix}antibot
@@ -5480,7 +5480,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}unblock
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑◆━┓
 │❖ ${prefix}awoo
 │❖ ${prefix}bite
 │❖ ${prefix}blush
@@ -5519,7 +5519,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}yeet
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒◆━┓
 │❖ ${prefix}calculate
 │❖ ${prefix}calculator
 │❖ ${prefix}cartoonify
@@ -5548,7 +5548,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}wikipedia
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄◆━┓
 │❖ ${prefix}bass
 │❖ ${prefix}blown
 │❖ ${prefix}deep
@@ -5566,7 +5566,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}tts
 ┗━━━━━━━━━━━━━━┛
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑◆━┓
 │❖ ${prefix}😭
 │❖ ${prefix}account
 │❖ ${prefix}alive
@@ -5784,7 +5784,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -5807,7 +5807,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈◆━┓
 │❖ ${prefix}tohid
 │❖ ${prefix}tohid-active
 │❖ ${prefix}tohid-off
@@ -5955,7 +5955,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -5978,7 +5978,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄◆━┓
 │❖ ${prefix}akiyama
 │❖ ${prefix}ana
 │❖ ${prefix}animebite
@@ -6229,7 +6229,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6252,7 +6252,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
- ┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆*◆━━┓
+ ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
 │❖ ${prefix}tohid-invis
 │❖ ${prefix}tohid-fcnew
 │❖ ${prefix}tohid-bulldozer
@@ -6389,7 +6389,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6412,7 +6412,7 @@ try {
 📱 *Pair ᴛᴏʜɪᴅ ᴀɪ:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃◆━┓
 │❖ ${prefix}apk
 │❖ ${prefix}apkdl
 │❖ ${prefix}facebook
@@ -6566,7 +6566,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6589,7 +6589,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍◆━┓
 │❖ ${prefix}8ball
 │❖ ${prefix}advice
 │❖ ${prefix}ascii
@@ -6779,7 +6779,7 @@ case 'groupban': {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6802,7 +6802,7 @@ case 'groupban': {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒◆━┓
 │❖ ${prefix}coin
 │❖ ${prefix}coinbattle
 │❖ ${prefix}dice
@@ -6942,7 +6942,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6965,7 +6965,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏◆━┓
 │❖ ${prefix}add
 │❖ ${prefix}antibot
 │❖ ${prefix}antibadword
@@ -7139,7 +7139,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7162,7 +7162,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎◆━┓
 │❖ ${prefix}advancedglow
 │❖ ${prefix}blackpinklogo
 │❖ ${prefix}blackpinkstyle
@@ -7330,7 +7330,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7353,7 +7353,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑◆━┓
 │❖ .
 │❖ ${prefix}addsudo
 │❖ ${prefix}antibot
@@ -7512,7 +7512,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7535,7 +7535,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑◆━┓
 │❖ ${prefix}awoo
 │❖ ${prefix}bite
 │❖ ${prefix}blush
@@ -7697,7 +7697,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7720,7 +7720,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒◆━┓
 │❖ ${prefix}channel-react
 │❖ ${prefix}simdata
 │❖ ${prefix}testfunction
@@ -7905,7 +7905,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7928,7 +7928,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄◆━┓
 │❖ ${prefix}bass
 │❖ ${prefix}blown
 │❖ ${prefix}deep
@@ -8069,7 +8069,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -8092,7 +8092,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑*◆━━┓
+┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑◆━┓
 │❖ ${prefix}😭
 │❖ ${prefix}account
 │❖ ${prefix}alive
