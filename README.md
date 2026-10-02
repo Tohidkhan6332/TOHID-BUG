@@ -130,6 +130,83 @@ For Heroku, `.update` should use a deployment hook rather than relying on a loca
 Do **not** put a Heroku API token directly in the source code or README. Heroku's Platform API supports authenticated build creation, and Heroku Button provides the one-click deployment flow.
 
 For automatic GitHub-to-Heroku deployments, connect the Heroku app to this GitHub repository from the Heroku Dashboard's **Deploy** tab.
+## 🚀 Deployment
+
+TOHID-AI is prepared for multiple deployment styles. The recommended path is a persistent Node.js/Docker worker because WhatsApp requires a long-running process.
+
+### ☁️ One-click / direct deployment
+
+| Platform | Deploy | Notes |
+|---|---|---|
+| Heroku | [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/Tohidkhan6332/TOHID-BUG) | Uses `app.json` + worker Procfile |
+| Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Tohidkhan6332/TOHID-BUG) | Uses `render.yaml` + Docker worker |
+| Koyeb | [![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=dockerfile&repository=github.com/Tohidkhan6332/TOHID-BUG&branch=main&name=tohid-ai) | GitHub + Docker deployment |
+| Replit | [Open in Replit](https://replit.com/import/github/Tohidkhan6332/TOHID-BUG) | Import GitHub repo, then run/publish as a long-running app |
+
+Render's button can deploy a repository described by a `render.yaml` Blueprint, Koyeb supports GitHub/Docker deployments and a Deploy button, and Replit supports importing GitHub repositories. citeturn0search1turn2search0turn1search0
+
+### 🐳 Docker
+
+The repository now includes a Node.js 20 Dockerfile.
+
+```bash
+docker build -t tohid-ai .
+docker run -d --name tohid-ai --restart unless-stopped --env-file .env tohid-ai
+```
+
+This makes the same image suitable for VPS, Docker-capable cloud hosts, Koyeb, Render and other container platforms.
+
+### 🖥️ VPS / Ubuntu / Debian / Kali Linux
+
+```bash
+sudo apt update
+sudo apt install -y git nodejs npm ffmpeg
+git clone https://github.com/Tohidkhan6332/TOHID-BUG.git
+cd TOHID-BUG
+npm install
+cp .env.example .env
+npm start
+```
+
+For a persistent VPS process:
+
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+> Kali Linux is supported as a normal Debian-based Node.js environment. Use Node.js 20+.
+
+### 📱 Termux
+
+```bash
+pkg update -y
+pkg install git nodejs-lts ffmpeg -y
+git clone https://github.com/Tohidkhan6332/TOHID-BUG.git
+cd TOHID-BUG
+npm install
+cp .env.example .env
+npm start
+```
+
+PM2 can be used on Termux where the environment supports it.
+
+### 🤖 AI coding agents: Claude / Gemini / Codex
+
+Claude Code, Gemini and Codex are development agents rather than hosting platforms. They can work with this GitHub repository, modify it and prepare deployments, but the actual bot still needs a supported long-running runtime such as a VPS, Docker host, Render worker, Heroku worker, Koyeb service or a suitable Replit deployment.
+
+### 🔄 Universal `.update`
+
+The WhatsApp `.update` command is owner-only.
+
+- VPS/Termux/Kali/PM2: pulls `main`, installs changed dependencies and restarts.
+- Render/Heroku/other ephemeral hosts: use `TOHID_UPDATE_HOOK_URL` so the platform performs a fresh deployment instead of relying on a temporary filesystem.
+- Docker: rebuild/redeploy the container through the host's deployment mechanism.
+- Serverless/static-only hosts are **not** suitable for this WhatsApp bot because the bot requires a persistent long-running process.
+
+Never put platform API tokens directly in the repository. Store secrets in the platform's environment-variable/secret manager.
+
 ## 📱 Termux Deployment
 
 > Recommended: Node.js 20+ and a Termux installation with access to the official package repositories.
