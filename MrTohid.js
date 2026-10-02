@@ -116,6 +116,14 @@ const axios = require('axios');
 const fsx = require('fs-extra')
 const crypto = require('crypto')
 const { updateFromGitHub, restartProcess } = require('./utils/self-update');
+const {
+  getConfig: getAntiStatusConfig,
+  actionLabel: antiStatusActionLabel,
+  commandHelp: antiStatusCommandHelp,
+  configure: configureAntiStatus,
+  detectType: detectAntiStatusType,
+  enforce: enforceAntiStatus
+} = require('./utils/anti-status');
 let JsConfuser;
 try { JsConfuser = require('js-confuser'); } catch (e) { console.error('⚠️ The js-confuser module is not installed. Please run: npm install js-confuser'); }
 
@@ -3698,6 +3706,45 @@ if (getSetting(m.sender, "autobio", true)) {
 
         // ======================[ 🛡️ ANTI FEATURES DETECTION - FIXED ]======================
 
+        // ANTI-STATUS / ANTI-GROUP-STATUS CHECK
+        // .antistatus   = personal status mentioned/shared into this group
+        // .antigstatus  = group status/story posted directly in this group
+        if (m.isGroup && !m.key?.fromMe && !isAdmins && !isCreator) {
+            try {
+                const antiStatusType = detectAntiStatusType(m);
+
+                if (antiStatusType === 'status') {
+                    const config = getAntiStatusConfig(m.chat, 'antistatus');
+                    if (config.enabled) {
+                        const blocked = await enforceAntiStatus({
+                            sock: devtrust,
+                            message: m,
+                            config,
+                            handleWarn,
+                            reply
+                        });
+                        if (blocked) return;
+                    }
+                }
+
+                if (antiStatusType === 'groupstatus') {
+                    const config = getAntiStatusConfig(m.chat, 'antigstatus');
+                    if (config.enabled) {
+                        const blocked = await enforceAntiStatus({
+                            sock: devtrust,
+                            message: m,
+                            config,
+                            handleWarn,
+                            reply
+                        });
+                        if (blocked) return;
+                    }
+                }
+            } catch (antiStatusError) {
+                console.error('❌ [AntiStatus] Detection error:', antiStatusError?.message || antiStatusError);
+            }
+        }
+
         // ANTILINK CHECK
         if (m.isGroup && body && !isAdmins && !isCreator) {
             // Check if this group has anti-link enabled
@@ -4817,6 +4864,53 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         // ============ MENU COMMAND ============
       if (isCmd) {
         switch (command) {
+            // ============ ANTI STATUS CONTROLS ============
+            case 'antistatus':
+            case 'antigstatus': {
+                if (!m.isGroup) return reply('❌ This command can only be used in a group.');
+                if (!isAdmins && !isCreator) return reply('🔒 *Admin only*');
+
+                const settingType = command === 'antistatus' ? 'antistatus' : 'antigstatus';
+                const label = command === 'antistatus'
+                    ? '🛡️ *ANTI-STATUS*'
+                    : '🛡️ *ANTI-GROUP-STATUS*';
+
+                const sub = String(args?.[0] || '').toLowerCase();
+
+                if (!sub || sub === 'help') {
+                    return reply(
+                        antiStatusCommandHelp(prefix + command) +
+                        '\n\nCurrent: *' +
+                        (getAntiStatusConfig(m.chat, settingType).enabled ? 'ON' : 'OFF') +
+                        '*\nAction: *' +
+                        antiStatusActionLabel(getAntiStatusConfig(m.chat, settingType).action) +
+                        '*'
+                    );
+                }
+
+                if (sub === 'status') {
+                    const config = getAntiStatusConfig(m.chat, settingType);
+                    return reply(
+                        label +
+                        '\n\n⚡ Enabled: *' + (config.enabled ? 'YES' : 'NO') +
+                        '*\n🎯 Action: *' + antiStatusActionLabel(config.action) + '*'
+                    );
+                }
+
+                const updated = configureAntiStatus(m.chat, settingType, sub);
+                if (!updated) {
+                    return reply(antiStatusCommandHelp(prefix + command));
+                }
+
+                const state = updated.enabled ? 'ON' : 'OFF';
+                return reply(
+                    label +
+                    '\n\n⚡ Protection: *' + state +
+                    '*\n🎯 Action: *' + antiStatusActionLabel(updated.action) + '*'
+                );
+            }
+            break;
+
             case 'developercontact':
             case 'devcontact': {
                 const developerImages = [
