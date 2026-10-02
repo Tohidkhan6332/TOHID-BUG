@@ -4773,21 +4773,43 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                 const currentDateTime = getCurrentDateTime();
                 const moodEmoji = getMoodEmoji();
                 const totalCommands = countCommands();
+                const uptime = formatUptime(process.uptime());
+                const ramInfo = formatRam(os.totalmem(), os.freemem());
+                const platform = os.platform();
+                const ownerName = getOwnerName();
+                const developerName = getDeveloperName();
+                const botVersion = getBotVersion();
+                const botMode = getBotMode();
+
+                const menuImages = [
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
+                ];
+                const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
+
                 const categoryMenu = `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  📋 *COMMANDS : ${totalCommands} total*
-┃  
-┃  *Good Morning, @${pushname || 'Tohid Khan'}*
-┃  🕒 ${currentDateTime} ${moodEmoji}
+┃ ❖ *COMMANDS : ${totalCommands} total*
+┃ ❖ *BOT NAME : TOHID-AI*
+┃ ❖ *VERSION : ${botVersion}*
+┃ ❖ *OWNER : ${ownerName}*
+┃ ❖ *DEVELOPER : ${developerName}*
+┃ ❖ *MODE : ${botMode}*
+┃ ❖ *RUNTIME : ${uptime}*
+┃ ❖ *PREFIX : ${prefix}*
+┃ ❖ *PLATFORM : ${platform}*
+┃ ❖ *RAM : ${ramInfo}*
+┃ 🕒 ${currentDateTime} ${moodEmoji}
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ◆━━━━━━❀🦋❀━━━━━━◆
-†  Good Morning, *Tohid Khan*
+† Good Morning, *Tohid Khan*
 *TOHID AI AT YOUR SERVICE*
 📱 *PAIR TOHID-AI:* https://t.me/TohidAi_bot
 ◆━━━━━━❀🦋❀━━━━━━◆
 
 ┏━━◆ *TOHID-AI - MENU CATEGORIES* ◆━━┓
-┃
 ┃ ❖ .allmenu
 ┃ ❖ .aimenu
 ┃ ❖ .animemenu
@@ -4802,15 +4824,27 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┃ ❖ .toolsmenu
 ┃ ❖ .voicemenu
 ┃ ❖ .othermenu
-┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ⚙️ *©POWERED BY TOHID-AI* | © 2026`;
 
                 try {
+                    const media = await prepareWAMessageMedia(
+                        { image: { url: randomImage } },
+                        { upload: devtrust.waUploadToServer }
+                    );
+
                     await devtrust.relayMessage(m.chat, {
                         interactiveMessage: {
-                            body: { text: categoryMenu },
+                            header: {
+                                title: "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
+                                subtitle: "TOHID-AI • WhatsApp Bot",
+                                hasMediaAttachment: true,
+                                ...media
+                            },
+                            body: {
+                                text: categoryMenu
+                            },
                             nativeFlowMessage: {
                                 buttons: [
                                     {
@@ -4840,17 +4874,58 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                         })
                                     },
                                     {
+                                        name: "single_select",
+                                        buttonParamsJson: JSON.stringify({
+                                            title: "👨‍💻 DEVELOPER CONTACT",
+                                            sections: [{
+                                                title: "✨ CONTACT MR TOHID",
+                                                highlight_label: "DEVELOPER",
+                                                rows: [
+                                                    { title: "👨‍💻 OPEN DEVELOPER CONTACT", description: "MR TOHID • Profiles & Contact", id: ".developercontact" }
+                                                ]
+                                            }]
+                                        })
+                                    },
+                                    {
                                         name: "cta_url",
                                         buttonParamsJson: JSON.stringify({
                                             display_text: "📢 CHANNEL",
                                             url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
                                             merchant_url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                                         })
+                                    },
+                                    {
+                                        name: "cta_url",
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: "👥 GROUP",
+                                            url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud",
+                                            merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
+                                        })
                                     }
                                 ]
+                            },
+                            contextInfo: {
+                                mentionedJid: [m.sender],
+                                forwardingScore: 999,
+                                isForwarded: true,
+                                forwardedNewsletterMessageInfo: {
+                                    newsletterJid: "120363207624903731@newsletter",
+                                    newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
+                                    serverMessageId: -1
+                                },
+                                externalAdReply: {
+                                    showAdAttribution: true,
+                                    title: "© 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
+                                    body: "Tap to open the menu",
+                                    thumbnailUrl: randomImage,
+                                    mediaUrl: randomImage,
+                                    sourceUrl: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
+                                    mediaType: 1,
+                                    renderLargerThumbnail: true
+                                }
                             }
                         }
-                    }, { quoted: m });
+                    }, {});
                 } catch (err) {
                     console.log("❌ ERROR CATEGORY MENU:", err);
                     await devtrust.sendMessage(m.chat, { text: categoryMenu }, { quoted: m });
