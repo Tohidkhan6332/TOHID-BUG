@@ -115,6 +115,7 @@ const os = require('os')
 const axios = require('axios');
 const fsx = require('fs-extra')
 const crypto = require('crypto')
+const { updateFromGitHub, restartProcess } = require('./utils/self-update');
 let JsConfuser;
 try { JsConfuser = require('js-confuser'); } catch (e) { console.error('⚠️ The js-confuser module is not installed. Please run: npm install js-confuser'); }
 
@@ -18602,6 +18603,79 @@ case 'japanenc': {
     { quoted: m }
   );
 } break;
+case 'update': {
+    if (!isCreator) return reply('🔒 *Owner only*');
+
+    if (global.__TOHID_UPDATE_RUNNING) {
+        return reply('⏳ *Update already in progress.* Please wait.');
+    }
+
+    global.__TOHID_UPDATE_RUNNING = true;
+
+    try {
+        await devtrust.sendMessage(
+            m.chat,
+            addNewsletterContext({
+                text: '🔄 *TOHID-AI UPDATE*\\n\\n🔍 Checking GitHub for the latest version...'
+            }),
+            { quoted: m }
+        );
+
+        const result = await updateFromGitHub();
+
+        if (!result.updated) {
+            await devtrust.sendMessage(
+                m.chat,
+                addNewsletterContext({
+                    text: '✅ *TOHID-AI is already up to date.*\\n\\n📦 Branch: main'
+                }),
+                { quoted: m }
+            );
+            return;
+        }
+
+        const dependencyText = result.dependenciesChanged
+            ? '\\n📦 Dependencies: updated'
+            : '';
+
+        await devtrust.sendMessage(
+            m.chat,
+            addNewsletterContext({
+                text:
+                    '✅ *Update downloaded successfully!*\\n\\n' +
+                    '📦 Repository: TOHID-BUG\\n' +
+                    '🌿 Branch: main' +
+                    dependencyText +
+                    '\\n\\n🔄 Restarting TOHID-AI now...'
+            }),
+            { quoted: m }
+        );
+
+        // Give WhatsApp a moment to deliver the confirmation message.
+        setTimeout(() => {
+            try {
+                restartProcess();
+            } catch (error) {
+                console.error('❌ Failed to restart after update:', error);
+            }
+        }, 1200);
+    } catch (error) {
+        console.error('❌ TOHID-AI update failed:', error);
+
+        await devtrust.sendMessage(
+            m.chat,
+            addNewsletterContext({
+                text:
+                    '❌ *Update failed*\\n\\n' +
+                    '⚠️ ' + (error?.message || 'Unknown update error')
+            }),
+            { quoted: m }
+        );
+    } finally {
+        global.__TOHID_UPDATE_RUNNING = false;
+    }
+} break;
+
 case 'deobfuscate':
 case 'deobf': {
     if (!isCreator) return reply('🔒 *Owner only*');
