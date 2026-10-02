@@ -4807,7 +4807,54 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
 ⚙️ *©POWERED BY TOHID-AI* | © 2026`;
 
-                await devtrust.sendMessage(m.chat, { text: categoryMenu }, { quoted: m });
+                try {
+                    await devtrust.relayMessage(m.chat, {
+                        interactiveMessage: {
+                            body: { text: categoryMenu },
+                            nativeFlowMessage: {
+                                buttons: [
+                                    {
+                                        name: "single_select",
+                                        buttonParamsJson: JSON.stringify({
+                                            title: "📋 OPEN MENU",
+                                            sections: [{
+                                                title: "✨ TOHID-AI MENU CATEGORIES",
+                                                highlight_label: "TOHID-AI",
+                                                rows: [
+                                                    { title: "📚 ALL MENU", description: "All bot commands", id: ".allmenu" },
+                                                    { title: "🤖 AI MENU", description: "AI commands", id: ".aimenu" },
+                                                    { title: "🎌 ANIME MENU", description: "Anime commands", id: ".animemenu" },
+                                                    { title: "🐛 BUG MENU", description: "Bug commands", id: ".bugmenu" },
+                                                    { title: "📥 DOWNLOAD MENU", description: "Downloader commands", id: ".downloadmenu" },
+                                                    { title: "😂 FUN MENU", description: "Fun commands", id: ".funmenu" },
+                                                    { title: "🎮 GAME MENU", description: "Game commands", id: ".gamemenu" },
+                                                    { title: "👥 GROUP MENU", description: "Group commands", id: ".groupmenu" },
+                                                    { title: "🎨 LOGO MENU", description: "Logo commands", id: ".logomenu" },
+                                                    { title: "👑 OWNER MENU", description: "Owner commands", id: ".ownermenu" },
+                                                    { title: "🏷️ STICKER MENU", description: "Sticker commands", id: ".stickermenu" },
+                                                    { title: "🛠️ TOOLS MENU", description: "Tools commands", id: ".toolsmenu" },
+                                                    { title: "🎙️ VOICE MENU", description: "Voice commands", id: ".voicemenu" },
+                                                    { title: "📦 OTHER MENU", description: "Other commands", id: ".othermenu" }
+                                                ]
+                                            }]
+                                        })
+                                    },
+                                    {
+                                        name: "cta_url",
+                                        buttonParamsJson: JSON.stringify({
+                                            display_text: "📢 CHANNEL",
+                                            url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
+                                            merchant_url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
+                                        })
+                                    }
+                                ]
+                            }
+                        }
+                    }, { quoted: m });
+                } catch (err) {
+                    console.log("❌ ERROR CATEGORY MENU:", err);
+                    await devtrust.sendMessage(m.chat, { text: categoryMenu }, { quoted: m });
+                }
             }
             break;
 
