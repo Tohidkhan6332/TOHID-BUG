@@ -116,17 +116,18 @@ const axios = require('axios');
 const fsx = require('fs-extra')
 const crypto = require('crypto')
 let JsConfuser;
-try { JsConfuser = require('js-confuser'); } catch (e) { console.error('⚠️ Module js-confuser belum terinstall! Jalankan: npm install js-confuser'); }
+try { JsConfuser = require('js-confuser'); } catch (e) { console.error('⚠️ The js-confuser module is not installed. Please run: npm install js-confuser'); }
 
 const { Worker } = require('worker_threads');
-// Obfuscate worker source is inlined (not a separate file) so it doesn't
-// tergantung struktur folder eksternal. Dijalankan via eval:true.
+// The obfuscation worker source is inlined (not a separate file) so it doesn't
+// depend on any external folder structure. It is executed using eval:true.
 const OBFUSCATE_WORKER_SOURCE = `'use strict';
 // ================================================================
-// OBFUSCATE WORKER — menjalankan JsConfuser di thread terpisah
-// supaya event loop utama (koneksi WhatsApp) tidak terblokir
-// saat memproses file besar / config berat (controlFlowFlattening, dll).
-// All configs are IDENTICAL to those in MrTohid.js — unchanged.
+// OBFUSCATE WORKER — runs JsConfuser in a separate thread
+// so the main event loop (WhatsApp connection) is not blocked
+// while processing large files / heavy configurations
+// (controlFlowFlattening, etc.).
+// All configurations are IDENTICAL to those in MrTohid.js — unchanged.
 // ================================================================
 const { parentPort, workerData } = require('worker_threads');
 let JsConfuser;
@@ -317,7 +318,7 @@ const chars = "\x61\u0062\x63\u0064\x65\u0066\x67\u0068\x69\u006A\x6B\u006C\x6D\
         identifierGenerator: () => {
             let r = "";
             for (let i = 0; i < 6; i++) r += chars[Math.floor(Math.random() * chars.length)];
-            return '气TohidX和Here无' + r;
+            return '气TohidX和KING无' + r;
         },
         stringCompression: true,
         stringEncoding: true,
@@ -438,15 +439,16 @@ const CONFIG_MAP = {
 })();
 `;
 
-// Jalankan obfuscation di thread terpisah supaya event loop utama
-// (koneksi WhatsApp) tidak terblokir saat config berat (controlFlowFlattening tinggi, dll)
-// -> mencegah disconnect/Bad MAC akibat event loop macet lama.
+// Run obfuscation in a separate thread so the main event loop
+// (WhatsApp connection) is not blocked by heavy configurations
+// (high controlFlowFlattening, etc.)
+// -> helps prevent disconnects/Bad MAC errors caused by a long-blocked event loop.
 function runObfuscateWorker(workerData, timeoutMs = 5 * 60 * 1000) {
     return new Promise((resolve, reject) => {
         const worker = new Worker(OBFUSCATE_WORKER_SOURCE, { eval: true, workerData });
         const timer = setTimeout(() => {
             worker.terminate();
-            reject(new Error('Timeout: proses obfuscation terlalu lama'));
+            reject(new Error('Timeout: The obfuscation process took too long.'));
         }, timeoutMs);
 
         worker.once('message', (msg) => {
@@ -463,9 +465,10 @@ function runObfuscateWorker(workerData, timeoutMs = 5 * 60 * 1000) {
     });
 }
 
-// Safe wrapper: if the installed js-confuser version doesn't support
-// suatu opsi config ("Invalid option: 'xxx'"), opsi tersebut otomatis
-// dihapus dan obfuscate dicoba ulang — tanpa mengubah niat config aslinya.
+ // Safe wrapper: if the installed js-confuser version does not support
+ // a configuration option ("Invalid option: 'xxx'"), that option is automatically
+ // removed and the obfuscation is retried — without changing the original
+ // configuration intent.
 async function safeObfuscate(code, config) {
     let cfg = { ...config };
     for (let attempt = 0; attempt < 20; attempt++) {
@@ -544,18 +547,18 @@ const getGroupAdmins = (participants) => {
 //AUTO DELETE
 // ================================================================
 // REPLACE THIS ENTIRE BLOCK IN MrTohid.js
-// Mulai dari baris ~139 (//AUTO DELETE) sampai fungsi-fungsi
-// helper + ketiga event listener di bawahnya
+// Starting from approximately line ~139 (//AUTO DELETE) through the
+// helper functions + the three event listeners below
 // ================================================================
 
 // ============================================================
-// BAGIAN 1 — GANTI BLOK //AUTO DELETE (~baris 139)
+// SECTION 1 — REPLACE THE //AUTO DELETE BLOCK (~line 139)
 // ============================================================
 
 //AUTO DELETE
 const ANTIDELETE_SESSION_FILE = './tohid_del/tohid_delete_sesi.json';
 
-// Buat folder otomatis kalau belum ada
+// Automatically create the folder if it does not exist
 if (!fs.existsSync('./tohid_del')) {
     fs.mkdirSync('./tohid_del', { recursive: true });
 }
@@ -563,19 +566,20 @@ if (!fs.existsSync('./tohid_del')) {
 if (!global.antidelete)   global.antidelete   = {};
 if (!global.adStats)      global.adStats       = { recovered: 0, ignored: 0 };
 
-// Pakai Map — lebih efisien dari object biasa
+// Use a Map — more efficient than a regular object
 global.msgUpsertStore = global.msgUpsertStore instanceof Map
     ? global.msgUpsertStore
     : new Map();
 
-// Dedup notifikasi anti-delete (1 pesan = 1 notif, walau terdeteksi di banyak event)
+// Deduplicate anti-delete notifications
+// (1 message = 1 notification, even if detected in multiple events)
 global.notifiedDeletes = global.notifiedDeletes instanceof Set
     ? global.notifiedDeletes
     : new Set();
 
 function markAndCheckDeleteNotified(jid, msgId) {
     const key = `${jid}_${msgId}`;
-    if (global.notifiedDeletes.has(key)) return true; // sudah dinotif
+    if (global.notifiedDeletes.has(key)) return true; // already notified
     global.notifiedDeletes.add(key);
     if (global.notifiedDeletes.size > 3000) {
         const first = global.notifiedDeletes.values().next().value;
@@ -676,30 +680,152 @@ TOP_TOPICS_SHOW = 15
 MAX_HISTORY     = 30
 
 STOPWORDS = {
-    'yang','dengan','untuk','sudah','tidak','adalah','akan','dari','pada','dalam',
-    'bisa','juga','saya','kamu','dia','mereka','this','that','what','when','where',
-    'have','been','will','kami','kita','anda','atau','jika','maka','oleh','itu',
-    'ini','ada','apa','siapa','kapan','bagaimana','kenapa','karena','tapi','namun',
-    'dan','ke','di','ya','lah','deh','dong','nih','sih','kah','pun','punya','mau',
-    'udah','lagi','bisa','harus','jadi','kalau','gimana','emang','banget','sangat',
-}
+    // English
+    'the', 'with', 'for', 'already', 'not', 'is', 'will', 'from', 'at', 'in',
+    'can', 'also', 'i', 'you', 'he', 'she', 'they', 'this', 'that', 'what',
+    'when', 'where', 'have', 'been', 'we', 'us', 'your', 'or', 'if', 'then',
+    'by', 'it', 'there', 'who', 'how', 'why', 'because', 'but', 'however',
+    'and', 'to', 'yes', 'just', 'own', 'want', 'again', 'must', 'so', 'really',
+    'very',
+
+    // Hindi / Hinglish
+    'hai', 'hain', 'ho', 'hu', 'hun', 'tha', 'thi', 'the', 'hoga', 'hogi',
+    'honge', 'ka', 'ki', 'ke', 'ko', 'se', 'me', 'mein', 'par', 'pe',
+    'ye', 'yeh', 'woh', 'vo', 'is', 'us', 'ek', 'aur', 'ya', 'agar',
+    'to', 'toh', 'phir', 'bhi', 'hi', 'na', 'nahi', 'nahin', 'mat',
+    'kya', 'kyun', 'kyu', 'kaise', 'kab', 'kahan', 'kon', 'kaun',
+    'mera', 'meri', 'mere', 'mujhe', 'mujh', 'main', 'mai', 'hum',
+    'hamara', 'hamari', 'aap', 'aapka', 'aapki', 'aapke', 'tum',
+    'tumhara', 'tumhari', 'tumhe', 'tujhe', 'tera', 'teri', 'tere',
+    'apna', 'apni', 'apne', 'bhi', 'bas', 'ab', 'phir', 'sirf',
+    'bahut', 'bohot', 'zyada', 'kam', 'wala', 'wali', 'wale', 'raha',
+    'rahi', 'rahe', 'kar', 'karta', 'karti', 'karte', 'karna', 'karo',
+    'karke', 'ho', 'hona', 'hone', 'hoti', 'hote'
+};
 
 FACT_PATTERNS = [
-    (r'(?:nama\\s*(?:saya|aku|gue|gw|ku)|saya\\s*(?:bernama|dipanggil)|aku\\s*(?:bernama|dipanggil)|panggil\\s*(?:saya|aku|gue)\\s*(?:saja|aja)?)\\s*[:\\-]?\\s*([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{1,28})', 'nama'),
-    (r'(?:umur|usia)\\s*(?:saya|aku|gue|gw)?\\s*(?:adalah|itu|sekarang)?\\s*(\\d{1,3})\\s*(?:tahun|thn|th)?', 'umur'),
-    (r'(?:lahir|ultah|ulang\\s*tahun)\\s*(?:saya|aku)?\\s*(?:tanggal|tgl)?\\s*(\\d{1,2}[\\s/\\-]\\w+[\\s/\\-]?\\d{0,4})', 'ulang_tahun'),
-    (r'(?:saya|aku|gue|gw)\\s+(?:tinggal|berdomisili|berada|menetap|stay)\\s+(?:di\\s+)?([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s,]{1,50})', 'lokasi'),
-    (r'(?:asal|dari)\\s+(?:kota|daerah|desa)?\\s*([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{1,40})', 'asal'),
-    (r'(?:hobi|kesukaan|kegemaran|senang|suka)\\s*(?:saya|aku|gue)?\\s*(?:adalah|itu|nya)?\\s*[:\\-]?\\s*([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s,dan]{2,80})', 'hobi'),
-    (r'(?:pekerjaan|kerjaan|profesi|jabatan)\\s*(?:saya|aku|gue)?\\s*(?:adalah|sebagai|jadi|itu)?\\s*[:\\-]?\\s*([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{2,50})', 'pekerjaan'),
-    (r'(?:saya|aku|gue|gw)\\s+(?:kerja|bekerja|berprofesi)\\s+(?:sebagai|jadi|di)\\s+([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{2,50})', 'pekerjaan'),
-    (r'(?:sekolah|kuliah|study|belajar)\\s+(?:di|di\\s+)?([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{2,60})', 'pendidikan'),
-    (r'(?:jurusan|prodi|program\\s*studi)\\s*(?:saya|aku)?\\s*(?:adalah|itu)?\\s*[:\\-]?\\s*([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{2,60})', 'jurusan'),
-    (r'(?:saya|aku|gue|gw)\\s+(?:adalah|seorang|merupakan)\\s+([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{2,40})', 'identitas'),
-    (r'(?:makanan|minuman)\\s*(?:favorit|kesukaan)?\\s*(?:saya|aku)?\\s*(?:adalah|itu)?\\s*[:\\-]?\\s*([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s,]{2,50})', 'favorit_makanan'),
-    (r'warna\\s*(?:favorit|kesukaan)?\\s*(?:saya|aku)?\\s*(?:adalah|itu)?\\s*[:\\-]?\\s*([A-Za-z\\u00C0-\\u024F][A-Za-z\\u00C0-\\u024F\\s]{2,30})', 'favorit_warna'),
-    (r'(?:saya|aku|gue)\\s+(introvert|extrovert|ambivert|pemalu|pendiam|aktif|kreatif)', 'kepribadian'),
-    (r'(?:saya|aku|gue)\\s+(?:sedang|lagi)\\s+(stress|depresi|bahagia|senang|sedih|bingung|galau|excited|semangat)', 'kondisi_emosi'),
+
+    // ============================================================
+    // NAME — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+name\s+is|i\s+am\s+called|i\s*am\s*named|call\s+me)\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{1,28})', 'name'),
+
+    (r'(?:mera|meri)\s+(?:naam|name)\s*(?:hai|he|h)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{1,28})', 'name'),
+
+    (r'(?:naam|name)\s*(?:mera|meri)?\s*(?:hai|is)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{1,28})', 'name'),
+
+    // ============================================================
+    // AGE — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+age\s+is|i\s+am|i\'m)\s+(\d{1,3})\s*(?:years?\s*old|yrs?|year)?', 'age'),
+
+    (r'(?:meri|meri)\s+(?:age|umar)\s*(?:hai|he)?\s*(\d{1,3})\s*(?:saal|sal|years?)?', 'age'),
+
+    (r'(?:umar|age)\s*(?:meri|my)?\s*(?:hai|is)?\s*(\d{1,3})\s*(?:saal|sal|years?)?', 'age'),
+
+    // ============================================================
+    // BIRTHDAY — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+)?(?:birthday|birth\s*date|date\s+of\s+birth)\s*(?:is|on)?\s*(\d{1,2}[\s\/\-]\w+[\s\/\-]?\d{0,4})', 'birthday'),
+
+    (r'(?:mera|meri)\s+(?:birthday|janamdin|janam\s*din)\s*(?:hai|he)?\s*(\d{1,2}[\s\/\-]\w+[\s\/\-]?\d{0,4})', 'birthday'),
+
+    // ============================================================
+    // LOCATION — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:i|we)\s+(?:live|stay|reside|am\s+living)\s+(?:in|at)\s+([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s,]{1,50})', 'location'),
+
+    (r'(?:main|mai|hum)\s+(?:rehta|rehti|rahte)\s+(?:hu|hun|hain|hoon)?\s*(?:in|mein|me)?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s,]{1,50})', 'location'),
+
+    (r'(?:i\s+am|i\'m)\s+(?:from|originally\s+from)\s+([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{1,40})', 'origin'),
+
+    (r'(?:main|mai|hum)\s+(?:from|se|ka)\s+([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{1,40})\s*(?:hu|hun|hain)?', 'origin'),
+
+    (r'(?:mera|meri)\s+(?:gaon|shehar|city|village|hometown)\s*(?:hai|he)?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{1,40})', 'origin'),
+
+    // ============================================================
+    // HOBBIES / LIKES — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+)?(?:hobby|hobbies|favorite\s+activity|favourite\s+activity)\s*(?:is|are)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s,]{2,80})', 'hobbies'),
+
+    (r'(?:mujhe|mujhko)\s+(?:pasand|acha|achha|accha)\s+(?:hai|hain)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s,]{2,80})', 'hobbies'),
+
+    (r'(?:mera|meri)\s+(?:hobby|hobbies|pasand|shauk)\s*(?:hai|he)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s,]{2,80})', 'hobbies'),
+
+    // ============================================================
+    // JOB / PROFESSION — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+)?(?:job|work|profession|occupation|position)\s*(?:is|as)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,50})', 'job'),
+
+    (r'(?:i|i\'m)\s+(?:work|working|work\s+as)\s+(?:as|at)?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,50})', 'job'),
+
+    (r'(?:main|mai)\s+(?:kaam|job|work)\s+(?:karta|karti|kar raha|kar rahi)\s+(?:hu|hun|hoon)?\s*(?:as|mein|me)?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,50})', 'job'),
+
+    (r'(?:main|mai)\s+(?:ek|a)\s+([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,40})\s+(?:hu|hun|hoon)', 'identity'),
+
+    // ============================================================
+    // EDUCATION — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:i\s+)?(?:study|studying|school|college|university)\s+(?:at|in)?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,60})', 'education'),
+
+    (r'(?:main|mai)\s+(?:school|college|university)\s+(?:mein|me|at|in)\s+([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,60})', 'education'),
+
+    (r'(?:main|mai)\s+(?:padhai|study|padh)\s+(?:karta|karti|raha|rahi)\s+(?:hu|hun|hoon)?\s*(?:at|in|mein|me)?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,60})', 'education'),
+
+    // ============================================================
+    // MAJOR / FIELD OF STUDY — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+)?(?:major|degree|field\s+of\s+study|department)\s*(?:is|in)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,60})', 'major'),
+
+    (r'(?:mera|meri)\s+(?:subject|stream|branch|course|degree|field|department)\s*(?:hai|he)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,60})', 'major'),
+
+    // ============================================================
+    // IDENTITY — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:i|i\'m)\s+(?:am|a|an)\s+([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,40})', 'identity'),
+
+    (r'(?:main|mai)\s+(?:ek|a|an)\s+([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,40})\s+(?:hu|hun|hoon)', 'identity'),
+
+    // ============================================================
+    // FAVORITE FOOD — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+)?(?:favorite|favourite)\s+(?:food|dish|meal)\s*(?:is)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s,]{2,50})', 'favorite_food'),
+
+    (r'(?:mera|meri)\s+(?:favorite|favourite|pasandida)\s+(?:khana|food|dish)\s*(?:hai|he)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s,]{2,50})', 'favorite_food'),
+
+    // ============================================================
+    // FAVORITE COLOR — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:my\s+)?(?:favorite|favourite)\s+color\s*(?:is)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,30})', 'favorite_color'),
+
+    (r'(?:mera|meri)\s+(?:favorite|favourite|pasandida)\s+(?:color|rang)\s*(?:hai|he)?\s*[:\-]?\s*([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F\s]{2,30})', 'favorite_color'),
+
+    // ============================================================
+    // PERSONALITY — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:i|i\'m)\s+(introvert|extrovert|ambivert|shy|quiet|active|creative)', 'personality'),
+
+    (r'(?:main|mai)\s+(introvert|extrovert|ambivert|shy|sharmila|quiet|shaant|active|creative)\s*(?:hu|hun|hoon)?', 'personality'),
+
+    // ============================================================
+    // EMOTIONAL STATE — English + Hindi/Hinglish
+    // ============================================================
+
+    (r'(?:i|i\'m)\s+(?:feeling|currently|am)\s+(stressed|depressed|happy|excited|sad|confused|upset|motivated|angry)', 'emotional_state'),
+
+    (r'(?:main|mai)\s+(?:abhi|filhaal|currently|aaj)\s+(?:stress|stressed|depressed|happy|khush|sad|dukhi|confused|pareshan|excited|josh|motivate|gussa)\s*(?:hu|hun|hoon)?', 'emotional_state'),
 ]
 
 FACT_LABELS = {
@@ -4789,7 +4915,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                 ];
                 const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
 
-                const categoryMenu = `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+                const categoryMenu = `┏━━━━━━━━━━━━━━━━━━━┓
 ┃ ❖ *COMMANDS : ${totalCommands} total*
 ┃ ❖ *BOT NAME : TOHID-AI*
 ┃ ❖ *VERSION : ${botVersion}*
@@ -4801,7 +4927,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┃ ❖ *PLATFORM : ${platform}*
 ┃ ❖ *RAM : ${ramInfo}*
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━┛
 
 ◆━━━━━━❀🦋❀━━━━━━◆
 † Good Morning, *Tohid Khan*
@@ -4809,7 +4935,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 📱 *PAIR TOHID-AI:* https://t.me/TohidAi_bot
 ◆━━━━━━❀🦋❀━━━━━━◆
 
-┏━━◆ *TOHID-AI - MENU CATEGORIES* ◆━━┓
+┏◆*TOHID-AI - MENU CATEGORIES*◆
 ┃ ❖ .allmenu
 ┃ ❖ .aimenu
 ┃ ❖ .animemenu
@@ -4824,7 +4950,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┃ ❖ .toolsmenu
 ┃ ❖ .voicemenu
 ┃ ❖ .othermenu
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━┛
 
 ⚙️ *©POWERED BY TOHID-AI* | © 2026`;
 
@@ -4969,7 +5095,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏◆*𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -4984,7 +5110,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -4992,7 +5118,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈*◆━━┓
 │❖ ${prefix}ai
 │❖ ${prefix}codeai
 │❖ ${prefix}deepseek
@@ -5011,9 +5137,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}qwenxj
 │❖ ${prefix}storyai
 │❖ ${prefix}triviaai
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄*◆━━┓
 │❖ ${prefix}akiyama
 │❖ ${prefix}ana
 │❖ ${prefix}animebite
@@ -5139,9 +5265,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}yuki
 │❖ ${prefix}yulibocil
 │❖ ${prefix}yumeko
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ * -𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 𝐁𝐔𝐆* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 𝐁𝐔𝐆*◆━━┓
 │❖ ${prefix}tohid-invis
 │❖ ${prefix}tohid-fcnew
 │❖ ${prefix}tohid-bulldozer
@@ -5152,9 +5278,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}tohid-blank
 │❖ ${prefix}tohid-visibale
 │❖ ${prefix}xgroup
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃*◆━━┓
 │❖ ${prefix}apk
 │❖ ${prefix}apkdl
 │❖ ${prefix}facebook
@@ -5181,9 +5307,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}ytmp4
 │❖ ${prefix}ytsearch
 │❖ ${prefix}yts
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍*◆━━┓
 │❖ ${prefix}8ball
 │❖ ${prefix}advice
 │❖ ${prefix}ascii
@@ -5204,9 +5330,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}truthdare
 │❖ ${prefix}urban
 │❖ ${prefix}wouldyou
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒*◆━━┓
 │❖ ${prefix}coin
 │❖ ${prefix}coinbattle
 │❖ ${prefix}dice
@@ -5221,9 +5347,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}rps
 │❖ ${prefix}rpsls
 │❖ ${prefix}tictactoe
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏*◆━━┓
 │❖ ${prefix}add
 │❖ ${prefix}antibot
 │❖ ${prefix}antibadword
@@ -5271,9 +5397,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}totag
 │❖ ${prefix}unmute
 │❖ ${prefix}unmutemember
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎*◆━━┓
 │❖ ${prefix}advancedglow
 │❖ ${prefix}blackpinklogo
 │❖ ${prefix}blackpinkstyle
@@ -5316,9 +5442,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}underwatertext
 │❖ ${prefix}watercolortext
 │❖ ${prefix}writetext
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑*◆━━┓
 │❖ .
 │❖ ${prefix}addsudo
 │❖ ${prefix}antibot
@@ -5352,9 +5478,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}unbanuser
 │❖ ${prefix}unbanuser1
 │❖ ${prefix}unblock
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑*◆━━┓
 │❖ ${prefix}awoo
 │❖ ${prefix}bite
 │❖ ${prefix}blush
@@ -5391,9 +5517,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}wink
 │❖ ${prefix}wm
 │❖ ${prefix}yeet
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒*◆━━┓
 │❖ ${prefix}calculate
 │❖ ${prefix}calculator
 │❖ ${prefix}cartoonify
@@ -5420,9 +5546,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}weatherinfo
 │❖ ${prefix}wiki
 │❖ ${prefix}wikipedia
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄*◆━━┓
 │❖ ${prefix}bass
 │❖ ${prefix}blown
 │❖ ${prefix}deep
@@ -5438,9 +5564,9 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}smooth
 │❖ ${prefix}squirrel
 │❖ ${prefix}tts
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑*◆━━┓
 │❖ ${prefix}😭
 │❖ ${prefix}account
 │❖ ${prefix}alive
@@ -5505,7 +5631,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}xnxx
 │❖ ${prefix}xvideosearch
 │❖ ${prefix}xnxxvideodl
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -5658,7 +5784,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -5673,7 +5799,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -5681,7 +5807,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐈*◆━━┓
 │❖ ${prefix}tohid
 │❖ ${prefix}tohid-active
 │❖ ${prefix}tohid-off
@@ -5703,7 +5829,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}qwenxj
 │❖ ${prefix}storyai
 │❖ ${prefix}triviaai
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -5829,7 +5955,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -5844,7 +5970,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -5852,7 +5978,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐀𝐍𝐈𝐌𝐄*◆━━┓
 │❖ ${prefix}akiyama
 │❖ ${prefix}ana
 │❖ ${prefix}animebite
@@ -5978,7 +6104,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}yuki
 │❖ ${prefix}yulibocil
 │❖ ${prefix}yumeko
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -6103,7 +6229,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6118,7 +6244,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -6126,7 +6252,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
- ┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆* ◆━━┓
+ ┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆*◆━━┓
 │❖ ${prefix}tohid-invis
 │❖ ${prefix}tohid-fcnew
 │❖ ${prefix}tohid-bulldozer
@@ -6138,7 +6264,7 @@ try {
 │❖ ${prefix}tohid-visibale
 │❖ ${prefix}xgroup
 │❖ ${prefix}groupban
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -6263,7 +6389,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6278,7 +6404,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -6286,7 +6412,7 @@ try {
 📱 *Pair ᴛᴏʜɪᴅ ᴀɪ:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃*◆━━┓
 │❖ ${prefix}apk
 │❖ ${prefix}apkdl
 │❖ ${prefix}facebook
@@ -6314,7 +6440,7 @@ try {
 │❖ ${prefix}ytmp4
 │❖ ${prefix}ytsearch
 │❖ ${prefix}yts
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -6440,7 +6566,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6455,7 +6581,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -6463,7 +6589,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐅𝐔𝐍*◆━━┓
 │❖ ${prefix}8ball
 │❖ ${prefix}advice
 │❖ ${prefix}ascii
@@ -6484,7 +6610,7 @@ try {
 │❖ ${prefix}truthdare
 │❖ ${prefix}urban
 │❖ ${prefix}wouldyou
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -6653,7 +6779,7 @@ case 'groupban': {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6668,7 +6794,7 @@ case 'groupban': {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -6676,7 +6802,7 @@ case 'groupban': {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒*◆━━┓
 │❖ ${prefix}coin
 │❖ ${prefix}coinbattle
 │❖ ${prefix}dice
@@ -6691,7 +6817,7 @@ case 'groupban': {
 │❖ ${prefix}rps
 │❖ ${prefix}rpsls
 │❖ ${prefix}tictactoe
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -6816,7 +6942,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -6831,7 +6957,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -6839,7 +6965,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏*◆━━┓
 │❖ ${prefix}add
 │❖ ${prefix}antibot
 │❖ ${prefix}antibadword
@@ -6887,7 +7013,7 @@ try {
 │❖ ${prefix}totag
 │❖ ${prefix}unmute
 │❖ ${prefix}unmutemember
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -7013,7 +7139,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7028,7 +7154,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -7036,7 +7162,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐋𝐎𝐆𝐎*◆━━┓
 │❖ ${prefix}advancedglow
 │❖ ${prefix}blackpinklogo
 │❖ ${prefix}blackpinkstyle
@@ -7079,7 +7205,7 @@ try {
 │❖ ${prefix}underwatertext
 │❖ ${prefix}watercolortext
 │❖ ${prefix}writetext
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -7204,7 +7330,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7219,7 +7345,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -7227,7 +7353,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐖𝐍𝐄𝐑*◆━━┓
 │❖ .
 │❖ ${prefix}addsudo
 │❖ ${prefix}antibot
@@ -7261,7 +7387,7 @@ try {
 │❖ ${prefix}unbanuser
 │❖ ${prefix}unbanuser1
 │❖ ${prefix}unblock
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -7386,7 +7512,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7401,7 +7527,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -7409,7 +7535,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐒𝐓𝐈𝐂𝐊𝐄𝐑*◆━━┓
 │❖ ${prefix}awoo
 │❖ ${prefix}bite
 │❖ ${prefix}blush
@@ -7446,7 +7572,7 @@ try {
 │❖ ${prefix}wink
 │❖ ${prefix}wm
 │❖ ${prefix}yeet
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -7571,7 +7697,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7586,7 +7712,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -7594,7 +7720,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐓𝐎𝐎𝐋𝐒*◆━━┓
 │❖ ${prefix}channel-react
 │❖ ${prefix}simdata
 │❖ ${prefix}testfunction
@@ -7654,7 +7780,7 @@ try {
 │❖ ${prefix}arabenc
 │❖ ${prefix}japanenc
 │❖ ${prefix}deobfuscate
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -7779,7 +7905,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7794,7 +7920,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -7802,7 +7928,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐕𝐎𝐈𝐂𝐄*◆━━┓
 │❖ ${prefix}bass
 │❖ ${prefix}blown
 │❖ ${prefix}deep
@@ -7818,7 +7944,7 @@ try {
 │❖ ${prefix}smooth
 │❖ ${prefix}squirrel
 │❖ ${prefix}tts
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -7943,7 +8069,7 @@ try {
 
                 // ALPHABETICAL SECTIONS
                 const menuText = `
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔*◆━━┓
 ┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
 ┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
 ┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
@@ -7958,7 +8084,7 @@ try {
 ┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
 ┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
 ┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ❖═━═══𖠁𐂃𖠁══━═❖
 ♱  ${greeting}, *${pushname}*
@@ -7966,7 +8092,7 @@ try {
 📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
 ❖═━═══𖠁𐂃𖠁══━═❖
 
-┏━━◆ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑* ◆━━┓
+┏━━◆*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐎𝐓𝐇𝐄𝐑*◆━━┓
 │❖ ${prefix}😭
 │❖ ${prefix}account
 │❖ ${prefix}alive
@@ -8028,7 +8154,7 @@ try {
 │❖ ${prefix}vv
 │❖ ${prefix}vv2
 │❖ ${prefix}vvgh
-┗━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━┛
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
@@ -10906,7 +11032,7 @@ case 'cnic': {
         }
         if (!/^3\d{9}$/.test(phoneNumber)) {
             await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return reply(`❌ *Invalid phone number!*\nValid formats: 03XX-XXXXXXX, +923XX-XXXXXXX\n\n🔥 *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸*`);
+            return reply(`❌ *Invalid phone number!*\nValid formats: +9178XX-XXXXXXX, 78XX-XXXXXXX\n\n🔥 *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸*`);
         }
         queryValue = phoneNumber;
     }
@@ -12423,7 +12549,7 @@ case 'tf': {
     return reply(
       '📌 Usage: .tesfunc <target> <loop>\n' +
       '(Reply to a function text or .js file)\n\n' +
-      'Number  : .tesfunc 628123456789 3\n' +
+      'Number  : .tesfunc 918123456789 3\n' +
       'Group   : .tesfunc https://chat.whatsapp.com/xxx 2\n' +
       'Channel : .tesfunc https://whatsapp.com/channel/xxx 1\n' +
       'JID     : .tesfunc 120363xxx@g.us 2'
@@ -13307,8 +13433,8 @@ break;
                 try {
                     const { data } = await axios.get(`https://api.waifu.pics/sfw/${command}`);
                     await devtrust.sendImageAsSticker(from, data.url, m, {
-                        packname: "𝗦𝗔𝗬𝗔𝗡 𝗠𝗗 𝗕𝗨𝗚",
-                        author: "𝗦𝗔𝗬𝗔𝗡 𝗠𝗗 𝗕𝗨𝗚"
+                        packname: "𝐓𝐎𝐇𝐈𝐃 𝐀𝐈",
+                        author: "𝐓𝐎𝐇𝐈𝐃 𝐀𝐈"
                     });
                 } catch (err) {
                     reply("❌ *Sticker generation failed*");
@@ -14850,7 +14976,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                 if (!isCreator) return reply(`🔒 *Owner only*`);
 
                 if (!args[0]) {
-                    return reply("📌 *Usage:* reactch https://whatsapp.com/channel/... Robin");
+                    return reply("📌 *Usage:* reactch https://whatsapp.com/channel/... Tohid");
                 }
 
                 if (!args[0].startsWith("https://whatsapp.com/channel/")) {
@@ -15389,7 +15515,7 @@ case 'xnxx': {
                     `💎 1GB • 2GB • 3GB • 4GB\n` +
                     `💎 5GB • 6GB • 7GB • 8GB\n` +
                     `💎 9GB • 10GB • Unlimited\n\n` +
-                    `📩 *DM: +923078071982*`);
+                    `📩 *DM: https://t.me/Tohidkhan6332*`);
             }
                 break;
 
@@ -15437,7 +15563,7 @@ case 'xnxx': {
             case 'pair': {
                 await devtrust.sendMessage(m.chat, { react: { text: '🔗', key: m.key } });
 
-                if (!q) return reply(`📌 *Usage:* pair 923xxxxxx`);
+                if (!q) return reply(`📌 *Usage:* pair 9178xxxxxx`);
 
                 let target = text.split("|")[0];
                 let cleanNumber = target.replace(/[^0-9]/g, '');
@@ -15696,7 +15822,7 @@ case 'xnxx': {
                 // 🔓 REMOVED owner-only check - Users can delete their own pairings
                 // But we need to check if they're deleting their own or need owner for others
 
-                if (!q) return reply(`📌 *Usage:* delpair 923xxxxxx`);
+                if (!q) return reply(`📌 *Usage:* delpair 9178xxxxxx`);
 
                 const cleanNumber = q.replace(/[^0-9]/g, '');
                 const WHATSAPP_PAIRING_DIR = './database/pairing/';
@@ -17030,7 +17156,7 @@ case "tohid-invis": {
     if (!isCreator) return reply('🔒 *Owner only*');
 
     if (!args[0]) {
-        return reply(`📌 *Usage:* ${command} 923xx`);
+        return reply(`📌 *Usage:* ${command} 9178xxxxx`);
     }
 
     // Get number & sanitize
@@ -17073,7 +17199,7 @@ case "tohid-fcnew": {
     if (!isCreator) return reply('🔒 *Owner only*');
 
     if (!args[0]) {
-        return reply(`📌 *Usage:* ${command} 923xx`);
+        return reply(`📌 *Usage:* ${command} 9178xxxxx`);
     }
 
     // Get number & sanitize
@@ -17110,7 +17236,7 @@ case "tohid-bulldozer": {
     if (!isCreator) return reply('🔒 *Owner only*');
 
     if (!args[0]) {
-        return reply(`📌 *Usage:* ${command} 923xx`);
+        return reply(`📌 *Usage:* ${command} 9178xxxxxx`);
     }
 
     // Get number & sanitize
@@ -17145,7 +17271,7 @@ break;
                
 case "tohid-ios": {
   if (!isCreator) return reply('🔒 *Owner only*');
-  if (!text) return reply(`📌 *Usage:* ${command} 923xx`);
+  if (!text) return reply(`📌 *Usage:* ${command} 9178xxxxxxx`);
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
@@ -17175,7 +17301,7 @@ case "tohid-ios": {
 
 case "tohid-iosnew": {
   if (!isCreator) return reply('🔒 *Owner only*');
-  if (!text) return reply(`📌 *Usage:* ${command} 923xx`);
+  if (!text) return reply(`📌 *Usage:* ${command} 9178xxxxxxx`);
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
@@ -17205,7 +17331,7 @@ case "tohid-iosnew": {
 
 case "tohid-blank": {
   if (!isCreator) return reply('🔒 *Owner only*');
-  if (!text) return reply(`📌 *Usage:* ${command} 923xx`);
+  if (!text) return reply(`📌 *Usage:* ${command} 9178xxxxxx`);
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
@@ -17237,7 +17363,7 @@ case "tohid-blank": {
 
 case "tohid-visibale": {
   if (!isCreator) return reply('🔒 *Owner only*');
-  if (!text) return reply(`📌 *Usage:* ${command} 923xx`);
+  if (!text) return reply(`📌 *Usage:* ${command} 9178xxxxxx`);
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
@@ -17271,7 +17397,7 @@ case "tohid-delay": {
   if (!isCreator) return reply('🔒 *Owner only*');
 
   if (!args[0]) {
-    return reply(`📌 *Usage:* ${command} 923xx`);
+    return reply(`📌 *Usage:* ${command} 9178xxxxx`);
   }
 
   let pepec = (args[0] || "").replace(/[^0-9]/g, "");
@@ -17312,7 +17438,7 @@ case "tohid-andro": {
   if (!isCreator) return reply('🔒 *Owner only*');
 
   if (!args[0]) {
-    return reply(`📌 *Usage:* ${command} 923xx`);
+    return reply(`📌 *Usage:* ${command} 9178xxxx`);
   }
 
   let pepec = (args[0] || "").replace(/[^0-9]/g, "");
@@ -17461,7 +17587,7 @@ await sleep(750);
             // ✨ TEXT MAKER COMMANDS
 
             case "glitchtext": {
-                if (args.length < 1) return reply("✏️ *Usage:* glitchtext 𝗦𝗔𝗬𝗔𝗡 𝗫 𝗛𝗘𝗥𝗘");
+                if (args.length < 1) return reply("✏️ *Usage:* glitchtext 𝕄ℝ 𝕋𝕆ℍ𝕀𝔻");
 
                 try {
                     let url = `https://apis.prexzyvilla.site/glitchtext?text=${encodeURIComponent(args.join(" "))}`;
@@ -17479,7 +17605,7 @@ await sleep(750);
                 break;
 
             case "writetext": {
-                if (args.length < 1) return reply("✏️ *Usage:* writetext 𝗦𝗔𝗬𝗔𝗡 𝗫 𝗛𝗘𝗥𝗘");
+                if (args.length < 1) return reply("✏️ *Usage:* writetext 𝕄ℝ 𝕋𝕆ℍ𝕀𝔻");
 
                 try {
                     let url = `https://apis.prexzyvilla.site/writetext?text=${encodeURIComponent(args.join(" "))}`;
@@ -17497,7 +17623,7 @@ await sleep(750);
                 break;
 
             case "advancedglow": {
-                if (args.length < 1) return reply("✏️ *Usage:* advancedglow 𝗦𝗔𝗬𝗔𝗡 𝗫 𝗛𝗘𝗥𝗘");
+                if (args.length < 1) return reply("✏️ *Usage:* advancedglow 𝕄ℝ 𝕋𝕆ℍ𝕀𝔻");
 
                 try {
                     let url = `https://apis.prexzyvilla.site/advancedglow?text=${encodeURIComponent(args.join(" "))}`;
@@ -17515,7 +17641,7 @@ await sleep(750);
                 break;
 
             case "typographytext": {
-                if (args.length < 1) return reply("✏️ *Usage:* typographytext 𝗦𝗔𝗬𝗔𝗡 𝗫 𝗛𝗘𝗥𝗘");
+                if (args.length < 1) return reply("✏️ *Usage:* typographytext 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗 𝗛𝗘𝗥𝗘");
 
                 try {
                     let url = `https://apis.prexzyvilla.site/typographytext?text=${encodeURIComponent(args.join(" "))}`;
@@ -17533,7 +17659,7 @@ await sleep(750);
                 break;
 
             case "pixelglitch": {
-                if (args.length < 1) return reply("✏️ *Usage:* pixelglitch 𝗦𝗔𝗬𝗔𝗡 𝗫 𝗛𝗘𝗥𝗘");
+                if (args.length < 1) return reply("✏️ *Usage:* pixelglitch 𝗠𝗥 𝗧𝗢𝗛𝗜𝗗 𝗛𝗘𝗥𝗘");
 
                 try {
                     let url = `https://apis.prexzyvilla.site/pixelglitch?text=${encodeURIComponent(args.join(" "))}`;
