@@ -16,3 +16,5 @@ tohidstore/pairing/*
 *.session
 *.session.json
 *.auth
+
+database/antistatus_settings.json
