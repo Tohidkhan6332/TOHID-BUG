@@ -18623,6 +18623,30 @@ case 'update': {
 
         const result = await updateFromGitHub();
 
+        if (result.deploymentTriggered) {
+            await devtrust.sendMessage(
+                m.chat,
+                addNewsletterContext({
+                    text:
+                        '🚀 *TOHID-AI deployment triggered!*\\n\\n' +
+                        '📦 Repository: TOHID-BUG\\n' +
+                        '🌿 Branch: main\\n' +
+                        '☁️ Platform: ' + (result.platform || 'deployment hook') +
+                        '\\n\\n⏳ The hosting platform will deploy the latest GitHub version now.'
+                }),
+                { quoted: m }
+            );
+
+            setTimeout(() => {
+                try {
+                    restartProcess();
+                } catch (error) {
+                    console.error('❌ Failed to exit after deployment trigger:', error);
+                }
+            }, 1200);
+            return;
+        }
+
         if (!result.updated) {
             await devtrust.sendMessage(
                 m.chat,
