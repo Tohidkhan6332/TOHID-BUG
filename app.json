@@ -1,0 +1,37 @@
+{
+  "name": "TOHID-AI",
+  "description": "TOHID-AI WhatsApp multi-session bot by MR TOHID",
+  "repository": "https://github.com/Tohidkhan6332/TOHID-BUG",
+  "keywords": ["whatsapp-bot", "baileys", "telegram-bot", "tohid-ai"],
+  "stack": "heroku-24",
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "env": {
+    "TELEGRAM_BOT_TOKEN": {
+      "description": "Telegram bot token. Leave empty if the Telegram component is not used.",
+      "required": false
+    },
+    "STARTUP_PASSWORD": {
+      "description": "Secure startup password used by the bot configuration.",
+      "required": true
+    },
+    "TOHID_UPDATE_HOOK_URL": {
+      "description": "Optional deployment hook URL for the .update command. Do not paste Heroku API credentials here.",
+      "required": false
+    },
+    "TOHID_UPDATE_HOOK_METHOD": {
+      "description": "HTTP method for TOHID_UPDATE_HOOK_URL.",
+      "value": "POST",
+      "required": false
+    }
+  }
+}
