@@ -22,7 +22,7 @@
  * WhatsApp : MR TOHID
  * Telegram : TOHID-AI
  *
- * Built with ❤️ by MR TOHID
+ * Built with ❤️❤️ by MR TOHID
  *
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  */
