@@ -1,0 +1,192 @@
+/**
+ * TOHID-AI self-update system
+ * Updates the running installation from the configured GitHub repository.
+ *
+ * Requirements:
+ * - The deployment must contain a writable Git working tree.
+ * - Git and npm must be available on the host.
+ * - The process must be supervised/restarted by the hosting platform, or
+ *   TOHID-AI will spawn the same entry point before exiting.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { execFileSync, spawn } = require('child_process');
+
+const UPDATE_REPO = 'https://github.com/Tohidkhan6332/TOHID-BUG.git';
+const UPDATE_BRANCH = 'main';
+
+function run(command, args, options = {}) {
+    return execFileSync(command, args, {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        ...options
+    }).trim();
+}
+
+function git(args) {
+    return run('git', args);
+}
+
+function isGitRepository() {
+    return fs.existsSync(path.join(process.cwd(), '.git'));
+}
+
+function hasTrackedChanges() {
+    try {
+        git(['diff', '--quiet']);
+        git(['diff', '--cached', '--quiet']);
+        return false;
+    } catch {
+        return true;
+    }
+}
+
+function isPackageChange(currentSha, latestSha) {
+    const changed = git([
+        'diff',
+        '--name-only',
+        currentSha,
+        latestSha,
+        '--',
+        'package.json',
+        'package-lock.json'
+    ]);
+
+    return Boolean(changed);
+}
+
+async function updateFromGitHub() {
+    if (!isGitRepository()) {
+        throw new Error(
+            'This deployment does not contain a Git repository. ' +
+            'Deploy the bot from the TOHID-BUG Git repository to use .update.'
+        );
+    }
+
+    const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (!branch || branch === 'HEAD') {
+        throw new Error('The bot is running from a detached Git HEAD.');
+    }
+
+    const remote = git(['remote', 'get-url', 'origin']);
+    const normalizedRemote = remote
+        .replace(/\.git$/, '')
+        .replace(/^git@github\.com:/, 'https://github.com/')
+        .replace(/\/$/, '');
+
+    const expectedRemote = UPDATE_REPO
+        .replace(/\.git$/, '')
+        .replace(/\/$/, '');
+
+    if (normalizedRemote !== expectedRemote) {
+        throw new Error(
+            'The current Git remote does not match the official TOHID-BUG repository.'
+        );
+    }
+
+    if (branch !== UPDATE_BRANCH) {
+        throw new Error(
+            `The current branch is "${branch}". Switch the deployment to "${UPDATE_BRANCH}" before using .update.`
+        );
+    }
+
+    // Do not overwrite manual tracked changes.
+    if (hasTrackedChanges()) {
+        throw new Error(
+            'Local tracked changes were detected. Commit/stash them first, then run .update again.'
+        );
+    }
+
+    git(['fetch', 'origin', UPDATE_BRANCH, '--prune']);
+
+    const currentSha = git(['rev-parse', 'HEAD']);
+    const latestSha = git(['rev-parse', `origin/${UPDATE_BRANCH}`]);
+
+    if (currentSha === latestSha) {
+        return {
+            updated: false,
+            currentSha,
+            latestSha,
+            dependenciesChanged: false
+        };
+    }
+
+    // Only allow a fast-forward update. This prevents .update from
+    // silently destroying local history or merging unexpected changes.
+    try {
+        git(['merge-base', '--is-ancestor', currentSha, latestSha]);
+    } catch {
+        throw new Error(
+            'The local branch cannot be fast-forwarded to GitHub main. Manual intervention is required.'
+        );
+    }
+
+    const dependenciesChanged = isPackageChange(currentSha, latestSha);
+
+    git(['pull', '--ff-only', 'origin', UPDATE_BRANCH]);
+
+    if (dependenciesChanged) {
+        try {
+            run('npm', ['install', '--no-audit', '--no-fund'], { timeout: 15 * 60 * 1000 });
+        } catch (error) {
+            // Roll the source tree back if dependency installation fails.
+            try {
+                git(['reset', '--hard', currentSha]);
+            } catch (_) {}
+            throw new Error(
+                'Source update was rolled back because npm install failed: ' +
+                (error.stderr || error.message || 'unknown npm error')
+            );
+        }
+    }
+
+    return {
+        updated: true,
+        currentSha,
+        latestSha,
+        dependenciesChanged
+    };
+}
+
+function restartProcess() {
+    const entryPoint = process.argv[1]
+        ? path.resolve(process.argv[1])
+        : path.join(process.cwd(), 'index.js');
+
+    // Supervisors such as PM2/Pterodactyl/Render commonly restart the
+    // service after exit. In that case, do not create a second process.
+    const supervised = Boolean(
+        process.env.pm_id ||
+        process.env.PM2_HOME ||
+        process.env.PTERODACTYL_CONTAINER ||
+        process.env.RENDER
+    );
+
+    if (supervised) {
+        setTimeout(() => process.exit(0), 800);
+        return;
+    }
+
+    // For a plain "node index.js" process, start the same entry point first.
+    const child = spawn(process.execPath, [entryPoint, ...process.argv.slice(2)], {
+        cwd: process.cwd(),
+        env: {
+            ...process.env,
+            TOHID_UPDATE_RESTART: '1'
+        },
+        detached: true,
+        stdio: 'ignore'
+    });
+
+    child.unref();
+    setTimeout(() => process.exit(0), 800);
+}
+
+module.exports = {
+    updateFromGitHub,
+    restartProcess,
+    UPDATE_REPO,
+    UPDATE_BRANCH
+};
