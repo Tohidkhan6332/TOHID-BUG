@@ -1,0 +1,6 @@
+entrypoint = "index.js"
+
+[deployment]
+run = "npm start"
+build = "npm install --omit=dev --no-audit --no-fund"
+ignorePorts = true
