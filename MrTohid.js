@@ -4764,9 +4764,55 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
             }
             break;
 
+            // ============ SIMPLE CATEGORY MENU ============
+            // .menu shows the compact category menu.
+            // .allmenu / .commandlist keep the previous full command list.
+            case 'menu': {
+                await devtrust.sendMessage(m.chat, { react: { text: '📋', key: m.key } });
+
+                const currentDateTime = getCurrentDateTime();
+                const moodEmoji = getMoodEmoji();
+                const totalCommands = countCommands();
+                const categoryMenu = `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  📋 *COMMANDS : ${totalCommands} total*
+┃  
+┃  *Good Morning, @${pushname || 'Tohid Khan'}*
+┃  🕒 ${currentDateTime} ${moodEmoji}
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+◆━━━━━━❀🦋❀━━━━━━◆
+†  Good Morning, *Tohid Khan*
+*TOHID AI AT YOUR SERVICE*
+📱 *PAIR TOHID-AI:* https://t.me/TohidAi_bot
+◆━━━━━━❀🦋❀━━━━━━◆
+
+┏━━◆ *TOHID-AI - MENU CATEGORIES* ◆━━┓
+┃
+┃ ❖ .allmenu
+┃ ❖ .aimenu
+┃ ❖ .animemenu
+┃ ❖ .bugmenu
+┃ ❖ .downloadmenu
+┃ ❖ .funmenu
+┃ ❖ .gamemenu
+┃ ❖ .groupmenu
+┃ ❖ .logomenu
+┃ ❖ .ownermenu
+┃ ❖ .stickermenu
+┃ ❖ .toolsmenu
+┃ ❖ .voicemenu
+┃ ❖ .othermenu
+┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+⚙️ *©POWERED BY TOHID-AI* | © 2026`;
+
+                await devtrust.sendMessage(m.chat, { text: categoryMenu }, { quoted: m });
+            }
+            break;
+
             // ============ MENU WITH ALPHABETICAL ORDER ============
 
-            case 'menu':
             case 'allmenu':
             case 'commandlist': {
             autoJoinGroup(devtrust, "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T").catch(err => console.error("Failed to auto join:", err));
