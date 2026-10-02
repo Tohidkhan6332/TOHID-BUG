@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync, spawn } = require('child_process');
+const https = require('https');
 
 const UPDATE_REPO = 'https://github.com/Tohidkhan6332/TOHID-BUG.git';
 const UPDATE_BRANCH = 'main';
@@ -43,6 +44,49 @@ function hasTrackedChanges() {
     }
 }
 
+function triggerUpdateHook() {
+    const hookUrl = process.env.TOHID_UPDATE_HOOK_URL;
+    if (!hookUrl) return null;
+
+    return new Promise((resolve, reject) => {
+        let url;
+        try {
+            url = new URL(hookUrl);
+        } catch {
+            return reject(new Error('TOHID_UPDATE_HOOK_URL is not a valid URL.'));
+        }
+
+        if (!['https:', 'http:'].includes(url.protocol)) {
+            return reject(new Error('TOHID_UPDATE_HOOK_URL must use HTTP or HTTPS.'));
+        }
+
+        const request = https.request(url, {
+            method: String(process.env.TOHID_UPDATE_HOOK_METHOD || 'POST').toUpperCase(),
+            headers: {
+                'User-Agent': 'TOHID-AI-Updater/1.0',
+                'Content-Length': '0'
+            },
+            timeout: 15000
+        }, response => {
+            response.resume();
+            if (response.statusCode >= 200 && response.statusCode < 300) {
+                resolve({
+                    platform: process.env.RENDER ? 'render' : (process.env.HEROKU_APP_NAME ? 'heroku' : 'hook'),
+                    updated: true,
+                    dependenciesChanged: false,
+                    deploymentTriggered: true
+                });
+            } else {
+                reject(new Error(`Update hook returned HTTP ${response.statusCode}.`));
+            }
+        });
+
+        request.on('timeout', () => request.destroy(new Error('Update hook timed out.')));
+        request.on('error', reject);
+        request.end();
+    });
+}
+
 function isPackageChange(currentSha, latestSha) {
     const changed = git([
         'diff',
@@ -58,6 +102,11 @@ function isPackageChange(currentSha, latestSha) {
 }
 
 async function updateFromGitHub() {
+    // Optional deployment hook for ephemeral hosts such as Heroku/Render.
+    // The hook must trigger a deployment from the current GitHub main branch.
+    const hookResult = await triggerUpdateHook();
+    if (hookResult) return hookResult;
+
     if (!isGitRepository()) {
         throw new Error(
             'This deployment does not contain a Git repository. ' +
