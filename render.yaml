@@ -1,0 +1,16 @@
+services:
+  - type: worker
+    name: tohid-ai
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: off
+    envVars:
+      - key: STARTUP_PASSWORD
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TOHID_UPDATE_HOOK_URL
+        sync: false
+      - key: TOHID_UPDATE_HOOK_METHOD
+        value: POST
