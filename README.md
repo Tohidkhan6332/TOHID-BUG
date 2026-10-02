@@ -107,6 +107,29 @@ Known items that should be fixed before deployment include:
 - Baileys uses the PouCode GitHub fork (`github:pou-code/Baileys`) through the CommonJS compatibility bridge; Node.js 20+ is required.
 - Obfuscation/deobfuscation packages that were absent from the lockfile are treated as optional features rather than installation blockers.
 
+## 🚀 Deploy to Heroku
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/Tohidkhan6332/TOHID-BUG)
+
+Click the button above to create a Heroku app directly from this repository.
+
+### Heroku setup
+
+1. Click **Deploy to Heroku** above.
+2. Enter a secure `STARTUP_PASSWORD` when Heroku asks for configuration.
+3. Add `TELEGRAM_BOT_TOKEN` only if you use the Telegram component.
+4. Create the app and let Heroku build the worker dyno.
+5. Check Heroku logs and complete the bot's pairing/configuration flow.
+
+> **Important:** WhatsApp session data should be handled carefully on Heroku. Heroku dyno filesystems are not a substitute for persistent storage, so production deployments should use an appropriate external/persistent session strategy.
+
+### `.update` on Heroku
+
+For Heroku, `.update` should use a deployment hook rather than relying on a local `git pull`. Set `TOHID_UPDATE_HOOK_URL` to a secure deployment endpoint that rebuilds the app from the `main` branch. The bot will call that hook and then exit so Heroku can start the new release.
+
+Do **not** put a Heroku API token directly in the source code or README. Heroku's Platform API supports authenticated build creation, and Heroku Button provides the one-click deployment flow.
+
+For automatic GitHub-to-Heroku deployments, connect the Heroku app to this GitHub repository from the Heroku Dashboard's **Deploy** tab.
 ## 📱 Termux Deployment
 
 > Recommended: Node.js 20+ and a Termux installation with access to the official package repositories.
