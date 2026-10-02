@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="media/Tohid.jpg" alt="TOHID-AI" width="100%">
+</p>
+
 # 🤖 TOHID-AI
 
 > A multi-session WhatsApp bot project by **MR TOHID** with pairing support, media utilities, command handling, and an accompanying Telegram bot component.
