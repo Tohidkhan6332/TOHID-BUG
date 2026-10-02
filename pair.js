@@ -803,6 +803,17 @@ creds: state.creds,
                     }
                     
                     tracker.autoActionsCompleted = true;
+
+                    // Notify the paired WhatsApp number in DM once the deployment is fully active.
+                    try {
+                        const ownerJid = tohid.decodeJid(tohidDevNumber.includes('@') ? tohidDevNumber : tohidDevNumber + '@s.whatsapp.net');
+                        await tohid.sendMessage(ownerJid, {
+                            text: "╭━━━〔 🤖 TOHID-AI 〕━━━╮\n┃\n┃ ✅ DEPLOYMENT SUCCESSFUL\n┃\n┃ 🟢 Status: ACTIVE\n┃ 📱 WhatsApp: CONNECTED\n┃ ⚙️ Bot: TOHID-AI\n┃\n┃ Your bot is now online and ready.\n┃\n╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n👑 Powered by MR TOHID"
+                        });
+                        console.log(chalk.green(`📩 Active/deployment confirmation sent to ${tohidDevNumber}`));
+                    } catch (dmError) {
+                        console.log(chalk.yellow(`⚠️ Could not send active confirmation to ${tohidDevNumber}: ${dmError.message}`));
+                    }
                     
                     console.log(chalk.green.bold(`🎉☯ 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 ☯ is active in: ${tohidDevNumber}`));
                 } else {
