@@ -99,6 +99,8 @@ const ASSETS = {
     'https://h.uguu.se/qWcJAzsK.mp4',
     'https://h.uguu.se/ANUyTwpB.mp4'
   ],
+  // Set TUTORIAL_VIDEO_URL to a direct MP4 URL for the "WATCH NOW" button.
+  tutorialVideo: process.env.TUTORIAL_VIDEO_URL || '',
 };
 
 // Channel Requirements
@@ -3041,14 +3043,26 @@ bot.on('callback_query', async (query) => {
 
   else if (data === 'watch_tutorial') {
     await bot.answerCallbackQuery(query.id, { text: 'sᴇɴᴅɪɴɢ ᴠɪᴅᴇᴏ...' });
-    
+
+    const tutorialVideo = ASSETS.tutorialVideo;
+    if (!tutorialVideo) {
+      return bot.sendMessage(chatId,
+        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\n│\n├◆ ❌ ᴛᴜᴛᴏʀɪᴀʟ ᴠɪᴅᴇᴏ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ\n├◆ 👑 ᴏᴡɴᴇʀ: sᴇᴛ TUTORIAL_VIDEO_URL\n│\n└ ❏`,
+        { parse_mode: 'Markdown' }
+      );
+    }
+
     try {
-      await bot.sendVideo(chatId, ASSETS.tutorialVideo, {
+      await bot.sendVideo(chatId, tutorialVideo, {
         caption: `🎬 *${SYSTEM.name} sᴇᴛᴜᴘ ɢᴜɪᴅᴇ*`,
         parse_mode: 'Markdown'
       });
     } catch (e) {
-      await bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗘𝗥𝗥𝗢𝗥⌟* ◆\n│\n├◆ ᴠɪᴅᴇᴏ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+      console.error('[TUTORIAL] Video send failed:', e.message);
+      await bot.sendMessage(chatId,
+        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\n│\n├◆ ❌ ᴠɪᴅᴇᴏ sᴇɴᴅ ғᴀɪʟᴇᴅ\n│\n└ ❏`,
+        { parse_mode: 'Markdown' }
+      );
     }
   }
 
@@ -3091,13 +3105,16 @@ bot.on('callback_query', async (query) => {
 
     stats += `\n│\n└ ❏`;
 
-    await bot.editMessageText(stats, {
+    // The main menu is sent as a photo, so edit the caption rather than
+    // trying to edit it as a text message.
+    await bot.editMessageCaption(stats, {
       chat_id: chatId,
       message_id: msg.message_id,
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [{ text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'bot_stats' }]
+          [{ text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'bot_stats' }],
+          [{ text: '🏠 ᴍᴀɪɴ ᴍᴇɴᴜ', callback_data: 'show_main' }]
         ]
       }
     });
