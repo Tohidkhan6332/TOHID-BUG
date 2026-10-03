@@ -67,7 +67,30 @@ function saveTutorialVideoUrl(url) {
 function isValidTelegramUrl(value) {
   try {
     const parsed = new URL(String(value).trim());
-    return /^https?:$/.test(parsed.protocol) && /^(www\\.)?t\\.me$/i.test(parsed.hostname);
+
+    // Only HTTPS Telegram links are accepted.
+    if (parsed.protocol !== 'https:') return false;
+
+    const hostname = parsed.hostname.toLowerCase().replace(/^www\\./, '');
+    if (!['t.me', 'telegram.me'].includes(hostname)) return false;
+
+    // Tutorial must point to a specific Telegram message/post,
+    // not just a channel/group home page.
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    if (parts.length < 2) return false;
+
+    // Private channel/group post:
+    // https://t.me/c/1234567890/123
+    if (parts[0].toLowerCase() === 'c') {
+      return parts.length >= 3 &&
+        /^\\d+$/.test(parts[1]) &&
+        /^\\d+$/.test(parts[2]);
+    }
+
+    // Public channel/group post:
+    // https://t.me/ChannelUsername/123
+    return /^[A-Za-z0-9_]{5,32}$/.test(parts[0]) &&
+      /^\\d+$/.test(parts[1]);
   } catch {
     return false;
   }
@@ -130,7 +153,8 @@ const ASSETS = {
     'https://h.uguu.se/qWcJAzsK.mp4',
     'https://h.uguu.se/ANUyTwpB.mp4'
   ],
-  // Set TUTORIAL_VIDEO_URL to a direct MP4 URL for the "WATCH NOW" button.
+  // Telegram post URL used by the tutorial "WATCH NOW" button.
+  // Example: https://t.me/TohidChannel/123 or https://t.me/c/1234567890/123
   tutorialVideo: process.env.TUTORIAL_VIDEO_URL || '',
 };
 
@@ -2976,14 +3000,28 @@ bot.onText(/^\\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => 
 
   const url = String(match?.[1] || '').trim();
   if (!url) {
-    return bot.sendMessage(chatId, '❌ *Usage:*\\n/settutorial https://t.me/channel/123', { parse_mode: 'Markdown' });
+    return bot.sendMessage(chatId,
+      '❌ *Usage:*\\n/settutorial https://t.me/channel/123\\n\\nThe link must point to a specific Telegram video/post.',
+      { parse_mode: 'Markdown' }
+    );
   }
+
   if (!isValidTelegramUrl(url)) {
-    return bot.sendMessage(chatId, '❌ *Invalid Telegram link.*\\n\\nUse a link like:\\nhttps://t.me/channel/123\\nhttps://t.me/c/1234567890/123', { parse_mode: 'Markdown' });
+    return bot.sendMessage(chatId,
+      '❌ *Invalid Telegram post link.*\\n\\nUse a specific video/post link like:\\n' +
+      'https://t.me/channel/123\\n' +
+      'https://t.me/c/1234567890/123',
+      { parse_mode: 'Markdown' }
+    );
   }
 
   saveTutorialVideoUrl(url);
-  return bot.sendMessage(chatId, '✅ *Tutorial video link updated.*\\n\\n🎬 ' + url + '\\n\\nThe Telegram Tutorial → WATCH NOW button now uses this link.', { parse_mode: 'Markdown' });
+  return bot.sendMessage(chatId,
+    '✅ *Tutorial video link updated.*\\n\\n' +
+    '🎬 ' + url + '\\n\\n' +
+    'The *WATCH NOW* button will open this exact Telegram post.',
+    { parse_mode: 'Markdown' }
+  );
 });
 
 bot.onText(/^\\/deltutorial(?:@[\\w_]+)?$/i, async (msg) => {
@@ -3001,10 +3039,24 @@ bot.onText(/^\\/tutorialstatus(?:@[\\w_]+)?$/i, async (msg) => {
   if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
 
   const url = getTutorialVideoUrl();
-  return bot.sendMessage(chatId, url
-    ? '🎬 *Current Tutorial Link*\\n\\n' + url
-    : '❌ *No tutorial video link is configured.*\\n\\nUse /settutorial followed by a Telegram video/post link.',
-    { parse_mode: 'Markdown' }
+  if (!url) {
+    return bot.sendMessage(chatId,
+      '❌ *No tutorial video link is configured.*\\n\\nUse /settutorial followed by a Telegram video/post link.',
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  return bot.sendMessage(chatId,
+    '🎬 *Current Tutorial Video*\\n\\n' +
+    'The button below opens the exact Telegram video/post.',
+    {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '▶️ ᴏᴘᴇɴ ᴠɪᴅᴇᴏ', url }]
+        ]
+      }
+    }
   );
 });
 
@@ -3097,8 +3149,23 @@ bot.on('callback_query', async (query) => {
 
   else if (data === 'show_tutorial') {
     await bot.answerCallbackQuery(query.id);
-    
-    bot.sendMessage(chatId,
+
+    const tutorialVideo = getTutorialVideoUrl();
+
+    if (!tutorialVideo) {
+      return bot.sendMessage(chatId,
+        `┌ ❏ ◆ *⌜𝗩𝗜𝗗𝗘𝗢 𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟⌟* ◆
+│
+├◆ ❌ ᴠɪᴅᴇᴏ ʟɪɴᴋ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ
+├◆ 👑 ᴏᴡɴᴇʀ: ᴜsᴇ /settutorial
+│
+└ ❏`,
+        { parse_mode: 'Markdown' }
+      );
+    }
+
+    // Use a URL button directly so one tap opens the exact Telegram post.
+    return bot.sendMessage(chatId,
       `┌ ❏ ◆ *⌜𝗩𝗜𝗗𝗘𝗢 𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟⌟* ◆
 │
 ├◆ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴄᴏᴍᴘʟᴇᴛᴇ sᴇᴛᴜᴘ ɢᴜɪᴅᴇ
@@ -3108,7 +3175,7 @@ bot.on('callback_query', async (query) => {
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
-            [{ text: '▶️ ᴡᴀᴛᴄʜ ɴᴏᴡ', callback_data: 'watch_tutorial' }]
+            [{ text: '▶️ ᴡᴀᴛᴄʜ ɴᴏᴡ', url: tutorialVideo }]
           ]
         }
       }
