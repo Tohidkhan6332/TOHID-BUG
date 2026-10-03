@@ -17,20 +17,34 @@
   },
   "env": {
     "TELEGRAM_BOT_TOKEN": {
-      "description": "Telegram bot token. Leave empty if the Telegram component is not used.",
-      "required": false
-    },
-    "STARTUP_PASSWORD": {
-      "description": "Secure startup password used by the bot configuration.",
+      "description": "Telegram bot token used by TOHID-AI.",
       "required": true
     },
-    "TOHID_UPDATE_HOOK_URL": {
-      "description": "Optional deployment hook URL for the .update command. Do not paste Heroku API credentials here.",
+    "STARTUP_PASSWORD": {
+      "description": "Secure startup password used by TOHID-AI.",
+      "required": true
+    },
+    "HEROKU_API_KEY": {
+      "description": "Heroku API key used by the Telegram /update command to trigger a new Heroku build.",
       "required": false
     },
-    "TOHID_UPDATE_HOOK_METHOD": {
-      "description": "HTTP method for TOHID_UPDATE_HOOK_URL.",
-      "value": "POST",
+    "HEROKU_APP_NAME": {
+      "description": "Heroku app name used by the Telegram /update command.",
+      "required": false
+    },
+    "UPDATE_GITHUB_OWNER": {
+      "description": "GitHub repository owner used by /update.",
+      "value": "Tohidkhan6332",
+      "required": false
+    },
+    "UPDATE_GITHUB_REPO": {
+      "description": "GitHub repository used by /update.",
+      "value": "TOHID-BUG",
+      "required": false
+    },
+    "UPDATE_GITHUB_BRANCH": {
+      "description": "GitHub branch used by /update.",
+      "value": "main",
       "required": false
     }
   }
