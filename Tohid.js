@@ -1066,8 +1066,8 @@ async function sendBugMenu(chatId) {
     return bot.sendPhoto(chatId, BUG_MENU_IMAGE, {
       caption: `┌ ❏ ◆ *⌜𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 𝗡𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗⌟* ◆
 │
-├◆ ❌ ᴡʜᴀᴛsᴀᴘᴘ ʙᴏᴛ ᴀʙʜɪ ᴄᴏɴɴᴇᴄᴛ ɴᴀʜɪ ʜᴀɪ
-├◆ 🔗 ᴘᴇʜʟᴇ ᴡʜᴀᴛsᴀᴘᴘ ᴄᴏɴɴᴇᴄᴛ ᴋᴀʀᴏ
+├◆ ❌ WhatsApp is not connected yet
+├◆ 🔗 Please connect WhatsApp first
 │
 ├◆ ᴜsᴇ: /pair 917849917350
 │
@@ -1134,7 +1134,7 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
     if (!args) return sendBugMenu(chatId);
     return bot.sendMessage(chatId,
       `❌ ᴡʜᴀᴛsᴀᴘᴘ ᴀʙʜɪ ᴄᴏɴɴᴇᴄᴛ ɴᴀʜɪ ʜᴀɪ.
-🔗 ᴘᴇʜʟᴇ /pair <number> sᴇ ᴡʜᴀᴛsᴀᴘᴘ ᴄᴏɴɴᴇᴄᴛ ᴋᴀʀᴏ.`,
+🔗 Please connect WhatsApp first using /pair <number>.`,
       { parse_mode: 'Markdown' }
     );
   }
