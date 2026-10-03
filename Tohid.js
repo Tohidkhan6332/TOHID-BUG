@@ -901,6 +901,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /addadmin
 ├◆ /removeadmin
 ├◆ /restart
+├◆ /update
 │
 └ ❏`;
     }
