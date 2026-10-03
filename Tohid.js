@@ -1042,6 +1042,51 @@ bot.onText(/\/start/, async (msg) => {
   await sendMainMenu(chatId, userId, userName, isAdmin(userId.toString()), isOwner(userId));
 });
 
+// ==================== BUG MENU HELPERS ====================
+const BUG_MENU_IMAGE = ASSETS.menuImages?.[0] || "https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg";
+
+const BUG_MENU_TEXT = `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
+│❖ /tohid-invis 9178xxxxxxx
+│❖ /tohid-fcnew 9178xxxxxxx
+│❖ /tohid-bulldozer 9178xxxxxx
+│❖ /tohid-ios 9178xxxxxxxx
+│❖ /tohid-iosnew 9178xxxxx
+│❖ /tohid-delay 9178xxxxxxx
+│❖ /tohid-andro 9178xxxxxxx
+│❖ /tohid-blank 9178xxxxxxxx
+│❖ /tohid-visibale 9178xxxxxx
+│❖ /xgroup link
+│❖ /groupban link
+┗━━━━━━━━━━━━━━┛`;
+
+async function sendBugMenu(chatId) {
+  const target = getActiveConnection();
+
+  if (!target) {
+    return bot.sendPhoto(chatId, BUG_MENU_IMAGE, {
+      caption: `┌ ❏ ◆ *⌜𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 𝗡𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗⌟* ◆
+│
+├◆ ❌ ᴡʜᴀᴛsᴀᴘᴘ ʙᴏᴛ ᴀʙʜɪ ᴄᴏɴɴᴇᴄᴛ ɴᴀʜɪ ʜᴀɪ
+├◆ 🔗 ᴘᴇʜʟᴇ ᴡʜᴀᴛsᴀᴘᴘ ᴄᴏɴɴᴇᴄᴛ ᴋᴀʀᴏ
+│
+├◆ ᴜsᴇ: /pair 917849917350
+│
+└ ❏`,
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔗 ᴄᴏɴɴᴇᴄᴛ ᴡʜᴀᴛsᴀᴘᴘ', callback_data: 'pair_guide' }]
+        ]
+      }
+    });
+  }
+
+  return bot.sendPhoto(chatId, BUG_MENU_IMAGE, {
+    caption: BUG_MENU_TEXT,
+    parse_mode: 'Markdown'
+  });
+}
+
 // ==================== TELEGRAM → WHATSAPP BUG COMMAND BRIDGE ====================
 // Owner-only. These are the only WhatsApp BUG commands exposed directly on Telegram.
 const TELEGRAM_BUG_COMMANDS = new Set([
@@ -1083,31 +1128,21 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
     );
   }
 
-  if (!args) {
+  const target = getActiveConnection();
+
+  if (!target) {
+    if (!args) return sendBugMenu(chatId);
     return bot.sendMessage(chatId,
-      `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
-│❖ /tohid-invis 9178xxxxxxx
-│❖ /tohid-fcnew 9178xxxxxxx
-│❖ /tohid-bulldozer 9178xxxxxx
-│❖ /tohid-ios 9178xxxxxxxx
-│❖ /tohid-iosnew 9178xxxxx
-│❖ /tohid-delay 9178xxxxxxx
-│❖ /tohid-andro 9178xxxxxxx
-│❖ /tohid-blank 9178xxxxxxxx
-│❖ /tohid-visibale 9178xxxxxx
-│❖ /xgroup link
-│❖ /groupban link
-┗━━━━━━━━━━━━━━┛`,
+      `❌ ᴡʜᴀᴛsᴀᴘᴘ ᴀʙʜɪ ᴄᴏɴɴᴇᴄᴛ ɴᴀʜɪ ʜᴀɪ.
+🔗 ᴘᴇʜʟᴇ /pair <number> sᴇ ᴡʜᴀᴛsᴀᴘᴘ ᴄᴏɴɴᴇᴄᴛ ᴋᴀʀᴏ.`,
       { parse_mode: 'Markdown' }
     );
   }
 
-  const target = getActiveConnection();
-  if (!target) {
-    return bot.sendMessage(chatId,
-      '❌ No active WhatsApp session found. Pair a WhatsApp account first with /pair <number>.'
-    );
+  if (!args) {
+    return sendBugMenu(chatId);
   }
+
 
   const socket = target.connection;
   const selfJid = socket?.user?.id;
@@ -2923,22 +2958,7 @@ bot.on('callback_query', async (query) => {
 
   else if (data === 'show_bug_menu') {
     await bot.answerCallbackQuery(query.id, { text: 'ʙᴜɢ ᴍᴇɴᴜ' });
-
-    const bugMenu = `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
-│❖ /tohid-invis 9178xxxxxxx
-│❖ /tohid-fcnew 9178xxxxxxx
-│❖ /tohid-bulldozer 9178xxxxxx
-│❖ /tohid-ios 9178xxxxxxxx
-│❖ /tohid-iosnew 9178xxxxx
-│❖ /tohid-delay 9178xxxxxxx
-│❖ /tohid-andro 9178xxxxxxx
-│❖ /tohid-blank 9178xxxxxxxx
-│❖ /tohid-visibale 9178xxxxxx
-│❖ /xgroup link
-│❖ /groupban link
-┗━━━━━━━━━━━━━━┛`;
-
-    return bot.sendMessage(chatId, bugMenu, { parse_mode: 'Markdown' });
+    return sendBugMenu(chatId);
   }
 
   else if (data === 'show_tutorial') {
