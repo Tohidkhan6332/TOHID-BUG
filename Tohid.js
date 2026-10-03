@@ -1123,7 +1123,7 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
     return bot.sendMessage(chatId,
       `┌ ❏ ◆ *⌜𝗕𝗨𝗚 𝗖𝗢𝗠𝗠𝗔𝗡𝗗⌟* ◆
 │
-├◆ ᴄᴍᴅ: \\`${commandText}\\`
+├◆ ᴄᴍᴅ: ${commandText}
 ├◆ ᴡʜᴀᴛsᴀᴘᴘ: +${target.number.replace(/[^0-9]/g, '')}
 ├◆ sᴛᴀᴛᴜs: sᴇɴᴛ
 │
