@@ -46,6 +46,37 @@ const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json')
 
 function getTutorialVideoUrl() {
   try {
+    if (!fsSync.existsSync(TUTORIAL_CONFIG_FILE)) return '';
+    const data = JSON.parse(fsSync.readFileSync(TUTORIAL_CONFIG_FILE, 'utf8'));
+    return typeof data.url === 'string' ? data.url.trim() : '';
+  } catch (error) {
+    console.error('[TUTORIAL] Config read failed:', error.message);
+    return '';
+  }
+}
+
+function saveTutorialVideoUrl(url) {
+  const dir = path.dirname(TUTORIAL_CONFIG_FILE);
+  if (!fsSync.existsSync(dir)) fsSync.mkdirSync(dir, { recursive: true });
+  fsSync.writeFileSync(TUTORIAL_CONFIG_FILE, JSON.stringify({
+    url: url || '',
+    updatedAt: new Date().toISOString()
+  }, null, 2));
+}
+
+function isValidTelegramUrl(value) {
+  try {
+    const parsed = new URL(String(value).trim());
+    return /^https?:$/.test(parsed.protocol) && /^(www\\.)?t\\.me$/i.test(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
+
+function getTutorialVideoUrl() {
+  try {
     if (!fsSync.existsSync(TUTORIAL_CONFIG_FILE)) return ASSETS.tutorialVideo || '';
     const data = JSON.parse(fsSync.readFileSync(TUTORIAL_CONFIG_FILE, 'utf8'));
     return typeof data.url === 'string' ? data.url.trim() : '';
@@ -2947,6 +2978,46 @@ bot.onText(/\/status/, (msg) => {
     );
 });
 
+// ==================== TELEGRAM TUTORIAL CONTROLS ====================
+bot.onText(/^\\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from?.id;
+  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+
+  const url = String(match?.[1] || '').trim();
+  if (!url) {
+    return bot.sendMessage(chatId, '❌ *Usage:*\\n/settutorial https://t.me/channel/123', { parse_mode: 'Markdown' });
+  }
+  if (!isValidTelegramUrl(url)) {
+    return bot.sendMessage(chatId, '❌ *Invalid Telegram link.*\\n\\nUse a link like:\\nhttps://t.me/channel/123\\nhttps://t.me/c/1234567890/123', { parse_mode: 'Markdown' });
+  }
+
+  saveTutorialVideoUrl(url);
+  return bot.sendMessage(chatId, '✅ *Tutorial video link updated.*\\n\\n🎬 ' + url + '\\n\\nThe Telegram Tutorial → WATCH NOW button now uses this link.', { parse_mode: 'Markdown' });
+});
+
+bot.onText(/^\\/deltutorial(?:@[\\w_]+)?$/i, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from?.id;
+  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+
+  saveTutorialVideoUrl('');
+  return bot.sendMessage(chatId, '🗑️ *Tutorial video link removed.*\\n\\nWATCH NOW will stay unavailable until you add a new link.', { parse_mode: 'Markdown' });
+});
+
+bot.onText(/^\\/tutorialstatus(?:@[\\w_]+)?$/i, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from?.id;
+  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+
+  const url = getTutorialVideoUrl();
+  return bot.sendMessage(chatId, url
+    ? '🎬 *Current Tutorial Link*\\n\\n' + url
+    : '❌ *No tutorial video link is configured.*\\n\\nUse /settutorial followed by a Telegram video/post link.',
+    { parse_mode: 'Markdown' }
+  );
+});
+
 bot.onText(/^\/restart(?:@[\\w_]+)?$/i, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
@@ -3060,7 +3131,7 @@ bot.on('callback_query', async (query) => {
     if (!tutorialVideo) {
       await bot.answerCallbackQuery(query.id, { text: 'Tutorial link is not configured', show_alert: true });
       return bot.sendMessage(chatId,
-        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\\n│\\n├◆ ❌ ᴠɪᴅᴇᴏ ʟɪɴᴋ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ\\n├◆ 👑 ᴏᴡɴᴇʀ: ᴜsᴇ .settutorial ᴏɴ ᴡʜᴀᴛsᴀᴘᴘ\\n│\\n└ ❏`,
+        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\\n│\\n├◆ ❌ ᴠɪᴅᴇᴏ ʟɪɴᴋ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ\\n├◆ 👑 ᴏᴡɴᴇʀ: ᴜsᴇ /settutorial\\n│\\n└ ❏`,
         { parse_mode: 'Markdown' }
       );
     }
