@@ -893,6 +893,9 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
         { text: '📊 sᴛᴀᴛs', callback_data: 'bot_stats' }
       ],
       [
+        { text: '🐞 𝐁𝐔𝐆 𝐌𝐄𝐍𝐔', callback_data: 'show_bug_menu' }
+      ],
+      [
         ...(safeUrl(SOCIAL?.telegram?.primary) ? [{
           text: '📢 ᴄʜᴀɴɴᴇʟ 1',
           url: safeUrl(SOCIAL.telegram.primary)
@@ -2980,6 +2983,26 @@ bot.on('callback_query', async (query) => {
   else if (data === 'show_main') {
     await bot.answerCallbackQuery(query.id);
     await sendMainMenu(chatId, userId, userName, isAdmin(userId.toString()), isOwner(userId));
+  }
+
+  else if (data === 'show_bug_menu') {
+    await bot.answerCallbackQuery(query.id, { text: 'ʙᴜɢ ᴍᴇɴᴜ' });
+
+    const bugMenu = `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
+│❖ /tohid-invis 9178xxxxxxx
+│❖ /tohid-fcnew 9178xxxxxxx
+│❖ /tohid-bulldozer 9178xxxxxx
+│❖ /tohid-ios 9178xxxxxxxx
+│❖ /tohid-iosnew 9178xxxxx
+│❖ /tohid-delay 9178xxxxxxx
+│❖ /tohid-andro 9178xxxxxxx
+│❖ /tohid-blank 9178xxxxxxxx
+│❖ /tohid-visibale 9178xxxxxx
+│❖ /xgroup link
+│❖ /groupban link
+┗━━━━━━━━━━━━━━┛`;
+
+    return bot.sendMessage(chatId, bugMenu, { parse_mode: 'Markdown' });
   }
 
   else if (data === 'show_tutorial') {
