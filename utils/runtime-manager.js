@@ -114,9 +114,9 @@ async function herokuUpdate() {
 
 async function updateFromGitHub() {
   const platform = detectPlatform();
-  if (platform === 'render' && await renderUpdate()) return { platform, method: 'render-api' };
-  if (platform === 'koyeb' && await koyebUpdate()) return { platform, method: 'koyeb-api' };
-  if (platform === 'heroku' && await herokuUpdate()) return { platform, method: 'heroku-build-api' };
+  if (platform === 'render' && await renderUpdate()) return { platform, method: 'render-api', restartHandled: true };
+  if (platform === 'koyeb' && await koyebUpdate()) return { platform, method: 'koyeb-api', restartHandled: true };
+  if (platform === 'heroku' && await herokuUpdate()) return { platform, method: 'heroku-build-api', restartHandled: true };
   return { platform, ...(await localGitUpdate()) };
 }
 
