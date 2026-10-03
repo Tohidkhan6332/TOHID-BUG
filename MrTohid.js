@@ -4828,6 +4828,35 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
             return `${hours}:${minutes}`;
         }
 
+        // ============ TELEGRAM TUTORIAL VIDEO CONTROL ============
+        const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
+
+        function getTutorialConfig() {
+            try {
+                if (!fs.existsSync(TUTORIAL_CONFIG_FILE)) return { url: '' };
+                const data = JSON.parse(fs.readFileSync(TUTORIAL_CONFIG_FILE, 'utf8'));
+                return { url: typeof data.url === 'string' ? data.url.trim() : '' };
+            } catch (error) {
+                console.error('❌ Tutorial config read error:', error.message);
+                return { url: '' };
+            }
+        }
+
+        function isValidTutorialUrl(value) {
+            try {
+                const parsed = new URL(String(value).trim());
+                return /^https?:$/.test(parsed.protocol) && /^(www\\.)?t\\.me$/i.test(parsed.hostname);
+            } catch {
+                return false;
+            }
+        }
+
+        function saveTutorialConfig(url) {
+            const dir = path.dirname(TUTORIAL_CONFIG_FILE);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(TUTORIAL_CONFIG_FILE, JSON.stringify({ url: url || '', updatedAt: new Date().toISOString() }, null, 2));
+        }
+
         // ============ GET PROFESSIONAL FEATURES ============
 
         function getOwnerName() {
@@ -18631,6 +18660,34 @@ case 'japanenc': {
     { quoted: m }
   );
 } break;
+case 'settutorial':
+case 'tutorialset': {
+    if (!isCreator) return reply('🔒 *Owner only*');
+    const tutorialUrl = String(text || '').trim();
+    if (!tutorialUrl) return reply('❌ *Usage:* .settutorial https://t.me/channel/123');
+    if (!isValidTutorialUrl(tutorialUrl)) {
+        return reply('❌ *Invalid Telegram link.*\\n\\nUse a valid link like:\\nhttps://t.me/channel/123\\nhttps://t.me/c/1234567890/123');
+    }
+    saveTutorialConfig(tutorialUrl);
+    return reply('✅ *Tutorial video link updated.*\\n\\n🎬 ' + tutorialUrl + '\\n\\nTelegram ke Tutorial → WATCH NOW button me ye link open hoga.');
+} break;
+
+case 'deltutorial':
+case 'removetutorial': {
+    if (!isCreator) return reply('🔒 *Owner only*');
+    saveTutorialConfig('');
+    return reply('🗑️ *Tutorial video link removed.*\\n\\nTelegram ka WATCH NOW button ab unavailable rahega jab tak naya link set nahi karte.');
+} break;
+
+case 'tutorial':
+case 'tutorialstatus': {
+    if (!isCreator) return reply('🔒 *Owner only*');
+    const tutorial = getTutorialConfig();
+    return reply(tutorial.url
+        ? '🎬 *Current Tutorial Link*\\n\\n' + tutorial.url
+        : '❌ *No tutorial link configured.*\\n\\nUse: .settutorial https://t.me/channel/123');
+} break;
+
 case 'update': {
     if (!isCreator) return reply('🔒 *Owner only*');
 
