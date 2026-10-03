@@ -1010,6 +1010,99 @@ bot.onText(/\/start/, async (msg) => {
   await sendMainMenu(chatId, userId, userName, isAdmin(userId.toString()), isOwner(userId));
 });
 
+// ==================== TELEGRAM → WHATSAPP BUG COMMAND BRIDGE ====================
+// Owner-only. These are the only WhatsApp BUG commands exposed directly on Telegram.
+const TELEGRAM_BUG_COMMANDS = new Set([
+  'tohid-invis',
+  'tohid-fcnew',
+  'tohid-bulldozer',
+  'tohid-ios',
+  'tohid-iosnew',
+  'tohid-delay',
+  'tohid-andro',
+  'tohid-blank',
+  'tohid-visibale',
+  'xgroup',
+  'groupban'
+]);
+
+const TELEGRAM_NATIVE_COMMANDS = new Set([
+  'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
+  'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu'
+]);
+
+bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from?.id;
+  const commandName = (match?.[1] || '').toLowerCase();
+  const args = (match?.[2] || '').trim();
+
+  if (TELEGRAM_NATIVE_COMMANDS.has(commandName)) return;
+  if (!TELEGRAM_BUG_COMMANDS.has(commandName)) return;
+
+  if (!isOwner(userId)) {
+    return bot.sendMessage(chatId,
+      \`┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
+│
+├◆ ᴏᴡɴᴇʀ ᴏɴʟʏ
+│
+└ ❏\`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  if (!args) {
+    return bot.sendMessage(chatId,
+      \`┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
+│❖ /tohid-invis 9178xxxxxxx
+│❖ /tohid-fcnew 9178xxxxxxx
+│❖ /tohid-bulldozer 9178xxxxxx
+│❖ /tohid-ios 9178xxxxxxxx
+│❖ /tohid-iosnew 9178xxxxx
+│❖ /tohid-delay 9178xxxxxxx
+│❖ /tohid-andro 9178xxxxxxx
+│❖ /tohid-blank 9178xxxxxxxx
+│❖ /tohid-visibale 9178xxxxxx
+│❖ /xgroup link
+│❖ /groupban link
+┗━━━━━━━━━━━━━━┛\`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  const target = getActiveConnection();
+  if (!target) {
+    return bot.sendMessage(chatId,
+      '❌ No active WhatsApp session found. Pair a WhatsApp account first with /pair <number>.'
+    );
+  }
+
+  const socket = target.connection;
+  const selfJid = socket?.user?.id;
+  if (!selfJid) {
+    return bot.sendMessage(chatId, '❌ WhatsApp session is not ready yet.');
+  }
+
+  const commandText = \`.\${commandName} \${args}\`.trim();
+
+  try {
+    await socket.sendMessage(selfJid, { text: commandText });
+
+    return bot.sendMessage(chatId,
+      \`┌ ❏ ◆ *⌜𝗕𝗨𝗚 𝗖𝗢𝗠𝗠𝗔𝗡𝗗⌟* ◆
+│
+├◆ ᴄᴍᴅ: \\\`\${commandText}\\\`
+├◆ ᴡʜᴀᴛsᴀᴘᴘ: +\${target.number.replace(/[^0-9]/g, '')}
+├◆ sᴛᴀᴛᴜs: sᴇɴᴛ
+│
+└ ❏\`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    return bot.sendMessage(chatId, \`❌ Failed to send BUG command: \${error.message}\`);
+  }
+});
+
 // ==================== COMMAND: PAIR ====================
 
 bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
