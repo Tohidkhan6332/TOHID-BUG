@@ -13,17 +13,11 @@ const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('
 const processGuard = require('./utils/process-guard');
 attachGlobalHandlers();
 
-// ─── AUTO RESTART CONFIG ───────────────────────────────────────────────
-const AUTO_RESTART_INTERVAL = 15 * 60 * 1000; // 15 minutes (ms)
-
+// ─── AUTO RESTART ─────────────────────────────────────────────────────
+// Disabled: a timed process.exit() can leave the Telegram bot offline when
+// the hosting panel does not automatically restart the process.
 function startAutoRestart() {
-    console.log(chalk.cyan('⏱️  Auto restart active — bot will restart every 15 minutes.'));
-
-    setTimeout(() => {
-        console.log(chalk.yellow('\n🔄 Scheduled auto restart... Bot will restart now.'));
-        console.log(chalk.gray('   Pterodactyl panel will restart the process automatically.\n'));
-        setTimeout(() => process.exit(0), 2000); // 2-second delay so logs are readable
-    }, AUTO_RESTART_INTERVAL);
+    console.log(chalk.cyan('⏱️  Scheduled auto-restart disabled — bot will stay online.'));
 }
 // ───────────────────────────────────────────────────────────────────────
 
@@ -214,7 +208,7 @@ function launchBot() {
         console.log(chalk.green('✅ ᴛᴏʜɪᴅ ᴀɪ ᴀᴄᴛɪᴠᴇ!\n'));
     }
 
-    // ── Start auto restart timer after bot is active ──
+    // Keep the bot running continuously.
     startAutoRestart();
     runStartupDebug();
     startSessionMonitor();
