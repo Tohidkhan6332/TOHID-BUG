@@ -125,9 +125,33 @@ const RATE_LIMIT = {
 if (!BOT_TOKEN) {
   throw new Error("TELEGRAM_BOT_TOKEN is not configured. Set it in the environment before starting the Telegram component.");
 }
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+// Telegram polling is started explicitly after clearing any stale webhook.
+// This prevents Telegram from remaining in webhook mode and makes polling errors visible.
+const bot = new TelegramBot(BOT_TOKEN, { polling: false });
 const { initDebug } = require('./debug.js');
 initDebug(bot);
+
+(async () => {
+  try {
+    await bot.deleteWebHook({ drop_pending_updates: false });
+    const me = await bot.getMe();
+    console.log(`[TELEGRAM] Connected as @${me.username || me.first_name} (${me.id})`);
+    await bot.startPolling({
+      restart: true,
+      params: {
+        timeout: 30,
+        limit: 100,
+        allowed_updates: ['message', 'callback_query']
+      }
+    });
+    console.log('[TELEGRAM] Polling started successfully — waiting for messages...');
+  } catch (error) {
+    console.error('[TELEGRAM] Polling startup failed:', error.message);
+    if (error.response?.body) {
+      console.error('[TELEGRAM] API response:', JSON.stringify(error.response.body));
+    }
+  }
+})();
 
 // Data Stores
 let database = {
