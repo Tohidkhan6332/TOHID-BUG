@@ -2959,7 +2959,7 @@ bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
         const result = await updateFromGitHub();
         await bot.sendMessage(chatId, '✅ *Update started successfully.*\n\n📦 Latest GitHub version is being applied.\n🔄 Restarting with the updated version...', { parse_mode: 'Markdown' });
         console.log('[UPDATE] Completed via ' + result.method + '.');
-        setTimeout(() => { restartProcess().catch(error => { console.error('[UPDATE] Restart after update failed:', error); process.exit(1); }); }, 1200);
+        if (!result.restartHandled) setTimeout(() => restartProcess().catch(error => console.error('[UPDATE] Restart after update failed:', error)), 1200);
     } catch (error) {
         console.error('[UPDATE] Failed:', error);
         const details = String(error.stderr || error.stdout || error.message || 'Unknown error').trim();
