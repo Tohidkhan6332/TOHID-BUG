@@ -1127,7 +1127,7 @@ const TELEGRAM_NATIVE_COMMANDS = new Set([
   'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu'
 ]);
 
-bot.onText(/^\\/([a-zA-Z0-9_-]+)(?:@[^\\s]+)?(?:\\s+([\\s\\S]+))?$/i, async (msg, match) => {
+bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@?[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   const commandName = (match?.[1] || '').toLowerCase();
