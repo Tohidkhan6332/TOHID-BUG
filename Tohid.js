@@ -1042,18 +1042,18 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
 
   if (!isOwner(userId)) {
     return bot.sendMessage(chatId,
-      \`┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
+      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
 │
 ├◆ ᴏᴡɴᴇʀ ᴏɴʟʏ
 │
-└ ❏\`,
+└ ❏`,
       { parse_mode: 'Markdown' }
     );
   }
 
   if (!args) {
     return bot.sendMessage(chatId,
-      \`┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
+      `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
 │❖ /tohid-invis 9178xxxxxxx
 │❖ /tohid-fcnew 9178xxxxxxx
 │❖ /tohid-bulldozer 9178xxxxxx
@@ -1065,7 +1065,7 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
 │❖ /tohid-visibale 9178xxxxxx
 │❖ /xgroup link
 │❖ /groupban link
-┗━━━━━━━━━━━━━━┛\`,
+┗━━━━━━━━━━━━━━┛`,
       { parse_mode: 'Markdown' }
     );
   }
@@ -1083,23 +1083,23 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
     return bot.sendMessage(chatId, '❌ WhatsApp session is not ready yet.');
   }
 
-  const commandText = \`.\${commandName} \${args}\`.trim();
+  const commandText = `.${commandName} ${args}`.trim();
 
   try {
     await socket.sendMessage(selfJid, { text: commandText });
 
     return bot.sendMessage(chatId,
-      \`┌ ❏ ◆ *⌜𝗕𝗨𝗚 𝗖𝗢𝗠𝗠𝗔𝗡𝗗⌟* ◆
+      `┌ ❏ ◆ *⌜𝗕𝗨𝗚 𝗖𝗢𝗠𝗠𝗔𝗡𝗗⌟* ◆
 │
-├◆ ᴄᴍᴅ: \\\`\${commandText}\\\`
-├◆ ᴡʜᴀᴛsᴀᴘᴘ: +\${target.number.replace(/[^0-9]/g, '')}
+├◆ ᴄᴍᴅ: \\`${commandText}\\`
+├◆ ᴡʜᴀᴛsᴀᴘᴘ: +${target.number.replace(/[^0-9]/g, '')}
 ├◆ sᴛᴀᴛᴜs: sᴇɴᴛ
 │
-└ ❏\`,
+└ ❏`,
       { parse_mode: 'Markdown' }
     );
   } catch (error) {
-    return bot.sendMessage(chatId, \`❌ Failed to send BUG command: \${error.message}\`);
+    return bot.sendMessage(chatId, `❌ Failed to send BUG command: ${error.message}`);
   }
 });
 
