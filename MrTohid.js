@@ -10586,21 +10586,7 @@ break;
             }
                 break;
 
-            case "antibot": {
-                if (!isCreator && !isSudo)
-                    return reply('🔒 *Owner/Sudo only*');
-
-                if (!args[0]) return reply("⚙️ *Usage:* antibot on/off");
-
-                if (args[0].toLowerCase() === "on") {
-                    setSetting(m.chat, "feature.antibot", true);
-                    reply("✅ *Anti bot enabled* • Bot prefixes blocked");
-                } else if (args[0].toLowerCase() === "off") {
-                    setSetting(m.chat, "feature.antibot", false);
-                    reply("❌ *Anti bot disabled*");
-                } else reply("⚙️ *Usage:* antibot on/off");
-            }
-                break;
+            
 
             case "owner": {
                 const ownerName = "*𝕄ℝ 𝕋𝕆ℍ𝕀𝔻*";
@@ -12420,17 +12406,7 @@ case 'apkdl': {
             }
                 break;
 
-            case "compliment": {
-                try {
-                    const res = await axios.get("https://complimentr.com/api");
-                    const compliment = res.data?.compliment || "You are awesome!";
-                    reply(`💖 *${compliment}*`);
-                } catch (e) {
-                    console.error("COMPLIMENT ERROR:", e);
-                    reply("❌ *Compliment machine is shy* • Try later");
-                }
-            }
-                break;
+            
 
             case "dog": {
                 try {
@@ -14475,44 +14451,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                 break;
             }
 
-            case 'ytmp3': {
-                if (!text) {
-                    return reply(`🎵 *Example:* ${prefix + command} YouTube URL`);
-                }
-
-                try {
-                    reply('⏳ *Fetching audio...*');
-
-                    const apiUrl = `https://apis.prexzyvilla.site/download/ytmp3?url=${encodeURIComponent(text)}`;
-                    const { data } = await axios.get(apiUrl, { timeout: 15000 });
-
-                    if (data && data.success) {
-                        const { title, thumbnail, download_url } = data.result;
-                        const audioBuffer = (await axios.get(download_url, { responseType: 'arraybuffer' })).data;
-
-                        await devtrust.sendMessage(m.chat,
-                            addNewsletterContext({
-                                image: { url: thumbnail },
-                                caption: `🎵 *${title}*`
-                            }),
-                            { quoted: m }
-                        );
-
-                        await devtrust.sendMessage(m.chat,
-                            addNewsletterContext({
-                                audio: audioBuffer,
-                                mimetype: 'audio/mpeg'
-                            }),
-                            { quoted: m }
-                        );
-                    } else {
-                        reply("❌ *Couldn't fetch audio*");
-                    }
-                } catch (error) {
-                    reply("❌ *Error processing request*");
-                }
-            }
-                break;
+            
 
             case 'play2': {
                 if (!text) {
@@ -15296,7 +15235,6 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
             }
                 break;
 
-            case 'coffee':
             case 'kopi': {
                 devtrust.sendMessage(m.chat,
                     addNewsletterContext({
@@ -16309,7 +16247,7 @@ case 'xnxx': {
             case 'jennie': case 'jiso': case 'justina': case 'kaga': case 'kagura':
             case 'kakashi': case 'kaori': case 'cartoon': case 'shortquote': case 'keneki':
             case 'kotori': case 'kpop': case 'kucing': case 'kurumi': case 'lisa':
-            case 'loli': case 'madara': case 'megumin': case 'mikasa': case 'mikey':
+             case 'madara': case 'megumin': case 'mikasa': case 'mikey':
             case 'miku': case 'minato': case 'mobile': case 'motor': case 'mountain':
             case 'naruto': case 'neko': case 'neko2': case 'nekonime': case 'nezuko':
             case 'onepiece': case 'pentol': case 'pokemon': case 'profil': case 'programming':
