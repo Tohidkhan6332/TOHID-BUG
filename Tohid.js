@@ -957,11 +957,22 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 │
 ├◆ /addadmin
 ├◆ /removeadmin
-├◆ /settutorial
+├◆ /settutorial <ᴛᴇʟᴇɢʀᴀᴍ ᴘᴏsᴛ ʟɪɴᴋ>
 ├◆ /tutorialstatus
 ├◆ /deltutorial
 ├◆ /restart
 ├◆ /update
+
+┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗦𝗘𝗧𝗨𝗣⌟* ◆
+│
+├◆ ᴜsᴇ /settutorial ᴛᴏ sᴇᴛ ᴛʜᴇ ᴠɪᴅᴇᴏ
+├◆ ᴇxᴀᴍᴘʟᴇ:
+├◆ /settutorial https://t.me/TohidChannel/123
+├◆ ᴘʀɪᴠᴀᴛᴇ:
+├◆ /settutorial https://t.me/c/1234567890/123
+├◆ ⚠️ ʟɪɴᴋ ᴍᴜsᴛ ʙᴇ ᴀ sᴘᴇᴄɪғɪᴄ ᴛᴇʟᴇɢʀᴀᴍ ᴠɪᴅᴇᴏ/ᴘᴏsᴛ
+│
+└ ❏
 │
 └ ❏`;
     }
@@ -3001,15 +3012,25 @@ bot.onText(/^\\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => 
   const url = String(match?.[1] || '').trim();
   if (!url) {
     return bot.sendMessage(chatId,
-      '❌ *Usage:*\\n/settutorial https://t.me/channel/123\\n\\nThe link must point to a specific Telegram video/post.',
+      '┌ ❏ ◆ *⌜𝗦𝗘𝗧 𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗚𝗨𝗜𝗗𝗘⌟* ◆\\n│\\n' +
+      '├◆ ᴜsᴀɢᴇ: /settutorial <ᴛᴇʟᴇɢʀᴀᴍ ᴘᴏsᴛ ʟɪɴᴋ>\\n│\\n' +
+      '├◆ ᴘᴜʙʟɪᴄ ᴇxᴀᴍᴘʟᴇ:\\n' +
+      '├◆ /settutorial https://t.me/TohidChannel/123\\n│\\n' +
+      '├◆ ᴘʀɪᴠᴀᴛᴇ ᴇxᴀᴍᴘʟᴇ:\\n' +
+      '├◆ /settutorial https://t.me/c/1234567890/123\\n│\\n' +
+      '├◆ ⚠️ ᴜsᴇ ᴛʜᴇ ʟɪɴᴋ ᴏғ ᴛʜᴇ ᴇxᴀᴄᴛ ᴠɪᴅᴇᴏ/ᴘᴏsᴛ\\n│\\n' +
+      '└ ❏',
       { parse_mode: 'Markdown' }
     );
   }
 
   if (!isValidTelegramUrl(url)) {
     return bot.sendMessage(chatId,
-      '❌ *Invalid Telegram post link.*\\n\\nUse a specific video/post link like:\\n' +
-      'https://t.me/channel/123\\n' +
+      '❌ *Invalid Telegram post link.*\\n\\n' +
+      'Please use the exact video/post link.\\n\\n' +
+      '✅ Public example:\\n' +
+      'https://t.me/TohidChannel/123\\n\\n' +
+      '✅ Private example:\\n' +
       'https://t.me/c/1234567890/123',
       { parse_mode: 'Markdown' }
     );
