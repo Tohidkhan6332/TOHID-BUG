@@ -946,6 +946,9 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 │
 ├◆ /addadmin
 ├◆ /removeadmin
+├◆ /settutorial
+├◆ /tutorialstatus
+├◆ /deltutorial
 ├◆ /restart
 ├◆ /update
 │
