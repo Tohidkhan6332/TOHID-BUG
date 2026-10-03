@@ -101,40 +101,56 @@ const initializeBot = async () => {
     if (isAuthenticated()) {
         console.log(chalk.green('✅ Welcome back! Skipping password...'));
         launchBot();
-    } else {
-        if (!startupPassword) {
-            console.log(chalk.red('❌ STARTUP_PASSWORD is not configured. Set it in the environment before starting the bot.'));
-            return;
+        return;
+    }
+
+    if (!startupPassword) {
+        console.log(chalk.red('❌ STARTUP_PASSWORD is not configured. Set it in the environment before starting the bot.'));
+        return;
+    }
+
+    // Hosted workers/panels normally do not provide an interactive TTY.
+    // Never block the Telegram/WhatsApp services waiting for stdin in that case.
+    // Local Termux/terminal sessions still keep the startup password prompt.
+    const nonInteractive = !process.stdin.isTTY || !!process.env.CI ||
+        !!process.env.RENDER || !!process.env.HEROKU_APP_NAME ||
+        !!process.env.PTERODACTYL;
+
+    if (nonInteractive) {
+        console.log(chalk.yellow('⚙️ Non-interactive environment detected — starting bot automatically.'));
+        setAuthenticated(true);
+        launchBot();
+        return;
+    }
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    rl.stdoutMuted = true;
+    console.log(chalk.bold.yellow('🔐 Enter password to start bot:'));
+
+    rl.question(chalk.green('Password: '), function (input) {
+        if (input !== startupPassword) {
+            console.log(chalk.red('\\n❌ Incorrect password. Exiting...'));
+            rl.close();
+            process.exit(1);
         }
 
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
+        console.log(chalk.green('\\n✅ Password correct. Starting bot system...'));
+        setAuthenticated(true);
+        rl.close();
+        launchBot();
+    });
 
-        rl.stdoutMuted = true;
-        console.log(chalk.bold.yellow('🔐 Enter password to start bot:'));
-
-        rl.question(chalk.green('Password: '), function (input) {
-            if (input !== startupPassword) {
-                console.log(chalk.red('\n❌ Incorrect password. Exiting...'));
-                process.exit(1);
-            }
-
-            console.log(chalk.green('\n✅ Password correct. Starting bot system...'));
-            setAuthenticated(true);
-            rl.close();
-            launchBot();
-        });
-
-        rl._writeToOutput = function _writeToOutput(stringToWrite) {
-            if (rl.stdoutMuted) {
-                rl.output.write(chalk.cyan('*'));
-            } else {
-                rl.output.write(stringToWrite);
-            }
-        };
-    }
+    rl._writeToOutput = function _writeToOutput(stringToWrite) {
+        if (rl.stdoutMuted) {
+            rl.output.write(chalk.cyan('*'));
+        } else {
+            rl.output.write(stringToWrite);
+        }
+    };
 };
 
 function launchBot() {
