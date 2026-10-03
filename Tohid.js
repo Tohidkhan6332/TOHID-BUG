@@ -32,6 +32,7 @@ require('./setting/config');
 const TelegramBot = require('node-telegram-bot-api');
 const { execFile, spawn } = require('child_process');
 const { restartProcess, updateFromGitHub, detectPlatform, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH } = require('./utils/runtime-manager');
+const fsSync = require('fs');
 const fs = require('fs').promises;
 const path = require('path');
 const chalk = require('chalk');
@@ -41,6 +42,18 @@ const { BOT_TOKEN } = require('./tohidstore/token');
 const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
 const { getActiveConnection, getActiveConnections } = require('./pair');
+const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
+
+function getTutorialVideoUrl() {
+  try {
+    if (!fsSync.existsSync(TUTORIAL_CONFIG_FILE)) return ASSETS.tutorialVideo || '';
+    const data = JSON.parse(fsSync.readFileSync(TUTORIAL_CONFIG_FILE, 'utf8'));
+    return typeof data.url === 'string' ? data.url.trim() : '';
+  } catch (error) {
+    console.error('[TUTORIAL] Config read failed:', error.message);
+    return ASSETS.tutorialVideo || '';
+  }
+}
 
 // ==================== SYSTEM CONFIGURATION ====================
 const SYSTEM = {
@@ -3042,28 +3055,26 @@ bot.on('callback_query', async (query) => {
   }
 
   else if (data === 'watch_tutorial') {
-    await bot.answerCallbackQuery(query.id, { text: 'sᴇɴᴅɪɴɢ ᴠɪᴅᴇᴏ...' });
+    const tutorialVideo = getTutorialVideoUrl();
 
-    const tutorialVideo = ASSETS.tutorialVideo;
     if (!tutorialVideo) {
+      await bot.answerCallbackQuery(query.id, { text: 'Tutorial link is not configured', show_alert: true });
       return bot.sendMessage(chatId,
-        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\n│\n├◆ ❌ ᴛᴜᴛᴏʀɪᴀʟ ᴠɪᴅᴇᴏ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ\n├◆ 👑 ᴏᴡɴᴇʀ: sᴇᴛ TUTORIAL_VIDEO_URL\n│\n└ ❏`,
+        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\\n│\\n├◆ ❌ ᴠɪᴅᴇᴏ ʟɪɴᴋ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ\\n├◆ 👑 ᴏᴡɴᴇʀ: ᴜsᴇ .settutorial ᴏɴ ᴡʜᴀᴛsᴀᴘᴘ\\n│\\n└ ❏`,
         { parse_mode: 'Markdown' }
       );
     }
 
-    try {
-      await bot.sendVideo(chatId, tutorialVideo, {
-        caption: `🎬 *${SYSTEM.name} sᴇᴛᴜᴘ ɢᴜɪᴅᴇ*`,
-        parse_mode: 'Markdown'
-      });
-    } catch (e) {
-      console.error('[TUTORIAL] Video send failed:', e.message);
-      await bot.sendMessage(chatId,
-        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\n│\n├◆ ❌ ᴠɪᴅᴇᴏ sᴇɴᴅ ғᴀɪʟᴇᴅ\n│\n└ ❏`,
-        { parse_mode: 'Markdown' }
-      );
-    }
+    await bot.answerCallbackQuery(query.id, { text: 'Opening tutorial...' });
+    return bot.sendMessage(chatId,
+      `🎬 *${SYSTEM.name} SETUP GUIDE*\\n\\n👇 Tap below to watch the tutorial video.`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [[{ text: '▶️ ᴡᴀᴛᴄʜ ᴠɪᴅᴇᴏ', url: tutorialVideo }]]
+        }
+      }
+    );
   }
 
   else if (data === 'pair_guide') {
