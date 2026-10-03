@@ -73,19 +73,6 @@ function isValidTelegramUrl(value) {
   }
 }
 
-const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
-
-function getTutorialVideoUrl() {
-  try {
-    if (!fsSync.existsSync(TUTORIAL_CONFIG_FILE)) return ASSETS.tutorialVideo || '';
-    const data = JSON.parse(fsSync.readFileSync(TUTORIAL_CONFIG_FILE, 'utf8'));
-    return typeof data.url === 'string' ? data.url.trim() : '';
-  } catch (error) {
-    console.error('[TUTORIAL] Config read failed:', error.message);
-    return ASSETS.tutorialVideo || '';
-  }
-}
-
 // ==================== SYSTEM CONFIGURATION ====================
 const SYSTEM = {
   name: "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
