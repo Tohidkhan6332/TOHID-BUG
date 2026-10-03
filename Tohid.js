@@ -38,6 +38,7 @@ const os = require('os');
 const { BOT_TOKEN } = require('./tohidstore/token');
 const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
+const { getActiveConnection, getActiveConnections } = require('./pair');
 
 // ==================== SYSTEM CONFIGURATION ====================
 const SYSTEM = {
@@ -1004,6 +1005,102 @@ bot.onText(/\/start/, async (msg) => {
   }
 
   await sendMainMenu(chatId, userId, userName, isAdmin(userId.toString()), isOwner(userId));
+});
+
+// ==================== TELEGRAM → WHATSAPP COMMAND BRIDGE ====================
+// Owner-only bridge: run a normal WhatsApp bot command from Telegram.
+// Examples:
+//   /bug .xgroup <args>
+//   /bug xgroup <args>
+//   /bug 917849917350 .groupban <args>
+bot.onText(/^\/bug(?:\\s+(.+))?$/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from?.id;
+
+  if (!isOwner(userId)) {
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
+│
+├◆ ᴏᴡɴᴇʀ ᴏɴʟʏ
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  const raw = (match?.[1] || '').trim();
+  if (!raw) {
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 𝗕𝗨𝗚 𝗖ᴏᴍᴍᴀɴᴅ⌟* ◆
+│
+├◆ ᴜsᴀɢᴇ:
+├◆ /bug .xgroup <args>
+├◆ /bug xgroup <args>
+├◆ /bug <ᴡʜᴀᴛsᴀᴘᴘ-ɴᴜᴍʙᴇʀ> .xgroup <args>
+│
+├◆ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅ ᴡɪʟʟ ʙᴇ sᴇɴᴛ ᴛᴏ ᴛʜᴇ sᴇʟᴇᴄᴛᴇᴅ
+├◆ ᴀᴄᴛɪᴠᴇ ᴡʜᴀᴛsᴀᴘᴘ sᴇssɪᴏɴ.
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  const parts = raw.split(/\s+/);
+  let sessionNumber = null;
+
+  // Optional first argument: connected WhatsApp session number.
+  if (/^\d{7,15}$/.test(parts[0]) && parts.length > 1) {
+    sessionNumber = parts.shift();
+  }
+
+  let commandText = parts.join(' ').trim();
+  if (!commandText) {
+    return bot.sendMessage(chatId, '❌ Please provide a WhatsApp command.');
+  }
+
+  // WhatsApp commands in this project normally use ".", but accept either form.
+  if (!/^[.!#&]/.test(commandText)) {
+    commandText = '.' + commandText;
+  }
+
+  const target = getActiveConnection(sessionNumber);
+  if (!target) {
+    const active = getActiveConnections();
+    if (!active.length) {
+      return bot.sendMessage(chatId,
+        '❌ No active WhatsApp session found. Pair a WhatsApp account first with /pair <number>.'
+      );
+    }
+
+    return bot.sendMessage(chatId,
+      `❌ WhatsApp session not found: ${sessionNumber || 'default'}\\n\\nActive sessions: ${active.map(x => x.number).join(', ')}`
+    );
+  }
+
+  const socket = target.connection;
+  const selfJid = socket?.user?.id;
+  if (!selfJid) {
+    return bot.sendMessage(chatId, '❌ WhatsApp session is not ready yet.');
+  }
+
+  try {
+    await socket.sendMessage(selfJid, { text: commandText });
+
+    await bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗕𝗨𝗚 𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗦𝗘𝗡𝗧⌟* ◆
+│
+├◆ ᴄᴏᴍᴍᴀɴᴅ: \`${commandText}\`
+├◆ ᴡʜᴀᴛsᴀᴘᴘ: +${target.number.replace(/[^0-9]/g, '')}
+│
+├◆ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅ ɪs ɴᴏᴡ ʙᴇɪɴɢ ᴘʀᴏᴄᴇssᴇᴅ ʙʏ ᴛʜᴇ ᴡʜᴀᴛsᴀᴘᴘ ʙᴏᴛ.
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    await bot.sendMessage(chatId, `❌ Failed to send command to WhatsApp: ${error.message}`);
+  }
 });
 
 // ==================== COMMAND: PAIR ====================
