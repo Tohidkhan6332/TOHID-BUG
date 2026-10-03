@@ -29,55 +29,6 @@ function setAuthenticated(value) {
     fs.writeFileSync(AUTH_FILE, JSON.stringify({ authenticated: value }));
 }
 
-const autoLoadPairs = async () => {
-    console.log(chalk.cyan('🔄 Auto-loading all paired users...'));
-
-    if (!fs.existsSync(PAIRING_DIR)) {
-        console.log(chalk.red('❌ Pairing directory not found.'));
-        return;
-    }
-
-    const pairedUsers = fs.readdirSync(PAIRING_DIR, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
-        .filter(name => name.endsWith('@s.whatsapp.net'));
-
-    if (pairedUsers.length === 0) {
-        console.log(chalk.yellow('ℹ️  No paired users found.'));
-        return;
-    }
-
-    console.log(chalk.green(`✅ Found ${pairedUsers.length} paired users. Starting connections...`));
-    console.log(chalk.blue('⏳ Waiting 4 seconds before starting connections...'));
-    await delay(4000);
-
-    for (let i = 0; i < pairedUsers.length; i++) {
-        const userNumber = pairedUsers[i];
-
-        try {
-            console.log(chalk.blue(`🔄 Connecting user ${i + 1}/${pairedUsers.length}: ${userNumber}`));
-            await startpairing(userNumber);
-            console.log(chalk.green(`✅ Connected successfully: ${userNumber}`));
-
-            if (i < pairedUsers.length - 1) {
-                console.log(chalk.blue('⏳ Waiting 4 seconds before next connection...'));
-                await delay(4000);
-            }
-        } catch (error) {
-            console.log(chalk.red(`❌ Failed for ${userNumber}: ${error.message}`));
-
-            if (i < pairedUsers.length - 1) {
-                console.log(chalk.blue('⏳ Waiting 4 seconds before retry...'));
-                await delay(4000);
-            }
-        }
-    }
-
-    console.log(chalk.green('✅ All paired users processed.'));
-    console.log(chalk.blue('⏳ Waiting 4 seconds before continuing...'));
-    await delay(4000);
-};
-
 const initializeBot = async () => {
     console.clear();
     console.log(chalk.cyan(figlet.textSync('ᴛᴏʜɪᴅ ᴀɪ ʙᴏᴛ ᴀᴄᴛɪᴠᴇ', {
@@ -89,8 +40,6 @@ const initializeBot = async () => {
     console.log(chalk.yellow('\n⚄︎══════════════════════⚄︎'));
     console.log(chalk.green('𝐓𝐎𝐇𝐈𝐃-𝐀𝐈'));
     console.log(chalk.yellow('⚄︎═════════════════════⚄︎\n'));
-
-    await autoLoadPairs();
 
     if (isAuthenticated()) {
         console.log(chalk.green('✅ Welcome back! Skipping password...'));
@@ -174,35 +123,16 @@ function launchBot() {
         console.log(chalk.yellow('⚠️  Tohid.js not found, skipping Telegram bot...\n'));
     }
 
-    // Load WhatsApp commands (MrTohid.js)
-    const tohidPath = path.join(__dirname, 'MrTohid.js');
-    if (fs.existsSync(tohidPath)) {
-        try {
-            console.log(chalk.blue('💬 Loading WhatsApp commands system...'));
-            require('./MrTohid.js');
-            whatsappLoaded = true;
-            console.log(chalk.green('✅ WhatsApp commands loaded successfully!'));
-        } catch (error) {
-            console.log(chalk.red('❌ Failed to load WhatsApp commands (MrTohid.js):'));
-            console.log(chalk.red('   Error:', error.message));
-            if (error.stack) {
-                console.log(chalk.gray('   Stack:', error.stack.split('\n')[1].trim()));
-            }
-            console.log(chalk.yellow('⚠️  Continuing without WhatsApp commands...\n'));
-        }
-    } else {
-        console.log(chalk.yellow('⚠️  MrTohid.js not found, skipping WhatsApp commands...\n'));
-    }
-
+    // WhatsApp is intentionally NOT started during deployment.\n    // It becomes active only after the owner uses /pair from Telegram.\n    console.log(chalk.gray('💬 WhatsApp: waiting for Telegram /pair command...'));\n
     // Summary
     console.log(chalk.cyan('\n⚄︎═══════════════════════════════⚄︎'));
     console.log(chalk.bold.white('  ʙᴏᴛ ɪɴɪᴛɪᴀʟɪᴢᴀᴛɪᴏɴ sᴜᴍᴍᴀʀʏ        '));
     console.log(chalk.cyan('⚄︎════════════════════════════════⚄︎'));
     console.log(telegramLoaded ? chalk.green('ᴛᴏʜɪᴅ ᴀɪ: ᴀᴄᴛɪᴠᴇ ✅') : chalk.red('❌ ᴛᴏʜɪᴅ ᴀɪ 2026'));
-    console.log(whatsappLoaded ? chalk.green('✅ ᴡʜᴀᴛsᴀᴘᴘ ᴄᴏᴍᴍᴀɴᴅs: ᴀᴄᴛɪᴠᴇ') : chalk.red('❌ ᴡʜᴀᴛsᴀᴘᴘ ᴄᴏᴍᴍᴀᴍᴅs : ɪɴᴀᴄᴛɪᴠᴇ'));
+    console.log(chalk.yellow('⏳ ᴡʜᴀᴛsᴀᴘᴘ: ᴡᴀɪᴛɪɴɢ ғᴏʀ /ᴘᴀɪʀ ᴏɴ ᴛᴇʟᴇɢʀᴀᴍ'));
     console.log(chalk.cyan('⚄︎════════════════════════════════⚄︎\n'));
 
-    if (!telegramLoaded && !whatsappLoaded) {
+    if (!telegramLoaded) {
         console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
     } else {
         console.log(chalk.green('✅ ᴛᴏʜɪᴅ ᴀɪ ᴀᴄᴛɪᴠᴇ!\n'));
