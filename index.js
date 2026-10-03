@@ -5,10 +5,6 @@ const chalk = require('chalk');
 const figlet = require('figlet');
 const { startupPassword } = require('./tohidstore/token');
 const AUTH_FILE = './auth.json';
-const PAIRING_DIR = './tohidstore/pairing/';
-const startpairing = require('./pair');
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('./debug.js');
 const processGuard = require('./utils/process-guard');
 attachGlobalHandlers();
@@ -98,53 +94,45 @@ const initializeBot = async () => {
 
 function launchBot() {
     console.clear();
-    console.log(chalk.green('ᴛᴏʜɪᴅ ᴀɪ sᴏʟᴏs ᴀʟʟ....\n'));
+    console.log(chalk.green('ᴛᴏʜɪᴅ ᴀɪ ᴛᴇʟᴇɢʀᴀᴍ ᴄᴏɴᴛʀᴏʟ ʟᴀʏᴇʀ....\\n'));
 
+    // Telegram is the primary service.
+    // WhatsApp is NEVER started here. It is started only by Telegram /pair.
     let telegramLoaded = false;
-    let whatsappLoaded = false;
 
-    // Load Telegram bot (Tohid.js)
-    const botPath = path.join(__dirname, 'Tohid.js');
-    if (fs.existsSync(botPath)) {
-        try {
-            console.log(chalk.blue('📱 Loading Telegram pairing system...'));
-            require('./Tohid.js');
-            telegramLoaded = true;
-            console.log(chalk.green('✅ ᴛᴏʜɪᴅ ᴀɪ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴀᴄᴛɪᴠᴇ'));
-        } catch (error) {
-            console.log(chalk.red('❌ Failed to load Telegram bot (Tohid.js):'));
-            console.log(chalk.red('   Error:', error.message));
-            if (error.stack) {
-                console.log(chalk.gray('   Stack:', error.stack.split('\n')[1].trim()));
-            }
-            console.log(chalk.yellow('⚠️  Continuing without Telegram bot...\n'));
+    try {
+        const botPath = path.join(__dirname, 'Tohid.js');
+
+        if (!fs.existsSync(botPath)) {
+            throw new Error('Tohid.js not found in project root');
         }
-    } else {
-        console.log(chalk.yellow('⚠️  Tohid.js not found, skipping Telegram bot...\n'));
+
+        console.log(chalk.blue('📱 Loading Telegram bot...'));
+        require('./Tohid.js');
+        telegramLoaded = true;
+        console.log(chalk.green('✅ Telegram bot module loaded successfully.'));
+        console.log(chalk.yellow('⏳ WhatsApp is waiting for Telegram /pair command.'));
+    } catch (error) {
+        console.log(chalk.red('❌ Telegram bot failed to load.'));
+        console.log(chalk.red('   Error:'), error.message);
+        if (error.stack) {
+            console.log(chalk.gray(error.stack));
+        }
+        console.log(chalk.yellow('⚠️ Telegram service is NOT active. Fix the error above.'));
     }
 
-    // WhatsApp is intentionally NOT started during deployment.\n    // It becomes active only after the owner uses /pair from Telegram.\n    console.log(chalk.gray('💬 WhatsApp: waiting for Telegram /pair command...'));\n
-    // Summary
-    console.log(chalk.cyan('\n⚄︎═══════════════════════════════⚄︎'));
-    console.log(chalk.bold.white('  ʙᴏᴛ ɪɴɪᴛɪᴀʟɪᴢᴀᴛɪᴏɴ sᴜᴍᴍᴀʀʏ        '));
-    console.log(chalk.cyan('⚄︎════════════════════════════════⚄︎'));
-    console.log(telegramLoaded ? chalk.green('ᴛᴏʜɪᴅ ᴀɪ: ᴀᴄᴛɪᴠᴇ ✅') : chalk.red('❌ ᴛᴏʜɪᴅ ᴀɪ 2026'));
-    console.log(chalk.yellow('⏳ ᴡʜᴀᴛsᴀᴘᴘ: ᴡᴀɪᴛɪɴɢ ғᴏʀ /ᴘᴀɪʀ ᴏɴ ᴛᴇʟᴇɢʀᴀᴍ'));
-    console.log(chalk.cyan('⚄︎════════════════════════════════⚄︎\n'));
+    console.log(chalk.cyan('\\n⚄︎════════════════════════════════⚄︎'));
+    console.log(telegramLoaded
+        ? chalk.green('  ᴛᴇʟᴇɢʀᴀᴍ: ᴀᴄᴛɪᴠᴇ ✅')
+        : chalk.red('  ᴛᴇʟᴇɢʀᴀᴍ: ɪɴᴀᴄᴛɪᴠᴇ ❌'));
+    console.log(chalk.yellow('  ᴡʜᴀᴛsᴀᴘᴘ: ᴡᴀɪᴛɪɴɢ ғᴏʀ /ᴘᴀɪʀ'));
+    console.log(chalk.cyan('⚄︎════════════════════════════════⚄︎\\n'));
 
-    if (!telegramLoaded) {
-        console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
-    } else {
-        console.log(chalk.green('✅ ᴛᴏʜɪᴅ ᴀɪ ᴀᴄᴛɪᴠᴇ!\n'));
-    }
-
-    // Keep the bot running continuously.
     startAutoRestart();
     runStartupDebug();
     startSessionMonitor();
-    processGuard.install(); // restart otomatis: RAM > 10GB atau CPU > 90% (sustained)
+    processGuard.install();
 
-    // Error handlers
     const ignoredErrors = [
         'Socket connection timeout',
         'EKEYTYPE',
@@ -155,35 +143,21 @@ function launchBot() {
         'Value not found'
     ];
 
-    process.on('unhandledRejection', (reason, promise) => {
+    process.on('unhandledRejection', (reason) => {
         if (ignoredErrors.some(e => String(reason).includes(e))) return;
-        console.log(chalk.red('\n⚠️  Unhandled Promise Rejection:'));
+        console.log(chalk.red('\\n⚠️ Unhandled Promise Rejection:'));
         console.log(chalk.yellow('Reason:'), reason);
     });
 
     process.on('uncaughtException', (error) => {
         if (ignoredErrors.some(e => String(error).includes(e))) return;
-        console.log(chalk.red('\n❌ Uncaught Exception:'));
+        console.log(chalk.red('\\n❌ Uncaught Exception:'));
         console.log(chalk.yellow('Error:'), error.message);
-        if (error.stack) {
-            console.log(chalk.gray(error.stack));
-        }
+        if (error.stack) console.log(chalk.gray(error.stack));
     });
 
-    const originalConsoleError = console.error;
-    console.error = function (message, ...optionalParams) {
-        if (typeof message === 'string' && ignoredErrors.some(e => message.includes(e))) return;
-        originalConsoleError.apply(console, [message, ...optionalParams]);
-    };
-
-    const originalStderrWrite = process.stderr.write;
-    process.stderr.write = function (message, encoding, fd) {
-        if (typeof message === 'string' && ignoredErrors.some(e => message.includes(e))) return;
-        originalStderrWrite.apply(process.stderr, arguments);
-    };
-
-    console.log(chalk.blue('📊 Bot monitoring active...'));
-    console.log(chalk.gray('Press Ctrl+C to stop the bot\n'));
+    console.log(chalk.blue('📊 Telegram monitoring active...'));
+    console.log(chalk.gray('Press Ctrl+C to stop the bot\\n'));
 }
 
 // Keep terminal output enabled so startup, password prompts, pairing,
