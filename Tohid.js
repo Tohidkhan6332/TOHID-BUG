@@ -30,6 +30,7 @@
 require('dotenv').config();
 require('./setting/config');
 const TelegramBot = require('node-telegram-bot-api');
+const { execFile, spawn } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 const chalk = require('chalk');
@@ -2929,30 +2930,151 @@ bot.onText(/\/status/, (msg) => {
     );
 });
 
-bot.onText(/\/restart/, async (msg) => {
+bot.onText(/^\/restart(?:@[\\w_]+)?$/i, async (msg) => {
     const chatId = msg.chat.id;
-    if (!isOwner(chatId)) {
+    const userId = msg.from?.id;
+
+    if (!isOwner(userId)) {
         return bot.sendMessage(chatId,
-            `❌ *Access denied!*\nOnly the owner can use this command.`,
+            `❌ *Access denied!*
+Only the owner can use this command.`,
             { parse_mode: 'Markdown' }
         );
     }
 
     await bot.sendMessage(chatId,
-        `🔄 *Restarting bot...*\n\n` +
-        `⏳ The process will restart in 3 seconds.\n` +
-        `The Pterodactyl panel will restart automatically.\n\n` +
-        `_Please wait a moment..._`,
+        `🔄 *Restarting bot...*
+
+⏳ Restarting the current Node.js process...
+Please wait a moment.`,
         { parse_mode: 'Markdown' }
     );
 
     console.log(`[RESTART] Manual restart requested by owner (chat ID: ${chatId})`);
 
-    // Delay 3 seconds so the message is sent first, then exit
     setTimeout(() => {
-        console.log('[RESTART] Running process.exit(0) to restart the panel...');
+        const isTermux = Boolean(
+            process.env.TERMUX_VERSION ||
+            String(process.env.PREFIX || '').includes('com.termux')
+        );
+
+        if (isTermux) {
+            console.log('[RESTART] Termux detected — starting a fresh process.');
+            const child = spawn(process.execPath, process.argv.slice(1), {
+                cwd: process.cwd(),
+                env: process.env,
+                detached: true,
+                stdio: 'inherit'
+            });
+            child.unref();
+
+            setTimeout(() => process.exit(0), 1000);
+            return;
+        }
+
+        console.log('[RESTART] Non-Termux host detected — exiting for panel/process manager restart.');
         process.exit(0);
-    }, 3000);
+    }, 1500);
+});
+
+// ==================== GITHUB UPDATE ====================
+bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
+    const chatId = msg.chat.id;
+    const userId = msg.from?.id;
+
+    if (!isOwner(userId)) {
+        return bot.sendMessage(chatId,
+            `❌ *Access denied!*
+Only the owner can use this command.`,
+            { parse_mode: 'Markdown' }
+        );
+    }
+
+    await bot.sendMessage(chatId,
+        `⬆️ *Updating TOHID-AI...*
+
+📥 Pulling the latest code from GitHub...
+⏳ Please wait.`,
+        { parse_mode: 'Markdown' }
+    );
+
+    const run = (command, args) => new Promise((resolve, reject) => {
+        execFile(command, args, {
+            cwd: __dirname,
+            windowsHide: true,
+            maxBuffer: 1024 * 1024 * 4
+        }, (error, stdout, stderr) => {
+            if (error) {
+                error.stdout = stdout;
+                error.stderr = stderr;
+                reject(error);
+                return;
+            }
+            resolve({ stdout, stderr });
+        });
+    });
+
+    try {
+        // --autostash preserves local runtime/config changes such as auth.json
+        // while updating tracked source files from origin/main.
+        const pull = await run('git', [
+            'pull', '--rebase', '--autostash', 'origin', 'main'
+        ]);
+
+        await bot.sendMessage(chatId,
+            `✅ *GitHub code updated.*
+
+📦 Installing any new dependencies...`,
+            { parse_mode: 'Markdown' }
+        );
+
+        await run('npm', [
+            'install', '--no-audit', '--no-fund'
+        ]);
+
+        await bot.sendMessage(chatId,
+            `✅ *Update completed successfully.*
+
+🔄 Restarting with the latest GitHub version...`,
+            { parse_mode: 'Markdown' }
+        );
+
+        console.log('[UPDATE] GitHub update completed by owner.');
+        console.log(pull.stdout || pull.stderr || '[UPDATE] No git output.');
+
+        setTimeout(() => {
+            const isTermux = Boolean(
+                process.env.TERMUX_VERSION ||
+                String(process.env.PREFIX || '').includes('com.termux')
+            );
+
+            if (isTermux) {
+                const child = spawn(process.execPath, process.argv.slice(1), {
+                    cwd: process.cwd(),
+                    env: process.env,
+                    detached: true,
+                    stdio: 'inherit'
+                });
+                child.unref();
+                setTimeout(() => process.exit(0), 1000);
+                return;
+            }
+
+            process.exit(0);
+        }, 1500);
+
+    } catch (error) {
+        console.error('[UPDATE] Failed:', error);
+        const details = String(error.stderr || error.stdout || error.message || 'Unknown error').trim();
+        return bot.sendMessage(chatId,
+            `❌ *Update failed.*
+
+\```
+${details.slice(-3000)}
+\````,
+            { parse_mode: 'Markdown' }
+        );
+    }
 });
 
 // ==================== CALLBACK HANDLER ====================
