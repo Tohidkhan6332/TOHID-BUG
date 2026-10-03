@@ -1103,6 +1103,79 @@ bot.onText(/^\/bug(?:\\s+(.+))?$/i, async (msg, match) => {
   }
 });
 
+// ==================== TELEGRAM → WHATSAPP DIRECT COMMAND BRIDGE ====================
+// Owner-only: use the same command name on Telegram as on WhatsApp.
+// Examples:
+//   /groupban 123456789
+//   /xgroup 123456789
+//   /tohid-invis 91987654321
+//   /any-whatsapp-command <args>
+//
+// The command is forwarded to the selected active WhatsApp bot session.
+// /bug remains available for explicit session selection.
+const TELEGRAM_NATIVE_COMMANDS = new Set([
+  'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
+  'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu', 'bug'
+]);
+
+bot.onText(/^\\/([a-zA-Z0-9_-]+)(?:@[^\\s]+)?(?:\\s+([\\s\\S]+))?$/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from?.id;
+  const commandName = (match?.[1] || '').toLowerCase();
+  const args = (match?.[2] || '').trim();
+
+  if (TELEGRAM_NATIVE_COMMANDS.has(commandName)) return;
+
+  if (!isOwner(userId)) {
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
+│
+├◆ ᴏᴡɴᴇʀ ᴏɴʟʏ
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  const target = getActiveConnection();
+  if (!target) {
+    const active = getActiveConnections();
+    if (!active.length) {
+      return bot.sendMessage(chatId,
+        '❌ No active WhatsApp session found. Pair a WhatsApp account first with /pair <number>.'
+      );
+    }
+    return bot.sendMessage(chatId,
+      `❌ WhatsApp session is not available.\\n\\nActive sessions: ${active.map(x => x.number).join(', ')}`
+    );
+  }
+
+  const socket = target.connection;
+  const selfJid = socket?.user?.id;
+  if (!selfJid) {
+    return bot.sendMessage(chatId, '❌ WhatsApp session is not ready yet.');
+  }
+
+  const commandText = `.${commandName}${args ? ` ${args}` : ''}`;
+
+  try {
+    await socket.sendMessage(selfJid, { text: commandText });
+
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 𝗖𝗢𝗠𝗠𝗔𝗡𝗗⌟* ◆
+│
+├◆ ᴄᴍᴅ: \`${commandText}\`
+├◆ ᴡʜᴀᴛsᴀᴘᴘ: +${target.number.replace(/[^0-9]/g, '')}
+├◆ sᴛᴀᴛᴜs: ᴇxᴇᴄᴜᴛɪɴɢ
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    return bot.sendMessage(chatId, `❌ Failed to send WhatsApp command: ${error.message}`);
+  }
+});
+
 // ==================== COMMAND: PAIR ====================
 
 bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
