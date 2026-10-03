@@ -131,11 +131,17 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: false });
 const { initDebug } = require('./debug.js');
 initDebug(bot);
 
-(async () => {
+let telegramPollingStarted = false;
+
+async function startTelegramPolling() {
+  if (telegramPollingStarted) return;
+  telegramPollingStarted = true;
+
   try {
     await bot.deleteWebHook({ drop_pending_updates: false });
     const me = await bot.getMe();
     console.log(`[TELEGRAM] Connected as @${me.username || me.first_name} (${me.id})`);
+
     await bot.startPolling({
       restart: true,
       params: {
@@ -144,14 +150,16 @@ initDebug(bot);
         allowed_updates: ['message', 'callback_query']
       }
     });
+
     console.log('[TELEGRAM] Polling started successfully — waiting for messages...');
   } catch (error) {
+    telegramPollingStarted = false;
     console.error('[TELEGRAM] Polling startup failed:', error.message);
     if (error.response?.body) {
       console.error('[TELEGRAM] API response:', JSON.stringify(error.response.body));
     }
   }
-})();
+}
 
 // Data Stores
 let database = {
@@ -3203,6 +3211,9 @@ setInterval(async () => {
   console.log(chalk.cyan(`⏱️ ᴜᴘᴛɪᴍᴇ: ${formatUptime(Date.now() - database.stats.startTime)}`));
   console.log(chalk.white('\n📢 ᴍᴏɴɪᴛᴏʀɪɴɢ ғᴏʀ ᴄᴏᴍᴍᴀɴᴅs...\n'));
 })();
+
+// Telegram must start polling only after all handlers above are registered.
+startTelegramPolling();
 
 // ==================== SHUTDOWN HANDLERS ====================
 const shutdown = async (signal) => {
