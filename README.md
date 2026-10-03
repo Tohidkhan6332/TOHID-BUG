@@ -127,11 +127,9 @@ Click the button above to create a Heroku app directly from this repository.
 
 > **Important:** WhatsApp session data should be handled carefully on Heroku. Heroku dyno filesystems are not a substitute for persistent storage, so production deployments should use an appropriate external/persistent session strategy.
 
-### `.update` on Heroku
+### Telegram `/update` on Heroku
 
-For Heroku, `.update` should use a deployment hook rather than relying on a local `git pull`. Set `TOHID_UPDATE_HOOK_URL` to a secure deployment endpoint that rebuilds the app from the `main` branch. The bot will call that hook and then exit so Heroku can start the new release.
-
-Do **not** put a Heroku API token directly in the source code or README. Heroku's Platform API supports authenticated build creation, and Heroku Button provides the one-click deployment flow.
+The owner-only Telegram `/update` command can trigger a fresh Heroku build directly from the public `main` branch when `HEROKU_API_KEY` and `HEROKU_APP_NAME` are configured. It does not store the API token in source code.
 
 For automatic GitHub-to-Heroku deployments, connect the Heroku app to this GitHub repository from the Heroku Dashboard's **Deploy** tab.
 ## 🚀 Deployment
@@ -200,17 +198,29 @@ PM2 can be used on Termux where the environment supports it.
 
 Claude Code, Gemini and Codex are development agents rather than hosting platforms. They can work with this GitHub repository, modify it and prepare deployments, but the actual bot still needs a supported long-running runtime such as a VPS, Docker host, Render worker, Heroku worker, Koyeb service or a suitable Replit deployment.
 
-### 🔄 Universal `.update`
+### 🔄 Universal Telegram `/update` + `/restart`
 
-The WhatsApp `.update` command is owner-only.
+Both commands are owner-only and use the runtime manager in `utils/runtime-manager.js`.
 
-- VPS/Termux/Kali/PM2: pulls `main`, installs changed dependencies and restarts.
-- Render/Heroku/other ephemeral hosts: use `TOHID_UPDATE_HOOK_URL` so the platform performs a fresh deployment instead of relying on a temporary filesystem.
-- Docker: rebuild/redeploy the container through the host's deployment mechanism.
-- Serverless/static-only hosts are **not** suitable for this WhatsApp bot because the bot requires a persistent long-running process.
+| Runtime | `/restart` | `/update` |
+|---|---|---|
+| Termux | Starts a fresh Node process | `git pull --rebase --autostash` + dependency install |
+| VPS / generic Node | Starts a fresh Node process | Git pull + dependency install |
+| PM2 | Uses PM2 restart | Git pull + dependency install, then PM2 restart |
+| Pterodactyl | Exits for the panel's restart policy | Git pull when the panel deployment contains `.git` |
+| Heroku | Dyno supervisor restarts the process | Creates a new build from the latest GitHub branch |
+| Render | Uses Render API when credentials are configured; otherwise exits for the platform supervisor | Triggers a fresh deploy from the service's latest configured source |
+| Koyeb | Uses Koyeb API when credentials are configured; otherwise exits for the platform supervisor | Triggers a service redeploy when API credentials are configured |
+| Replit | Uses the deployment/runtime supervisor | Git pull when the workspace is a Git checkout |
+| Docker / systemd / Supervisor | Exits and lets the configured supervisor restart it | Git pull when the repository is mounted |
 
-Never put platform API tokens directly in the repository. Store secrets in the platform's environment-variable/secret manager.
+**Required provider variables when API control is needed:**
 
+`RENDER_API_KEY`, `RENDER_SERVICE_ID`, `KOYEB_API_TOKEN`, `KOYEB_SERVICE_ID`, `HEROKU_API_KEY`, and `HEROKU_APP_NAME`.
+
+For Pterodactyl, Docker, systemd and other supervisors, the hosting panel/service must itself be configured to restart the process after it exits. A bot process cannot create a host-level restart policy that the host does not provide.
+
+Static/serverless deployments are not suitable for this long-running WhatsApp/Telegram process.
 ## 📱 Termux Deployment
 
 > Recommended: Node.js 20+ and a Termux installation with access to the official package repositories.
