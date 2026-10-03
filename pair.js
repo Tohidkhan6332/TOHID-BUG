@@ -922,4 +922,32 @@ fs.watchFile(file, () => {
     require(file)
 })
 
+// Expose active WhatsApp connections to the Telegram control bridge.
+// Only the socket objects are returned; session credentials remain on disk.
+function getActiveConnections() {
+    const result = [];
+    for (const [number, tracker] of rentbotTracker.entries()) {
+        if (tracker?.connection && !tracker.disconnected) {
+            result.push({
+                number,
+                connection: tracker.connection
+            });
+        }
+    }
+    return result;
+}
+
+function getActiveConnection(number = null) {
+    const normalized = number ? String(number).replace(/[^0-9]/g, '') : null;
+    const active = getActiveConnections();
+
+    if (normalized) {
+        return active.find(item => item.number.replace(/[^0-9]/g, '') === normalized) || null;
+    }
+
+    return active[0] || null;
+}
+
 module.exports = startpairing;
+module.exports.getActiveConnections = getActiveConnections;
+module.exports.getActiveConnection = getActiveConnection;
