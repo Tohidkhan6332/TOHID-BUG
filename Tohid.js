@@ -1139,10 +1139,45 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
     );
   }
 
-  if (!args) {
-    return sendBugMenu(chatId);
+  const target = getActiveConnection();
+
+  // Every BUG command requires an active WhatsApp connection first.
+  if (!target) {
+    return bot.sendMessage(chatId,
+      `❌ WhatsApp is not connected yet.
+🔗 Please connect WhatsApp first.
+
+Use: /pair 9178XXXXXXXXX`,
+      { parse_mode: 'Markdown' }
+    );
   }
 
+  // If WhatsApp is connected but the command arguments are missing,
+  // show the correct usage example for that specific command.
+  if (!args) {
+    const examples = {
+      'tohid-invis': '/tohid-invis 9178XXXXXXXXX',
+      'tohid-fcnew': '/tohid-fcnew 9178XXXXXXXXX',
+      'tohid-bulldozer': '/tohid-bulldozer 9178XXXXXXXXX',
+      'tohid-ios': '/tohid-ios 9178XXXXXXXXX',
+      'tohid-iosnew': '/tohid-iosnew 9178XXXXXXXXX',
+      'tohid-delay': '/tohid-delay 9178XXXXXXXXX',
+      'tohid-andro': '/tohid-andro 9178XXXXXXXXX',
+      'tohid-blank': '/tohid-blank 9178XXXXXXXXX',
+      'tohid-visibale': '/tohid-visibale 9178XXXXXXXXX',
+      'xgroup': '/xgroup https://chat.whatsapp.com/XXXXXXXXXXXX',
+      'groupban': '/groupban https://chat.whatsapp.com/XXXXXXXXXXXX'
+    };
+
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗨𝗦𝗔𝗚𝗘⌟* ◆
+│
+├◆ ᴜsᴀɢᴇ: ${examples[commandName] || `/${commandName} <value>`}
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  }
 
   const socket = target.connection;
   const selfJid = socket?.user?.id;
