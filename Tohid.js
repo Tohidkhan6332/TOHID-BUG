@@ -1130,17 +1130,6 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
 
   const target = getActiveConnection();
 
-  if (!target) {
-    if (!args) return sendBugMenu(chatId);
-    return bot.sendMessage(chatId,
-      `❌ ᴡʜᴀᴛsᴀᴘᴘ ᴀʙʜɪ ᴄᴏɴɴᴇᴄᴛ ɴᴀʜɪ ʜᴀɪ.
-🔗 Please connect WhatsApp first using /pair <number>.`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  const target = getActiveConnection();
-
   // Every BUG command requires an active WhatsApp connection first.
   if (!target) {
     return bot.sendMessage(chatId,
@@ -1177,6 +1166,28 @@ Use: /pair 9178XXXXXXXXX`,
 └ ❏`,
       { parse_mode: 'Markdown' }
     );
+  }
+
+  // Strict argument validation:
+  // Target commands require digits only; group commands require a WhatsApp invite link.
+  if (!['xgroup', 'groupban'].includes(commandName)) {
+    const number = args.replace(/^\\+/, '').trim();
+    if (!/^\\d{10,15}$/.test(number)) {
+      return bot.sendMessage(chatId,
+        `❌ Invalid number.
+Use: /${commandName} 91987654321`,
+        { parse_mode: 'Markdown' }
+      );
+    }
+  } else {
+    const link = args.trim();
+    if (!/^https?:\\/\\/(chat\\.)?whatsapp\\.com\\/\\S+$/i.test(link)) {
+      return bot.sendMessage(chatId,
+        `❌ Invalid WhatsApp group link.
+Use: /${commandName} https://chat.whatsapp.com/XXXXXXXXXXXX`,
+        { parse_mode: 'Markdown' }
+      );
+    }
   }
 
   const socket = target.connection;
