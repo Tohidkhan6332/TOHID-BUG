@@ -244,13 +244,6 @@ let database = {
   maintenance: false,
   // NEW: Premium system stores
   premium: {}, // Format: { "user_id": { expiry: timestamp, addedBy: admin_id, addedAt: timestamp } }
-  trialMode: {
-    active: false,
-    expiry: null,
-    startedBy: null,
-    startedAt: null
-  },
-  serviceMode: 'free'
 };
 
 // Rate Limit Store
