@@ -4379,51 +4379,7 @@ ${recentText}
 const sendMyPayments = async (chatId, userId) => {
   const mine = getPaymentRecords().filter(p => p.userId === userId.toString()).slice(0, 10);
   if (!mine.length) return bot.sendMessage(chatId, '┌ ❏ ◆ *⌜𝗠𝗬 𝗣𝗔𝗬𝗠𝗘𝗡𝗧𝗦⌟* ◆\n│\n├◆ No payment history found.\n│\n└ ❏', { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 PLANS', callback_data: 'premium_plans' }]] } });
-  const lines = mine.map(p => '├◆ 🧾 *' + p.id + '*\n│   ↳ ' + p.planName + ' • bot.onText(/^\/payments(?:@[\w_]+)?$/i, async (msg) => {
-  const userId = msg.from.id;
-  if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(msg.chat.id, 'admin');
-
-  const pending = Object.values(database.payments)
-    .filter(p => p.status === 'pending_review')
-    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
-    .slice(0, 20);
-
-  if (!pending.length) {
-    return bot.sendMessage(msg.chat.id, '┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆\\n│\\n├◆ No pending payment requests.\\n│\\n└ ❏', { parse_mode: 'Markdown' });
-  }
-
-  for (const request of pending) {
-    const caption = `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆
-│
-├◆ 🧾 ID: *${request.id}*
-├◆ 👤 User: *${request.userId}*
-├◆ 📦 Plan: *${request.planName}*
-├◆ 💵 Price: *${request.priceUsd}*
-├◆ 💳 Method: *${String(request.method || '').toUpperCase()}*
-├◆ 🔖 TX/UTR: *${request.transactionId || 'See proof'}*
-│
-└ ❏`;
-
-    const markup = {
-      inline_keyboard: [[
-        { text: '✅ APPROVE', callback_data: 'payment_approve:' + request.id },
-        { text: '❌ REJECT', callback_data: 'payment_reject:' + request.id }
-      ]]
-    };
-
-    try {
-      if (request.proofType === 'photo' && request.proofFileId) {
-        await bot.sendPhoto(msg.chat.id, request.proofFileId, { caption, parse_mode: 'Markdown', reply_markup: markup });
-      } else {
-        await bot.sendMessage(msg.chat.id, caption, { parse_mode: 'Markdown', reply_markup: markup });
-      }
-    } catch (error) {
-      console.error('[PAYMENT] Review display failed:', error.message);
-    }
-  }
-});
-
-bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
+  const lines = mine.map(p => '├◆ 🧾 *' + p.id + '*\n│   ↳ ' + p.planName + ' • bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
@@ -7152,50 +7108,6 @@ module.exports = { bot };
  + p.priceUsd + '\n│   ↳ ' + formatPaymentStatus(p.status) + (p.transactionId ? '\n│   ↳ TX: ' + p.transactionId : '') + (p.rejectionReason ? '\n│   ↳ Reason: ' + p.rejectionReason : '')).join('\n');
   return bot.sendMessage(chatId, '┌ ❏ ◆ *⌜𝗠𝗬 𝗣𝗔𝗬𝗠𝗘𝗡𝗧𝗦⌟* ◆\n│\n' + lines + '\n│\n└ ❏', { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 PLANS', callback_data: 'premium_plans' }], [{ text: '🏠 MENU', callback_data: 'show_main' }]] } });
 };
-bot.onText(/^\/payments(?:@[\w_]+)?$/i, async (msg) => {
-  const userId = msg.from.id;
-  if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(msg.chat.id, 'admin');
-
-  const pending = Object.values(database.payments)
-    .filter(p => p.status === 'pending_review')
-    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
-    .slice(0, 20);
-
-  if (!pending.length) {
-    return bot.sendMessage(msg.chat.id, '┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆\\n│\\n├◆ No pending payment requests.\\n│\\n└ ❏', { parse_mode: 'Markdown' });
-  }
-
-  for (const request of pending) {
-    const caption = `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆
-│
-├◆ 🧾 ID: *${request.id}*
-├◆ 👤 User: *${request.userId}*
-├◆ 📦 Plan: *${request.planName}*
-├◆ 💵 Price: *${request.priceUsd}*
-├◆ 💳 Method: *${String(request.method || '').toUpperCase()}*
-├◆ 🔖 TX/UTR: *${request.transactionId || 'See proof'}*
-│
-└ ❏`;
-
-    const markup = {
-      inline_keyboard: [[
-        { text: '✅ APPROVE', callback_data: 'payment_approve:' + request.id },
-        { text: '❌ REJECT', callback_data: 'payment_reject:' + request.id }
-      ]]
-    };
-
-    try {
-      if (request.proofType === 'photo' && request.proofFileId) {
-        await bot.sendPhoto(msg.chat.id, request.proofFileId, { caption, parse_mode: 'Markdown', reply_markup: markup });
-      } else {
-        await bot.sendMessage(msg.chat.id, caption, { parse_mode: 'Markdown', reply_markup: markup });
-      }
-    } catch (error) {
-      console.error('[PAYMENT] Review display failed:', error.message);
-    }
-  }
-});
-
 bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
