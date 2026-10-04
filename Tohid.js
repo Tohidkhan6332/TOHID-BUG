@@ -1904,15 +1904,27 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   }
 
   if (sessions.includes(`${cleanNumber}@s.whatsapp.net`)) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗘𝗫𝗜𝗦𝗧𝗦⌟* ◆
+    // A failed pairing may leave only pairing.json behind. That is not an
+    // authenticated WhatsApp session and must not block a fresh /pair.
+    const sessionDetails = await getSessionDetails();
+    const existing = sessionDetails.find(
+      session => String(session.number) === String(cleanNumber)
+    );
+
+    if (existing?.status === 'ᴀᴄᴛɪᴠᴇ ✅') {
+      return bot.sendMessage(chatId,
+        `┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗘𝗫𝗜𝗦𝗧𝗦⌟* ◆
 │
 ├◆ sᴇssɪᴏɴ ᴀʟʀᴇᴀᴅʏ ᴇxɪsᴛs
 ├◆ ᴜsᴇ /unpair ${cleanNumber}
 │
 └ ❏`,
-      { parse_mode: 'Markdown' }
-    );
+        { parse_mode: 'Markdown' }
+      );
+    }
+
+    // Remove incomplete/corrupt pairing state before retrying.
+    await deleteSession(cleanNumber);
   }
 
   if (database.activeSessions.has(cleanNumber)) {
