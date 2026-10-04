@@ -1990,13 +1990,18 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   try {
     const pairModule = require('./pair');
     const jid = cleanNumber + '@s.whatsapp.net';
-    await pairModule(
+    // Start the WhatsApp socket without blocking the Telegram pairing flow.
+    // Pairing code generation is asynchronous, so the file watcher below can
+    // succeed even if socket initialization/reconnect work takes longer.
+    let pairStartError = null;
+    const pairStartPromise = pairModule(
       jid,
       customCode ? customCode.toUpperCase() : null
-    );
-    await sleep(4000);
-    
-    clearInterval(loadingInterval);
+    ).catch((err) => {
+      pairStartError = err;
+      console.log('[PAIR] Socket start error:', err?.message || err);
+      return null;
+    });
 
     // pair.js stores each user's pairing code inside their own session directory.
     // Read that exact file instead of the old shared root pairing.json.
@@ -2008,10 +2013,10 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       'pairing.json'
     );
 
-    // The pairing code is generated asynchronously. Wait briefly for the
-    // session-specific file instead of reading a stale/missing shared file.
+    // The pairing code is generated asynchronously. Wait long enough for the
+    // Baileys socket/retry flow instead of freezing on "PAIRING IN PROGRESS".
     let cuObj = null;
-    const pairingDeadline = Date.now() + 10000;
+    const pairingDeadline = Date.now() + 30000;
 
     while (Date.now() < pairingDeadline) {
       if (await fileExists(pairingFile)) {
@@ -2031,8 +2036,12 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       await sleep(500);
     }
 
+    clearInterval(loadingInterval);
+
     if (!cuObj?.code) {
-      throw new Error('ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
+      throw new Error(
+        pairStartError?.message || 'ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ'
+      );
     }
 
     const code = cuObj.code;
