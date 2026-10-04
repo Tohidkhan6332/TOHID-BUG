@@ -129,7 +129,8 @@ module.exports = {
       const pairUsers = files
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
-        .filter(name => name.endsWith('@s.whatsapp.net'));
+        .filter(name => /^\d{7,15}$/.test(name) || name.endsWith('@s.whatsapp.net'))
+        .map(name => name.replace(/@s\.whatsapp\.net$/i, ''));
 
       if (pairUsers.length === 0) {
         console.log(chalk.yellow('ℹ️ No paired users found.'));
