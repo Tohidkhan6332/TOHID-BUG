@@ -261,6 +261,27 @@ bot.sendMessage = function commandAwareSendMessage(chatId, text, options = {}) {
   delete cleanOptions.__noCommandImage;
   return sendCommandResponse(chatId, text, cleanOptions);
 };
+
+// ==================== PERMISSION CONTACT ====================
+const sendOwnerContact = (chatId, type = 'admin') => {
+  const required = type === 'owner' ? 'OWNER' : 'ADMIN';
+  const message = \`┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
+│
+├◆ 🔒 \${required} permission required
+├◆ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪs ɴᴏᴛ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ʏᴏᴜ
+│
+└ ❏\`;
+
+  return bot.sendMessage(chatId, message, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '👑 ᴄᴏɴᴛᴀᴄᴛ ᴏᴡɴᴇʀ', url: SOCIAL.telegram.developer }]
+      ]
+    }
+  });
+};
+
 const { initDebug } = require('./debug.js');
 initDebug(bot);
 
@@ -2457,7 +2478,7 @@ bot.onText(/^\/users(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   const usersList = [...database.users].slice(0, 10);
@@ -2484,7 +2505,7 @@ bot.onText(/^\/listpair(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   const sessions = await getSessionDetails();
@@ -2532,7 +2553,7 @@ bot.onText(/^\/broadcast(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const message = match ? match[1] : null;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   if (!message) {
@@ -2636,7 +2657,7 @@ bot.onText(/^\/clean(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   const sessions = await getSessions();
@@ -2683,7 +2704,7 @@ bot.onText(/^\/ban(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const input = match ? match[1] : null;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   if (!input) {
@@ -2734,7 +2755,7 @@ bot.onText(/^\/unban(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const input = match ? match[1] : null;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   if (!input) {
@@ -2776,7 +2797,7 @@ bot.onText(/^\/checkuser(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const targetId = match ? match[1] : null;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   if (!targetId) {
@@ -2821,7 +2842,7 @@ bot.onText(/^\/maintenance(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const mode = match ? match[1] : null;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   if (!mode) {
@@ -2867,7 +2888,7 @@ bot.onText(/^\/logs(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   const recentLogs = database.audit.slice(-5).reverse();
@@ -2895,7 +2916,7 @@ bot.onText(/^\/announce(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const input = match ? match[1] : null;
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   if (!input) {
@@ -2988,7 +3009,7 @@ bot.onText(/^\/addadmin(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const targetId = match ? match[1] : null;
 
   if (!isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴏᴡɴᴇʀ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'owner');
   }
 
   if (!targetId) {
@@ -3028,7 +3049,7 @@ bot.onText(/^\/removeadmin(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const targetId = match ? match[1] : null;
 
   if (!isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴏᴡɴᴇʀ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'owner');
   }
 
   if (!targetId) {
@@ -3086,7 +3107,7 @@ bot.onText(/^\/status(?:@[\w_]+)?$/i, (msg) => {
 // ==================== MANUAL PREMIUM ADMIN CONTROLS ====================
 bot.onText(/^\/addpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id, adminId = msg.from.id;
-  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
+  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return sendOwnerContact(chatId, 'admin');
   const args = String(match?.[1] || '').trim().split(/\s+/);
   const targetId = args.shift(), duration = args.join(' ');
   if (!/^\d+$/.test(targetId || '') || !duration) return bot.sendMessage(chatId, 'Usage: /addpremium USER_ID 30 days');
@@ -3099,7 +3120,7 @@ bot.onText(/^\/addpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 
 bot.onText(/^\/delpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id, adminId = msg.from.id, targetId = String(match?.[1] || '').trim();
-  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
+  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return sendOwnerContact(chatId, 'admin');
   if (!/^\d+$/.test(targetId)) return bot.sendMessage(chatId, 'Usage: /delpremium USER_ID');
   if (!database.premium[targetId]) return bot.sendMessage(chatId, '❌ User is not Premium.');
   delete database.premium[targetId]; await saveData(); addAuditLog('ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇ', adminId, targetId);
@@ -3108,7 +3129,7 @@ bot.onText(/^\/delpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 
 bot.onText(/^\/(?:premiumusers|premlist)(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id, adminId = msg.from.id;
-  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
+  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return sendOwnerContact(chatId, 'admin');
   const entries = Object.entries(database.premium).filter(([, d]) => Number(d?.expiry) > Date.now());
   if (!entries.length) return bot.sendMessage(chatId, '👑 No active Premium users.');
   const lines = entries.slice(0, 50).map(([id, d], i) => (i + 1) + '. ' + id + ' — ' + formatPlanExpiry(d.expiry));
@@ -3122,7 +3143,7 @@ bot.onText(/^\/(?:premiumusers|premlist)(?:@[\w_]+)?$/i, async (msg) => {
 bot.onText(/^\/settutorial(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
-  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+  if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
 
   const url = String(match?.[1] || '').trim();
   if (!url) {
@@ -3163,7 +3184,7 @@ bot.onText(/^\/settutorial(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 bot.onText(/^\/deltutorial(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
-  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+  if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
 
   saveTutorialVideoUrl('');
   return bot.sendMessage(chatId, '🗑️ *Tutorial video link removed.*\\n\\nWATCH NOW will stay unavailable until you add a new link.', { parse_mode: 'Markdown' });
@@ -3172,7 +3193,7 @@ bot.onText(/^\/deltutorial(?:@[\w_]+)?$/i, async (msg) => {
 bot.onText(/^\/tutorialstatus(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
-  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+  if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
 
   const url = getTutorialVideoUrl();
   if (!url) {
@@ -3700,7 +3721,7 @@ bot.onText(/^\/reply(?:@[\w_]+)?\s+(\d+)\s+(.+)$/i, async (msg, match) => {
   const replyMessage = match[2];
 
   if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    return sendOwnerContact(chatId, 'admin');
   }
 
   try {
