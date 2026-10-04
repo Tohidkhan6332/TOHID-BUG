@@ -1543,7 +1543,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
-            [{ text: '📋 ᴄᴏᴘʏ ᴄᴏᴅᴇ', callback_data: `copy_${code}` }],
+            [{ text: '📋 ᴄᴏᴘʏ ᴄᴏᴅᴇ', copy_text: { text: code } }],
             [
               { text: '📖 ᴛᴜᴛᴏʀɪᴀʟ', callback_data: 'show_tutorial' },
               { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }
