@@ -140,7 +140,8 @@ const PATHS = {
   backups: path.join(__dirname, 'axis_storage', 'backups'),
   // NEW: Premium system paths
   premium: path.join(__dirname, 'axis_storage', 'premium.json'),
-  trials: path.join(__dirname, 'axis_storage', 'trials.json')
+  trials: path.join(__dirname, 'axis_storage', 'trials.json'),
+  serviceMode: path.join(__dirname, 'axis_storage', 'service-mode.json')
 };
 
 // Media Assets
@@ -249,7 +250,8 @@ let database = {
     expiry: null,
     startedBy: null,
     startedAt: null
-  }
+  },
+  serviceMode: 'free'
 };
 
 // Rate Limit Store
@@ -453,9 +455,12 @@ const getPlanStatus = (userId) => {
     const expiry = database.premium[id]?.expiry || null;
     return { plan: 'premium', active: true, expiry, remaining: expiry ? Math.max(0, expiry - Date.now()) : null };
   }
-  if (isTrialActive()) {
+  if (database.serviceMode === 'free' && isTrialActive()) {
     const expiry = database.trialMode?.expiry || null;
     return { plan: 'trial', active: true, expiry, remaining: expiry ? Math.max(0, expiry - Date.now()) : null };
+  }
+  if (database.serviceMode === 'premium') {
+    return { plan: 'premium_required', active: false, expiry: null };
   }
   const pairsUsed = Number(database.userDetails[id]?.pairs || 0);
   return { plan: 'free', active: pairsUsed < SERVICE_PLANS.free.maxPairings, expiry: null, pairsUsed };
@@ -476,6 +481,8 @@ const sendPlans = async (chatId, userId) => {
       ? '🎁 TRIAL • EXPIRES: ' + formatPlanExpiry(status.expiry)
       : status.plan === 'admin'
         ? '🛡️ ADMIN / OWNER'
+        : status.plan === 'premium_required'
+        ? '🔒 PREMIUM MODE • Premium plan required'
         : '🆓 FREE • ' + Math.min(status.pairsUsed || 0, SERVICE_PLANS.free.maxPairings) + '/' + SERVICE_PLANS.free.maxPairings + ' pairing used';
   const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗦𝗘𝗥𝗩𝗜𝗖𝗘⌟* ◆
 │
@@ -657,6 +664,19 @@ const loadDatabase = async () => {
     await fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2));
   }
 
+  // Load service mode
+  if (await fileExists(PATHS.serviceMode)) {
+    try {
+      const modeData = JSON.parse(await fs.readFile(PATHS.serviceMode, 'utf8'));
+      database.serviceMode = modeData.mode === 'premium' ? 'premium' : 'free';
+    } catch (err) {
+      console.error('sᴇʀᴠɪᴄᴇ ᴍᴏᴅᴇ ʟᴏᴀᴅ ᴇʀʀᴏʀ:', err.message);
+      database.serviceMode = 'free';
+    }
+  } else {
+    await fs.writeFile(PATHS.serviceMode, JSON.stringify({ mode: database.serviceMode }, null, 2));
+  }
+
   // NEW: Load trial data
   if (await fileExists(PATHS.trials)) {
     try {
@@ -686,7 +706,8 @@ const saveData = async () => {
       fs.writeFile(PATHS.audit, JSON.stringify(database.audit.slice(-SYSTEM.maxLogs), null, 2)),
       // NEW: Save premium and trial data
       fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2)),
-      fs.writeFile(PATHS.trials, JSON.stringify(database.trialMode, null, 2))
+      fs.writeFile(PATHS.trials, JSON.stringify(database.trialMode, null, 2)),
+      fs.writeFile(PATHS.serviceMode, JSON.stringify({ mode: database.serviceMode }, null, 2))
     ]);
   } catch (err) {
     console.error('sᴀᴠᴇ ᴇʀʀᴏʀ:', err.message);
@@ -1072,6 +1093,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
         }] : [])
       ],
       [
+        { text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' },
         { text: '👨‍💻 ᴅᴇᴠᴇʟᴏᴘᴇʀ', url: 'https://t.me/Tohidkhan6332' }
       ]
     ];
@@ -1171,6 +1193,25 @@ bot.onText(/\/myplan/, async (msg) => {
   text += '│\\n└ ❏';
   return bot.sendMessage(msg.chat.id, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 ᴜᴘɢʀᴀᴅᴇ', callback_data: 'premium_plans' }]] } });
 });
+// ==================== SERVICE MODE COMMANDS ====================
+bot.onText(/^\/freemode(?:@[\\w_]+)?$/i, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Owner only.*', { parse_mode: 'Markdown' });
+  database.serviceMode = 'free';
+  await saveData();
+  return bot.sendMessage(chatId, '🆓 *FREE MODE ENABLED*\\n\\nFree users can use the normal 1-pairing limit.', { parse_mode: 'Markdown' });
+});
+
+bot.onText(/^\/premiummode(?:@[\\w_]+)?$/i, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Owner only.*', { parse_mode: 'Markdown' });
+  database.serviceMode = 'premium';
+  await saveData();
+  return bot.sendMessage(chatId, '👑 *PREMIUM MODE ENABLED*\\n\\nOnly Premium/Admin/Owner users can start a WhatsApp pairing.', { parse_mode: 'Markdown' });
+});
+
 // ==================== COMMAND: START ====================
 
 bot.onText(/\/start/, async (msg) => {
@@ -1265,7 +1306,8 @@ const TELEGRAM_BUG_COMMANDS = new Set([
 const TELEGRAM_NATIVE_COMMANDS = new Set([
   'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
   'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu',
-  'plans', 'myplan', 'addpremium', 'delpremium', 'premiumusers'
+  'plans', 'myplan', 'addpremium', 'delpremium', 'premiumusers',
+  'misc', 'freemode', 'premiummode'
 ]);
 
 bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
@@ -3317,6 +3359,21 @@ bot.on('callback_query', async (query) => {
   else if (data === 'show_bug_menu') {
     await bot.answerCallbackQuery(query.id, { text: 'ʙᴜɢ ᴍᴇɴᴜ' });
     return sendBugMenu(chatId);
+  }
+
+  else if (data === 'misc_menu') {
+    await bot.answerCallbackQuery(query.id, { text: 'ᴍɪsᴄ ᴍᴇɴᴜ' });
+    const modeLabel = database.serviceMode === 'premium' ? '👑 PREMIUM MODE' : '🆓 FREE MODE';
+    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗠𝗜𝗦𝗖 𝗠𝗘𝗡𝗨⌟* ◆
+│
+├◆ ᴄᴜʀʀᴇɴᴛ ᴍᴏᴅᴇ: ${modeLabel}
+│
+├◆ /freemode     - ᴇɴᴀʙʟᴇ ғʀᴇᴇ ᴍᴏᴅᴇ
+├◆ /premiummode  - ᴇɴᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴏɴʟʏ
+│
+├◆ ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴄʜᴀɴɢᴇ ᴛʜᴇ ᴍᴏᴅᴇ
+│
+└ ❏`, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } });
   }
 
   else if (data === 'show_tutorial') {
