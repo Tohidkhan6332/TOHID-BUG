@@ -207,7 +207,7 @@ async function updateFromGitHub() {
         } catch (_) {}
 
         const files = runtimeFiles
-            .split('\\n')
+            .split('\n')
             .map(file => file.trim())
             .filter(Boolean)
             .filter(file =>
