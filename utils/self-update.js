@@ -141,11 +141,20 @@ async function updateFromGitHub() {
         );
     }
 
-    // Do not overwrite manual tracked changes.
+    // The bot writes runtime data to some tracked JSON files (owner, premium,
+    // database state, etc.). Do not abort .update because of those files.
+    // Preserve runtime data while taking the code from GitHub as the source of truth.
+    let updateStash = null;
     if (hasTrackedChanges()) {
-        throw new Error(
-            'Local tracked changes were detected. Commit/stash them first, then run .update again.'
-        );
+        try {
+            git(['stash', 'push', '-m', 'TOHID-AI automatic runtime-data backup']);
+            updateStash = 'stash@{0}';
+        } catch (error) {
+            throw new Error(
+                'Unable to safely preserve local runtime data before update: ' +
+                (error.message || error)
+            );
+        }
     }
 
     git(['fetch', 'origin', UPDATE_BRANCH, '--prune']);
@@ -154,6 +163,9 @@ async function updateFromGitHub() {
     const latestSha = git(['rev-parse', `origin/${UPDATE_BRANCH}`]);
 
     if (currentSha === latestSha) {
+        if (updateStash) {
+            git(['stash', 'pop', '--index', updateStash]);
+        }
         return {
             updated: false,
             currentSha,
@@ -167,6 +179,9 @@ async function updateFromGitHub() {
     try {
         git(['merge-base', '--is-ancestor', currentSha, latestSha]);
     } catch {
+        if (updateStash) {
+            try { git(['stash', 'pop', '--index', updateStash]); } catch (_) {}
+        }
         throw new Error(
             'The local branch cannot be fast-forwarded to GitHub main. Manual intervention is required.'
         );
@@ -174,7 +189,42 @@ async function updateFromGitHub() {
 
     const dependenciesChanged = isPackageChange(currentSha, latestSha);
 
-    git(['pull', '--ff-only', 'origin', UPDATE_BRANCH]);
+    try {
+        git(['pull', '--ff-only', 'origin', UPDATE_BRANCH]);
+    } catch (error) {
+        if (updateStash) {
+            try { git(['stash', 'pop', '--index', updateStash]); } catch (_) {}
+        }
+        throw error;
+    }
+
+    // Restore only runtime JSON state from the backup. Code/config edits remain
+    // on GitHub's version. This prevents .update from losing live bot data.
+    if (updateStash) {
+        let runtimeFiles = '';
+        try {
+            runtimeFiles = git(['stash', 'show', '--name-only', updateStash]);
+        } catch (_) {}
+
+        const files = runtimeFiles
+            .split('\\n')
+            .map(file => file.trim())
+            .filter(Boolean)
+            .filter(file =>
+                /^(allfunc|database|tohidstore)\\/i.test(file) &&
+                /\\.json$/i.test(file)
+            );
+
+        for (const file of files) {
+            try {
+                git(['checkout', updateStash, '--', file]);
+            } catch (restoreError) {
+                console.warn('[UPDATE] Could not restore runtime file ' + file + ': ' + restoreError.message);
+            }
+        }
+
+        try { git(['stash', 'drop', updateStash]); } catch (_) {}
+    }
 
     if (dependenciesChanged) {
         try {
