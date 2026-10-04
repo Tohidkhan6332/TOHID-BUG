@@ -1990,12 +1990,14 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   try {
     const pairModule = require('./pair');
     const jid = cleanNumber + '@s.whatsapp.net';
+    // Pass digits only so the auth folder and pairing tracker use the same key.
+    // The JID is still used elsewhere for WhatsApp addressing.
     // Start the WhatsApp socket without blocking the Telegram pairing flow.
     // Pairing code generation is asynchronous, so the file watcher below can
     // succeed even if socket initialization/reconnect work takes longer.
     let pairStartError = null;
     const pairStartPromise = pairModule(
-      jid,
+      cleanNumber,
       customCode ? customCode.toUpperCase() : null
     ).catch((err) => {
       pairStartError = err;
