@@ -3159,17 +3159,67 @@ bot.on('callback_query', async (query) => {
 
   else if (data === 'misc_menu') {
     await bot.answerCallbackQuery(query.id, { text: 'ᴍɪsᴄ ᴍᴇɴᴜ' });
-    return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗠𝗜𝗦𝗖 𝗠𝗘𝗡𝗨⌟* ◆
+
+    const isOwnerUser = isOwner(userId);
+    const isAdminUser = isAdmin(userId.toString());
+
+    let miscText = `┌ ❏ ◆ *⌜𝗠𝗜𝗦𝗖 𝗠𝗘𝗡𝗨⌟* ◆
 │
-├◆ 👑 ᴘʀᴇᴍɪᴜᴍ-ᴏɴʟʏ sᴇʀᴠɪᴄᴇ
-├◆ 💳 ᴘᴀʏᴍᴇɴᴛ: ᴍᴀɴᴜᴀʟ ᴠᴇʀɪғɪᴇᴅ
-├◆ 📩 sᴜᴘᴘᴏʀᴛ: @Tohidkhan6332
+├◆ *⌜𝗤𝗨𝗜𝗖𝗞 𝗔𝗖𝗧𝗜𝗢𝗡𝗦⌟*
 │
-└ ❏`, {
+├◆ /pair    - ᴘᴀɪʀ ᴡʜᴀᴛsᴀᴘᴘ
+├◆ /unpair  - ʀᴇᴍᴏᴠᴇ sᴇssɪᴏɴ
+├◆ /ping    - ʟᴀᴛᴇɴᴄʏ ᴄʜᴇᴄᴋ
+├◆ /runtime - sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ
+├◆ /stats   - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs
+├◆ /report  - ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ
+├◆ /plans   - ᴘʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇ ᴘʟᴀɴ
+├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
+├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
+├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ`;
+
+    if (isAdminUser || isOwnerUser) {
+      miscText += `\n│
+└ ❏
+┌ ❏ ◆ *⌜𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗡𝗧𝗥𝗢𝗟⌟* ◆
+│
+├◆ /users
+├◆ /listpair
+├◆ /broadcast
+├◆ /clean
+├◆ /ban
+├◆ /unban
+├◆ /checkuser
+├◆ /addpremium USER_ID 30 days
+├◆ /delpremium USER_ID
+├◆ /premiumusers
+├◆ /maintenance
+├◆ /logs
+├◆ /announce`;
+    }
+
+    if (isOwnerUser) {
+      miscText += `\n│
+└ ❏
+┌ ❏ ◆ *⌜𝗢𝗪𝗡𝗘𝗥 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦⌟* ◆
+│
+├◆ /addadmin
+├◆ /removeadmin
+├◆ /setchannels
+├◆ /settutorial
+├◆ /restart
+├◆ /update`;
+    }
+
+    miscText += `
+│
+└ ❏`;
+
+    return bot.sendMessage(chatId, miscText, {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [{ text: '👑 ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs', callback_data: 'premium_plans' }],
+          [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
           [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
         ]
       }
