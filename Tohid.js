@@ -1809,11 +1809,14 @@ Use: /${commandName} https://chat.whatsapp.com/XXXXXXXXXXXX`,
 
 // ==================== COMMAND: PAIR ====================
 
-bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   let input = match ? match[1] : null;
-  let qrMode = false;
+  let qrMode = /^\/qr(?:@|\s|$)/i.test(msg.text || '');
+  if (qrMode && input && /^qr\s+/i.test(input)) {
+    input = input.replace(/^qr\s+/i, '').trim();
+  }
   const isGroup = msg.chat.type !== 'private';
 
   // Maintenance check
@@ -1858,7 +1861,8 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 │
 ├◆ ᴜsᴀɢᴇ: /pair 9178499xxxxx
 ├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
-├◆ QR: /pair qr 9178499xxxxx
+├◆ QR: /qr 9178499xxxxx
+├◆ ᴏʀ: /pair qr 9178499xxxxx
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
