@@ -3468,9 +3468,23 @@ bot.onText(/^\/update(?:@[\w_]+)?$/i, async (msg) => {
         await bot.sendMessage(chatId, '⬆️ *Updating TOHID-AI...*\n\n📦 Source: *' + GITHUB_OWNER + '/' + GITHUB_REPO + ':' + GITHUB_BRANCH + '*\n🖥️ Platform: *' + platform + '*\n⏳ Getting the latest version...', { parse_mode: 'Markdown' });
         console.log('[UPDATE] Owner requested update on ' + platform + '.');
         const result = await updateFromGitHub();
-        await bot.sendMessage(chatId, '✅ *Update started successfully.*\n\n📦 Latest GitHub version is being applied.\n🔄 Restarting with the updated version...', { parse_mode: 'Markdown' });
-        console.log('[UPDATE] Completed via ' + result.method + '.');
-        if (!result.restartHandled) setTimeout(() => restartProcess().catch(error => console.error('[UPDATE] Restart after update failed:', error)), 1200);
+        const updateDetails = String(result?.pullOutput || result?.installOutput || '').trim();
+        console.log('[UPDATE] Git update completed on ' + (result?.platform || platform) + '.');
+        if (updateDetails) {
+            console.log('[UPDATE] Details:', updateDetails.slice(-4000));
+        }
+
+        await bot.sendMessage(
+            chatId,
+            '✅ *Update completed successfully.*\n\n📦 Latest GitHub version has been applied.\n🔄 Restarting with the updated version...',
+            { parse_mode: 'Markdown' }
+        );
+
+        if (!result.restartHandled) {
+            setTimeout(() => {
+                restartProcess().catch(error => console.error('[UPDATE] Restart after update failed:', error));
+            }, 1200);
+        }
     } catch (error) {
         console.error('[UPDATE] Failed:', error);
         const details = String(error.stderr || error.stdout || error.message || 'Unknown error').trim();
