@@ -997,14 +997,6 @@ function smsg(tohid, m, store) {
     return m
 }
 
-let file = require.resolve(__filename)
-fs.watchFile(file, () => {
-    fs.unwatchFile(file)
-    console.log(chalk.redBright(`Update '${__filename}'`))
-    delete require.cache[file]
-    require(file)
-})
-
 // Expose active WhatsApp connections to the Telegram control bridge.
 // Only the socket objects are returned; session credentials remain on disk.
 function getConnectionHealth() {
