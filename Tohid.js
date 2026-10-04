@@ -415,7 +415,11 @@ const hasAccess = (userId) => {
 const getPlanStatus = (userId) => {
   const id = userId.toString();
 
-  if (isOwner(userId) || isAdmin(id)) {
+  if (isOwner(userId)) {
+    return { plan: 'owner', active: true, expiry: null, remaining: null };
+  }
+
+  if (isAdmin(id)) {
     return { plan: 'admin', active: true, expiry: null, remaining: null };
   }
 
@@ -434,7 +438,7 @@ const getPlanStatus = (userId) => {
 
 const canStartPairing = (userId) => {
   const status = getPlanStatus(userId);
-  return status.plan === 'admin' || status.plan === 'premium';
+  return status.plan === 'owner' || status.plan === 'admin' || status.plan === 'premium';
 };
 
 const formatPlanExpiry = (expiry) => expiry ? new Date(expiry).toLocaleString() : 'N/A';
@@ -443,9 +447,11 @@ const sendPlans = async (chatId, userId) => {
   const status = getPlanStatus(userId);
   const current = status.plan === 'premium'
     ? '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry)
-    : status.plan === 'admin'
-      ? '🛡️ ADMIN / OWNER'
-      : '🔒 PREMIUM REQUIRED';
+    : status.plan === 'owner'
+      ? '👑 OWNER'
+      : status.plan === 'admin'
+        ? '🛡️ ADMIN'
+        : '🔒 PREMIUM REQUIRED';
 
   const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗦𝗘𝗥𝗩𝗜𝗖𝗘⌟* ◆
 │
@@ -1026,7 +1032,8 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
       ],
       [
         { text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' },
-        { text: '🐞 ʙᴜɢ ᴍᴇɴᴜ', callback_data: 'show_bug_menu' }
+        { text: '🐞 ʙᴜɢ ᴍᴇɴᴜ', callback_data: 'show_bug_menu' },
+        { text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' }
       ],
       [
         ...(safeUrl(SOCIAL?.telegram?.primary) ? [{
@@ -1041,7 +1048,6 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
         }] : [])
       ],
       [
-        { text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' },
         { text: '👨‍💻 ᴅᴇᴠᴇʟᴏᴘᴇʀ', url: 'https://t.me/Tohidkhan6332' }
       ]
     ];
