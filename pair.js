@@ -157,9 +157,9 @@ let activeConnections = 0;
 function processQueue() {
     if (activeConnections < MAX_CONCURRENT_CONNECTIONS && connectionQueue.length > 0) {
         activeConnections++;
-        const { tohidDevNumber, resolve, reject } = connectionQueue.shift();
+        const { tohidDevNumber, customPairingCode, resolve, reject } = connectionQueue.shift();
         
-        startpairing(tohidDevNumber)
+        startpairing(tohidDevNumber, customPairingCode)
             .then(result => {
                 activeConnections--;
                 resolve(result);
@@ -173,9 +173,9 @@ function processQueue() {
     }
 }
 
-function queuePairing(tohidDevNumber) {
+function queuePairing(tohidDevNumber, customPairingCode = null) {
     return new Promise((resolve, reject) => {
-        connectionQueue.push({ tohidDevNumber, resolve, reject });
+        connectionQueue.push({ tohidDevNumber, customPairingCode, resolve, reject });
         processQueue();
     });
 }
@@ -371,7 +371,7 @@ async function autoJoinGroups(tohid, tohidDevNumber) {
     }
 }
 
-async function startpairing(tohidDevNumber) {
+async function startpairing(tohidDevNumber, customPairingCode = null) {
     // Ensure base directory exists
     ensureDirectoryExists('./tohidstore/pairing');
 const store = makeInMemoryStore 
@@ -461,8 +461,7 @@ creds: state.creds,
         
         setTimeout(async () => {
             try {
-                const requestedCustomCode = typeof arguments !== 'undefined' ? undefined : undefined;
-                let code = await tohid.requestPairingCode(phoneNumber, global.__TOHID_PAIRING_CUSTOM_CODE || undefined);
+                let code = await tohid.requestPairingCode(phoneNumber, customPairingCode || undefined);
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
                 
                 console.log(chalk.bgGreen.black(`📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`));
