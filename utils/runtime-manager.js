@@ -109,40 +109,13 @@ async function localGitUpdate() {
     console.warn('[UPDATE] Could not set Git HTTP/1.1:', error.message);
   }
 
-  // Production hosts can contain tracked runtime edits. Preserve them in a
-  // Git stash so the GitHub version can be applied instead of aborting the update.
-  // The stash is intentionally not auto-applied: GitHub remains the source of truth.
-  let updateStashCreated = false;
-  try {
-    const status = await run('git', ['status', '--porcelain']);
-    const trackedChanges = String(status.stdout || '')
-      .split('\n')
-      .filter(line => line && !line.slice(0, 2).includes('??'));
-
-    if (trackedChanges.length) {
-      await run('git', ['stash', 'push', '-m', 'TOHID-AI automatic update backup']);
-      updateStashCreated = true;
-      console.log('[UPDATE] Local tracked changes stashed before GitHub update.');
-    }
-  } catch (error) {
-    throw new Error('Unable to prepare local changes for update: ' + error.message);
-  }
-
-  let pull;
-  try {
-    pull = await runWithRetry(
-      'git',
-      ['pull', '--rebase', '--autostash', 'origin', GITHUB_BRANCH],
-      {},
-      3,
-      2500
-    );
-  } catch (error) {
-    if (updateStashCreated) {
-      console.error('[UPDATE] GitHub update failed; local changes remain safely in Git stash.');
-    }
-    throw error;
-  }
+  const pull = await runWithRetry(
+    'git',
+    ['pull', '--rebase', '--autostash', 'origin', GITHUB_BRANCH],
+    {},
+    3,
+    2500
+  );
 
   let install = null;
   if (fs.existsSync(path.join(process.cwd(), 'package.json'))) {
