@@ -41,7 +41,7 @@ const os = require('os');
 const { BOT_TOKEN } = require('./tohidstore/token');
 const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
-const { getActiveConnection, getActiveConnections, restartActiveConnection, getConnectionHealth } = require('./pair');
+const { getActiveConnection, getActiveConnections, restartActiveConnection, stopActiveConnection, getConnectionHealth } = require('./pair');
 const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
 
 function getTutorialVideoUrl() {
@@ -83,8 +83,8 @@ function isValidTelegramUrl(value) {
     // https://t.me/c/1234567890/123
     if (parts[0].toLowerCase() === 'c') {
       return parts.length >= 3 &&
-        /^\\d+$/.test(parts[1]) &&
-        /^\\d+$/.test(parts[2]);
+        /^\d+$/.test(parts[1]) &&
+        /^\d+$/.test(parts[2]);
     }
 
     // Public channel/group post:
@@ -817,15 +817,47 @@ const verifyMembership = async (userId) => {
 /**
  * Get all sessions
  */
-const getSessions = async () => {
-  try {
-    const entries = await fs.readdir(PATHS.sessions, { withFileTypes: true });
-    return entries
-      .filter(entry => entry.isDirectory() && entry.name.includes('@s.whatsapp.net'))
-      .map(entry => entry.name);
-  } catch {
-    return [];
+const getSessionRecords = async () => {
+  const roots = [
+    path.join(__dirname, 'tohidstore', 'pairing'),
+    PATHS.sessions
+  ];
+  const records = [];
+  const seen = new Set();
+
+  for (const root of roots) {
+    try {
+      const entries = await fs.readdir(root, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const raw = String(entry.name);
+        const number = raw.replace(/@s\.whatsapp\.net$/i, '').replace(/[^0-9]/g, '');
+        if (!/^\d{7,15}$/.test(number) || seen.has(number)) continue;
+
+        const sessionPath = path.join(root, raw);
+        seen.add(number);
+        records.push({
+          jid: number + '@s.whatsapp.net',
+          number,
+          path: sessionPath
+        });
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        console.error('sᴇssɪᴏɴ sᴄᴀɴ ᴇʀʀᴏʀ:', error.message);
+      }
+    }
   }
+
+  return records;
+};
+
+/**
+ * Get all sessions from the actual pairing store and legacy session store.
+ */
+const getSessions = async () => {
+  const records = await getSessionRecords();
+  return records.map(record => record.jid);
 };
 
 /**
@@ -833,19 +865,16 @@ const getSessions = async () => {
  */
 const getSessionDetails = async () => {
   try {
-    const entries = await fs.readdir(PATHS.sessions, { withFileTypes: true });
+    const records = await getSessionRecords();
     const sessions = [];
-    
-    for (const entry of entries) {
-      if (!entry.isDirectory() || !entry.name.includes('@s.whatsapp.net')) continue;
-      
-      const sessionPath = path.join(PATHS.sessions, entry.name);
-      const credsPath = path.join(sessionPath, 'creds.json');
-      
+
+    for (const record of records) {
+      const credsPath = path.join(record.path, 'creds.json');
+
       let status = 'ɪɴᴀᴄᴛɪᴠᴇ';
       let name = 'ᴜɴᴋɴᴏᴡɴ';
       let lastActive = null;
-      
+
       if (await fileExists(credsPath)) {
         try {
           const creds = JSON.parse(await fs.readFile(credsPath, 'utf8'));
@@ -862,17 +891,17 @@ const getSessionDetails = async () => {
       } else {
         status = 'ɪɴᴄᴏᴍᴘʟᴇᴛᴇ ⚠️';
       }
-      
+
       sessions.push({
-        jid: entry.name,
-        number: entry.name.split('@')[0],
+        jid: record.jid,
+        number: record.number,
         name,
         status,
         lastActive,
-        path: sessionPath
+        path: record.path
       });
     }
-    
+
     return sessions;
   } catch (error) {
     console.error('sᴇssɪᴏɴ ᴅᴇᴛᴀɪʟs ᴇʀʀᴏʀ:', error.message);
@@ -1293,7 +1322,7 @@ bot.onText(/^\/coupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 
 bot.onText(/^\/createcoupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, '❌ Admin only.');
-  const args = String(match?.[1] || '').trim().split(/\\s+/);
+  const args = String(match?.[1] || '').trim().split(/\s+/);
   const code = String(args.shift() || '').toUpperCase();
   const days = Number(args.shift());
   const maxUses = Number(args.shift() || 1);
@@ -1735,7 +1764,8 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
 
     const code = customCode || cuObj.code;
 
-    delete require.cache[require.resolve('./pair')];
+    // Keep the shared pair module loaded so its connection tracker and health monitor
+    // continue to see every active WhatsApp session.
 
     // Save to owner.json
     const ownerPath = path.join(__dirname, 'allfunc', 'owner.json');
@@ -1963,6 +1993,10 @@ bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
       { parse_mode: 'Markdown' }
     );
   }
+
+  // Stop the live socket before deleting its credentials. Otherwise the
+  // connection-close handler can immediately recreate the deleted session.
+  stopActiveConnection(cleanNumber);
 
   if (await deleteSession(cleanNumber)) {
     database.activeSessions.delete(cleanNumber);
