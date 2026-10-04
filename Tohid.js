@@ -1341,7 +1341,7 @@ bot.onText(/^\/coupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 });
 
 bot.onText(/^\/createcoupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
-  if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, '❌ Admin only.');
+  if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return sendOwnerContact(msg.chat.id, 'admin');
   const args = String(match?.[1] || '').trim().split(/\s+/);
   const code = String(args.shift() || '').toUpperCase();
   const days = Number(args.shift());
@@ -1355,7 +1355,7 @@ bot.onText(/^\/createcoupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 });
 
 bot.onText(/^\/coupons(?:@[\w_]+)?$/i, async (msg) => {
-  if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, '❌ Admin only.');
+  if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return sendOwnerContact(msg.chat.id, 'admin');
   const entries = Object.entries(database.coupons);
   if (!entries.length) return bot.sendMessage(msg.chat.id, '🎟️ No coupons.');
   return bot.sendMessage(msg.chat.id, '🎟️ *COUPONS*\\n\\n' + entries.map(([code, d]) => `${code} — ${d.days}d — ${d.uses}/${d.maxUses}`).join('\\n'), { parse_mode: 'Markdown' });
@@ -1474,14 +1474,7 @@ bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, mat
   if (!TELEGRAM_BUG_COMMANDS.has(commandName)) return;
 
   if (!isOwner(userId)) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
-│
-├◆ ᴏᴡɴᴇʀ ᴏɴʟʏ
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
+    return sendOwnerContact(chatId, 'owner');
   }
 
   const target = getActiveConnection();
@@ -3220,7 +3213,7 @@ bot.onText(/^\/tutorialstatus(?:@[\w_]+)?$/i, async (msg) => {
 bot.onText(/^\/restart(?:@[\w_]+)?$/i, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
-    if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+    if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
     try {
         const platform = detectPlatform();
         await bot.sendMessage(chatId, '🔄 *Restarting TOHID-AI...*\n\n🖥️ Platform: *' + platform + '*\n⏳ Restarting safely...', { parse_mode: 'Markdown' });
@@ -3237,7 +3230,7 @@ bot.onText(/^\/restart(?:@[\w_]+)?$/i, async (msg) => {
 bot.onText(/^\/update(?:@[\w_]+)?$/i, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
-    if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
+    if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
     try {
         const platform = detectPlatform();
         await bot.sendMessage(chatId, '⬆️ *Updating TOHID-AI...*\n\n📦 Source: *' + GITHUB_OWNER + '/' + GITHUB_REPO + ':' + GITHUB_BRANCH + '*\n🖥️ Platform: *' + platform + '*\n⏳ Getting the latest version...', { parse_mode: 'Markdown' });
