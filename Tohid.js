@@ -2179,7 +2179,10 @@ bot.onText(/^\/restartbot(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   }
 });
 
-// ==================== PREMIUM COMMANDS ====================\n// Premium command handlers are defined in the manual premium controls section below.\n\n// ==================== COMMAND: PING ====================
+// ==================== PREMIUM COMMANDS ====================
+// Premium command handlers are defined in the manual premium controls section below.
+
+// ==================== COMMAND: PING ====================
 
 bot.onText(/^\/ping(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
