@@ -265,12 +265,12 @@ bot.sendMessage = function commandAwareSendMessage(chatId, text, options = {}) {
 // ==================== PERMISSION CONTACT ====================
 const sendOwnerContact = (chatId, type = 'admin') => {
   const required = type === 'owner' ? 'OWNER' : 'ADMIN';
-  const message = \`┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
+  const message = `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
 │
-├◆ 🔒 \${required} permission required
+├◆ 🔒 ${required} permission required
 ├◆ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪs ɴᴏᴛ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ʏᴏᴜ
 │
-└ ❏\`;
+└ ❏`;
 
   return bot.sendMessage(chatId, message, {
     parse_mode: 'Markdown',
