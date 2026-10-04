@@ -442,7 +442,7 @@ const store = makeInMemoryStore
     const { version, isLatest } = await fetchLatestBaileysVersion();
     
     // Ensure session directory exists
-    const sessionPath = `./tohidstore/pairing/${tohidDevNumber}`;
+    const sessionPath = `./tohidstore/pairing/${sessionKey}`;
     ensureDirectoryExists(sessionPath);
     
     const {
