@@ -670,9 +670,8 @@ const saveData = async () => {
       fs.writeFile(PATHS.maintenance, JSON.stringify({ enabled: database.maintenance }, null, 2)),
       fs.writeFile(PATHS.reports, JSON.stringify(database.reports, null, 2)),
       fs.writeFile(PATHS.audit, JSON.stringify(database.audit.slice(-SYSTEM.maxLogs), null, 2)),
-      // NEW: Save premium and trial data
-      fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2)),
-
+      // Save premium data
+      fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2))
     ]);
   } catch (err) {
     console.error('sᴀᴠᴇ ᴇʀʀᴏʀ:', err.message);
@@ -1907,140 +1906,6 @@ bot.onText(/\/delprem(?:\s+(\d+))?/, async (msg, match) => {
 });
 
 /**
- * /trials <duration> - Enable trial mode for everyone
- */
-bot.onText(/\/trials(?:\s+(.+))?/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  const durationStr = match ? match[1] : null;
-
-  // Admin only check
-  if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, 
-      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, 
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  if (!durationStr) {
-    const status = database.trialMode.active ? 
-      `ᴀᴄᴛɪᴠᴇ ✅ (ᴇxᴘɪʀᴇs: ${new Date(database.trialMode.expiry).toLocaleString()})` : 
-      'ɪɴᴀᴄᴛɪᴠᴇ ❌';
-    
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗧𝗥𝗜𝗔𝗟 𝗠𝗢𝗗𝗘 𝗚𝗨𝗜𝗗𝗘⌟* ◆
-│
-├◆ ᴄᴜʀʀᴇɴᴛ sᴛᴀᴛᴜs: ${status}
-├◆
-├◆ ᴜsᴀɢᴇ: /trials <ᴅᴜʀᴀᴛɪᴏɴ>
-├◆
-├◆ ᴇxᴀᴍᴘʟᴇs:
-├◆ /trials 3 ᴅᴀʏs
-├◆ /trials 1 ᴡᴇᴇᴋ
-├◆ /trials 24 ʜᴏᴜʀs
-├◆
-├◆ ᴛᴏ ᴇɴᴅ ᴛʀɪᴀʟ ᴇᴀʀʟʏ: /trials ᴇɴᴅ
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  // Handle early end
-  if (durationStr.toLowerCase() === 'ᴇɴᴅ') {
-    database.trialMode.active = false;
-    database.trialMode.expiry = null;
-    database.trialMode.startedBy = null;
-    database.trialMode.startedAt = null;
-    await saveData();
-
-    await bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗧𝗥𝗜𝗔𝗟 𝗠𝗢𝗗𝗘 𝗘𝗡𝗗𝗘𝗗⌟* ◆
-│
-├◆ ᴛʀɪᴀʟ ᴘᴇʀɪᴏᴅ ʜᴀs ʙᴇᴇɴ ᴇɴᴅᴇᴅ
-├◆ ʙᴏᴛ ɪs ɴᴏᴡ ʙᴀᴄᴋ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ ᴏɴʟʏ
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-
-    addAuditLog('ᴛʀɪᴀʟ_ᴇɴᴅ', userId);
-    return;
-  }
-
-  const durationMs = parseDuration(durationStr);
-  if (!durationMs) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗗𝗨𝗥𝗔𝗧𝗜𝗢𝗡⌟* ◆
-│
-├◆ ᴜsᴇ ғᴏʀᴍᴀᴛs ʟɪᴋᴇ: 3 ᴅᴀʏs, 1 ᴡᴇᴇᴋ, 24 ʜᴏᴜʀs
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  const expiry = Date.now() + durationMs;
-
-  // Enable trial mode
-  database.trialMode = {
-    active: true,
-    expiry: expiry,
-    startedBy: userId.toString(),
-    startedAt: Date.now()
-  };
-
-  await saveData();
-
-  // Notify admin
-  await bot.sendMessage(chatId,
-    `┌ ❏ ◆ *⌜𝗧𝗥𝗜𝗔𝗟 𝗠𝗢𝗗𝗘 𝗘𝗡𝗔𝗕𝗟𝗘𝗗⌟* ◆
-│
-├◆ 🎉 ᴛʀɪᴀʟ ᴘᴇʀɪᴏᴅ ɪs ɴᴏᴡ ᴀᴄᴛɪᴠᴇ
-├◆ ⏱️ ᴅᴜʀᴀᴛɪᴏɴ: ${durationStr}
-├◆ 📅 ᴇxᴘɪʀʏ: ${new Date(expiry).toLocaleString()}
-├◆
-├◆ 👥 ᴀʟʟ ᴜsᴇʀs ʜᴀᴠᴇ ᴀᴄᴄᴇss ᴜɴᴛɪʟ ᴇxᴘɪʀʏ
-│
-└ ❏`,
-    { parse_mode: 'Markdown' }
-  );
-
-  // Broadcast to all users
-  const broadcastMsg = `┌ ❏ ◆ *⌜🎉 𝗧𝗥𝗜𝗔𝗟 𝗠𝗢𝗗𝗘 𝗔𝗖𝗧𝗜𝗩𝗔𝗧𝗘𝗗 ⌟* ◆
-│
-├◆ ɢʀᴇᴀᴛ ɴᴇᴡs! ᴛʜᴇ ʙᴏᴛ ɪs ɴᴏᴡ ғʀᴇᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ
-├◆
-├◆ ⏱️ ᴛʀɪᴀʟ ᴘᴇʀɪᴏᴅ: ${durationStr}
-├◆ 📅 ᴇɴᴅs: ${new Date(expiry).toLocaleString()}
-├◆
-├◆ 🚀 ᴇɴᴊᴏʏ ᴘᴀɪʀɪɴɢ ғᴏʀ ғʀᴇᴇ!
-│
-└ ❏`;
-
-  // Send to all users (limited to avoid rate limits)
-  let sent = 0;
-  for (const user of [...database.users].slice(0, 100)) {
-    try {
-      await bot.sendMessage(user, broadcastMsg, { parse_mode: 'Markdown' });
-      sent++;
-      await sleep(100);
-    } catch (e) {}
-  }
-
-  await bot.sendMessage(chatId,
-    `┌ ❏ ◆ *⌜𝗕𝗥𝗢𝗔𝗗𝗖𝗔𝗦𝗧 𝗥𝗘𝗦𝗨𝗟𝗧⌟* ◆
-│
-├◆ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ sᴇɴᴛ ᴛᴏ ${sent} ᴜsᴇʀs
-│
-└ ❏`,
-    { parse_mode: 'Markdown' }
-  );
-
-  addAuditLog('ᴛʀɪᴀʟ_ꜱᴛᴀʀᴛ', userId, null, { duration: durationStr, expiry });
-});
-
-/**
  * /premlist - List all premium users
  */
 bot.onText(/\/premlist/, async (msg) => {
@@ -2228,10 +2093,6 @@ bot.onText(/\/stats/, async (msg) => {
 ├◆ 👑 ᴘʀᴇᴍɪᴜᴍ: ${premiumCount}
 │`;
 
-  if (database.trialMode.active) {
-    const trialExpiry = new Date(database.trialMode.expiry).toLocaleString();
-    stats += `\n├◆ 🎁 ᴛʀɪᴀʟ ᴍᴏᴅᴇ: ᴀᴄᴛɪᴠᴇ (ᴇɴᴅs: ${trialExpiry})`;
-  }
 
   stats += `\n│\n└ ❏`;
 
@@ -2437,7 +2298,6 @@ bot.onText(/\/help/, async (msg) => {
 ├◆ ──── ᴘʀᴇᴍɪᴜᴍ ᴄᴏᴍᴍᴀɴᴅs ────
 ├◆ /addprem    - ᴀᴅᴅ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ
 ├◆ /delprem    - ʀᴇᴍᴏᴠᴇ ᴘʀᴇᴍɪᴜᴍ
-├◆ /trials     - sᴇᴛ ᴛʀɪᴀʟ ᴘᴇʀɪᴏᴅ
 ├◆ /premlist   - ʟɪsᴛ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs
 │`;
   }
@@ -3407,10 +3267,6 @@ bot.on('callback_query', async (query) => {
 ├◆ ⚡ ᴀᴠɢ sᴘᴇᴇᴅ: ${avgSpeed}ᴍs
 ├◆ 👑 ᴘʀᴇᴍɪᴜᴍ: ${premiumCount}`;
 
-    if (database.trialMode.active) {
-      const trialExpiry = new Date(database.trialMode.expiry).toLocaleString();
-      stats += `\n├◆ 🎁 ᴛʀɪᴀʟ ᴍᴏᴅᴇ: ᴀᴄᴛɪᴠᴇ (ᴇɴᴅs: ${trialExpiry})`;
-    }
 
     stats += `\n│\n└ ❏`;
 
@@ -3581,16 +3437,6 @@ setInterval(async () => {
   }
 }, 60 * 60 * 1000); // Check every hour
 
-// Also check trial mode expiry
-setInterval(async () => {
-  if (database.trialMode.active && database.trialMode.expiry < Date.now()) {
-    database.trialMode.active = false;
-    database.trialMode.expiry = null;
-    await saveData();
-    console.log('🎁 ᴛʀɪᴀʟ ᴍᴏᴅᴇ ᴇxᴘɪʀᴇᴅ');
-  }
-}, 60 * 1000); // Check every minute
-
 // ==================== INITIALIZATION ====================
 (async () => {
   console.clear();
@@ -3611,7 +3457,6 @@ setInterval(async () => {
   console.log(chalk.blue(`👥 ᴜsᴇʀs: ${formatNumber(database.stats.totalUsers)}`));
   console.log(chalk.yellow(`🔗 ᴀᴅᴍɪɴs: ${database.admins.length}`));
   console.log(chalk.magenta(`👑 ᴘʀᴇᴍɪᴜᴍ: ${Object.keys(database.premium).length}`));
-  console.log(chalk.cyan(`🎁 ᴛʀɪᴀʟ ᴍᴏᴅᴇ: ${database.trialMode.active ? 'ᴀᴄᴛɪᴠᴇ' : 'ɪɴᴀᴄᴛɪᴠᴇ'}`));
   console.log(chalk.cyan(`⏱️ ᴜᴘᴛɪᴍᴇ: ${formatUptime(Date.now() - database.stats.startTime)}`));
   console.log(chalk.white('\n📢 ᴍᴏɴɪᴛᴏʀɪɴɢ ғᴏʀ ᴄᴏᴍᴍᴀɴᴅs...\n'));
 })();
