@@ -896,8 +896,16 @@ creds: state.creds,
 
         if (wsState === 1) {
             tracker.state = 'online';
-            tracker.lastActivity = now;
-            tohid.sendPresenceUpdate('available').catch(() => {});
+            // Do not treat an open WebSocket as proof of activity forever.
+            // Only refresh lastActivity when WhatsApp accepts the presence update.
+            tohid.sendPresenceUpdate('available')
+                .then(() => {
+                    tracker.lastActivity = Date.now();
+                    tracker.lastError = null;
+                })
+                .catch((error) => {
+                    tracker.lastError = error?.message || String(error);
+                });
             return;
         }
 
