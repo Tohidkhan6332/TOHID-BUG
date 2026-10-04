@@ -1068,105 +1068,10 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
     const sessions = await getSessions();
     const userPremium = isPremium(userId);
 
-    // === MENU BASE ===
-    menu = `┌ ❏ ◆ *⌜𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨⌟* ◆
-│
-├◆ ${greeting.emoji} ɢᴏᴏᴅ ${greeting.text}, ${userName}
-├◆ ᴛᴏʜɪᴅ-ᴀɪ • ᴡʜᴀᴛsᴀᴘᴘ ᴘᴀɪʀɪɴɢ sʏsᴛᴇᴍ
-├◆ ᴏᴡɴᴇʀ: 𝕄ℝ 𝕋𝕆ℍ𝕀𝔻
-├◆ ᴅᴇᴠᴇʟᴏᴘᴇʀ: 𝕄ℝ 𝕋𝕆ℍ𝕀𝔻
-├◆ sᴜᴘᴘᴏʀᴛ: @Tohidkhan6332
-├◆ sᴇᴄᴜʀᴇ • ғᴀsᴛ • ʀᴇʟɪᴀʙʟᴇ
-│
-└ ❏
-┌ ❏ ◆ *⌜𝗦𝗬𝗦𝗧𝗘𝗠 𝗜𝗡𝗙𝗢⌟* ◆
-│
-├◆ ᴜᴘᴛɪᴍᴇ: ${uptime}
-├◆ ᴜsᴇʀs: ${formatNumber(database.stats.totalUsers)}
-├◆ sᴇssɪᴏɴs: ${sessions.length}/${SYSTEM.sessionLimit}
-├◆ ᴛᴏᴅᴀʏ: ${formatNumber(database.stats.dailyConnections)}`;
-
-    // === PREMIUM STATUS ===
-    if (!isAdminUser && !isOwnerUser) {
-      const premData = database.premium?.[userId.toString()];
-      if (userPremium && premData?.expiry) {
-        menu += `\n├◆ 👑 ᴘʀᴇᴍɪᴜᴍ: ᴀᴄᴛɪᴠᴇ (ᴇxᴘɪʀᴇs: ${new Date(premData.expiry).toLocaleDateString()})`;
-      } else {
-        menu += '\n├◆ 🔒 ᴘʀᴇᴍɪᴜᴍ: ʀᴇǫᴜɪʀᴇᴅ';
-      }
-    }
-
-    // === QUICK ACTION ===
-    menu += `
-│
-└ ❏
-┌ ❏ ◆ *⌜𝗤𝗨𝗜𝗖𝗞 𝗔𝗖𝗧𝗜𝗢𝗡𝗦⌟* ◆
-│
-├◆ /pair    - ᴘᴀɪʀ ᴡʜᴀᴛsᴀᴘᴘ
-├◆ /unpair  - ʀᴇᴍᴏᴠᴇ sᴇssɪᴏɴ
-├◆ /restartbot NUMBER - ʀᴇsᴛᴀʀᴛ ʏᴏᴜʀ ʙᴏᴛ
-├◆ /ping    - ʟᴀᴛᴇɴᴄʏ ᴄʜᴇᴄᴋ
-├◆ /runtime - sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ
-├◆ /sessionstatus - ᴡʜᴀᴛsᴀᴘᴘ sᴇssɪᴏɴ ʜᴇᴀʟᴛʜ
-├◆ /stats   - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs
-├◆ /report  - ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ
-├◆ /plans   - ᴘʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇ ᴘʟᴀɴ
-├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
-├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
-├◆ /dashboard - ᴜsᴇʀ ᴅᴀsʜʙᴏᴀʀᴅ
-├◆ /referral - ʀᴇғᴇʀʀᴀʟ ᴄᴏᴅᴇ
-├◆ /coupon CODE - ʀᴇᴅᴇᴇᴍ ᴄᴏᴜᴘᴏɴ
-├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ
-│
-└ ❏`;
-
-    // === ADMIN ===
-    if (isAdminUser || isOwnerUser) {
-      menu += `
-┌ ❏ ◆ *⌜𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗡𝗧𝗥𝗢𝗟⌟* ◆
-│
-├◆ /users
-├◆ /listpair
-├◆ /broadcast
-├◆ /clean
-├◆ /ban
-├◆ /unban
-├◆ /checkuser
-├◆ /addpremium USER_ID 30 days
-├◆ /delpremium USER_ID
-├◆ /premiumusers
-├◆ /maintenance
-├◆ /logs
-├◆ /announce
-│
-└ ❏`;
-    }
-
-    // === OWNER ===
-    if (isOwnerUser) {
-      menu += `
-┌ ❏ ◆ *⌜𝗢𝗪𝗡𝗘𝗥 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦⌟* ◆
-│
-├◆ /addadmin
-├◆ /removeadmin
-├◆ /settutorial <ᴛᴇʟᴇɢʀᴀᴍ ᴘᴏsᴛ ʟɪɴᴋ>
-├◆ /tutorialstatus
-├◆ /deltutorial
-├◆ /restart
-├◆ /update
-
-│
-└ ❏`;
-    }
-
-    // === FOOTER ===
-    menu += `
-┌ ❏ ◆ *⌜𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬⌟* ◆
-│
-├◆ ${SYSTEM.creator}
-│
-└ ❏`;
-
+    // Main menu intentionally contains only the image and inline buttons.
+    // Command/help lists are available from the Misc Menu button.
+    menu = '';
+    
     // === SAFE URL FUNCTION ===
     const safeUrl = (url) => {
       if (!url) return null;
@@ -3441,23 +3346,28 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
 
     let miscText = `┌ ❏ ◆ *⌜𝗠𝗜𝗦𝗖 𝗠𝗘𝗡𝗨⌟* ◆
 │
-├◆ *⌜𝗤𝗨𝗜𝗖𝗞 𝗔𝗖𝗧𝗜𝗢𝗡𝗦⌟*
+├◆ *⌜𝗨𝗦𝗘𝗥 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦⌟*
 │
-├◆ /pair    - ᴘᴀɪʀ ᴡʜᴀᴛsᴀᴘᴘ
-├◆ /unpair  - ʀᴇᴍᴏᴠᴇ sᴇssɪᴏɴ
-├◆ /ping    - ʟᴀᴛᴇɴᴄʏ ᴄʜᴇᴄᴋ
-├◆ /runtime - sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ
-├◆ /stats   - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs
-├◆ /report  - ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ
-├◆ /plans   - ᴘʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇ ᴘʟᴀɴ
-├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
-├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
-├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ`;
+├◆ /pair NUMBER
+├◆ /unpair NUMBER
+├◆ /restartbot NUMBER
+├◆ /ping
+├◆ /runtime
+├◆ /sessionstatus
+├◆ /stats
+├◆ /report
+├◆ /plans
+├◆ /myplan
+├◆ /tutorial
+├◆ /dashboard
+├◆ /referral
+├◆ /coupon CODE
+├◆ /help
+│
+└ ❏`;
 
     if (isAdminUser || isOwnerUser) {
-      miscText += `\n│
-└ ❏
-┌ ❏ ◆ *⌜𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗡𝗧𝗥𝗢𝗟⌟* ◆
+      miscText += `\n┌ ❏ ◆ *⌜𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗡𝗧𝗥𝗢𝗟⌟* ◆
 │
 ├◆ /users
 ├◆ /listpair
@@ -3469,28 +3379,28 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
 ├◆ /addpremium USER_ID 30 days
 ├◆ /delpremium USER_ID
 ├◆ /premiumusers
-├◆ /maintenance
+├◆ /maintenance on|off
 ├◆ /logs
 ├◆ /announce
 ├◆ /createcoupon CODE DAYS MAX-USES
-├◆ /coupons`;
+├◆ /coupons
+│
+└ ❏`;
     }
 
     if (isOwnerUser) {
-      miscText += `\n│
-└ ❏
-┌ ❏ ◆ *⌜𝗢𝗪𝗡𝗘𝗥 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦⌟* ◆
+      miscText += `\n┌ ❏ ◆ *⌜𝗢𝗪𝗡𝗘𝗥 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦⌟* ◆
 │
 ├◆ /addadmin
 ├◆ /removeadmin
-├◆ /settutorial
+├◆ /settutorial <TELEGRAM POST LINK>
+├◆ /tutorialstatus
+├◆ /deltutorial
 ├◆ /restart
-├◆ /update`;
-    }
-
-    miscText += `
+├◆ /update
 │
 └ ❏`;
+    }
 
     const miscKeyboard = {
       inline_keyboard: [
@@ -3514,6 +3424,18 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
       if (!miscImage) throw new Error('No Misc Menu image is configured.');
 
       try {
+        // Telegram photo captions are limited to 1024 characters.
+        if (Array.from(miscText).length > 1024) {
+          await bot.sendPhoto(chatId, miscImage, {
+            caption: '📌 TOHID-AI • MISC MENU',
+            reply_markup: miscKeyboard
+          });
+          return await bot.sendMessage(chatId, miscText, {
+            parse_mode: 'Markdown',
+            reply_markup: miscKeyboard
+          });
+        }
+
         return await bot.sendPhoto(chatId, miscImage, {
           caption: miscText,
           parse_mode: 'Markdown',
@@ -3521,8 +3443,7 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
         });
       } catch (photoError) {
         console.error('[MENU] Misc menu photo/Markdown failed:', photoError.message);
-        return await bot.sendPhoto(chatId, miscImage, {
-          caption: miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''),
+        return await originalSendMessage(chatId, miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''), {
           reply_markup: miscKeyboard
         });
       }
