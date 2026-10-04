@@ -194,7 +194,6 @@ function queuePairing(tohidDevNumber, customPairingCode = null) {
     connectionQueue.push({
         tohidDevNumber: key,
         customPairingCode,
-        pairingMode,
         resolve: resolvePromise,
         reject: rejectPromise,
         promise
@@ -501,6 +500,7 @@ creds: state.creds,
 
     const requestPairingCodeWithRetry = async () => {
         if (!pairingCode || state.creds.registered || tracker.disconnected) return;
+        if (tracker.connection !== tohid) return;
         if (tracker.pairingRequested || pairingRequestInFlight) return;
         if (pairingRetryCount >= MAX_PAIRING_RETRIES) {
             console.log(chalk.red(`❌ Pairing code retries exhausted for +${pairingNumber}`));
@@ -788,6 +788,12 @@ creds: state.creds,
             // Isolate a missing tracker before touching pairing state.
             if (!tracker) {
                 console.log(chalk.yellow(`⚠️ Tracker missing for ${tohidDevNumber}; ignoring WhatsApp update.`));
+                return;
+            }
+
+            // Ignore events from an older socket after a fresh socket replaces it.
+            if (tracker.connection && tracker.connection !== tohid) {
+                console.log(chalk.gray(`ℹ️ Ignoring stale socket update for ${tohidDevNumber}`));
                 return;
             }
 
