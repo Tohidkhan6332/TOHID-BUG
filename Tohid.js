@@ -190,6 +190,73 @@ if (!BOT_TOKEN) {
 // Telegram polling is started explicitly after clearing any stale webhook.
 // This prevents Telegram from remaining in webhook mode and makes polling errors visible.
 const bot = new TelegramBot(BOT_TOKEN, { polling: false });
+
+const { AsyncLocalStorage } = require('async_hooks');
+
+// Command responses are sent with one of the repository media images.
+// Local files are preferred; GitHub Raw is the fallback when running without
+// the repository media directory mounted.
+const COMMAND_RESPONSE_IMAGES = [
+  path.join(__dirname, 'media', 'Tohid.jpg'),
+  path.join(__dirname, 'media', 'Tohid1.jpg'),
+  path.join(__dirname, 'media', 'Tohid2.jpg'),
+  path.join(__dirname, 'media', 'Tohid3.jpg')
+];
+const COMMAND_RESPONSE_IMAGE_URLS = [
+  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
+];
+const commandResponseContext = new AsyncLocalStorage();
+const originalOnText = bot.onText.bind(bot);
+const originalSendMessage = bot.sendMessage.bind(bot);
+
+function getCommandResponseImage() {
+  const local = COMMAND_RESPONSE_IMAGES.filter(imagePath => fsSync.existsSync(imagePath));
+  const available = local.length ? local : COMMAND_RESPONSE_IMAGE_URLS;
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+async function sendCommandResponse(chatId, text, options = {}) {
+  const image = getCommandResponseImage();
+  if (!image) return originalSendMessage(chatId, text, options);
+
+  // Telegram photo captions are limited to 1024 characters. Long command
+  // responses stay as normal messages instead of failing.
+  if (String(text ?? '').length > 1024) {
+    return originalSendMessage(chatId, text, options);
+  }
+
+  try {
+    return await bot.sendPhoto(chatId, image, {
+      ...options,
+      caption: text
+    });
+  } catch (error) {
+    console.error('[COMMAND IMAGE] Photo response failed, using text fallback:', error.message);
+    return originalSendMessage(chatId, text, options);
+  }
+}
+
+// Wrap every registered Telegram text command so its normal sendMessage
+// responses automatically get a repository image without changing each
+// individual command handler.
+bot.onText = function wrappedOnText(regexp, callback) {
+  return originalOnText(regexp, async (...args) => {
+    return commandResponseContext.run(true, () => callback(...args));
+  });
+};
+
+bot.sendMessage = function commandAwareSendMessage(chatId, text, options = {}) {
+  if (!commandResponseContext.getStore() || options?.__noCommandImage) {
+    return originalSendMessage(chatId, text, options);
+  }
+
+  const cleanOptions = { ...options };
+  delete cleanOptions.__noCommandImage;
+  return sendCommandResponse(chatId, text, cleanOptions);
+};
 const { initDebug } = require('./debug.js');
 initDebug(bot);
 
@@ -1043,7 +1110,6 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
 ├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
 ├◆ /dashboard - ᴜsᴇʀ ᴅᴀsʜʙᴏᴀʀᴅ
-├◆ /restartbot NUMBER - ʀᴇsᴛᴀʀᴛ ʏᴏᴜʀ ʙᴏᴛ
 ├◆ /referral - ʀᴇғᴇʀʀᴀʟ ᴄᴏᴅᴇ
 ├◆ /coupon CODE - ʀᴇᴅᴇᴇᴍ ᴄᴏᴜᴘᴏɴ
 ├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ
@@ -3607,7 +3673,6 @@ bot.on('callback_query', async (query) => {
 │
 ├◆ /addadmin
 ├◆ /removeadmin
-├◆ /setchannels
 ├◆ /settutorial
 ├◆ /restart
 ├◆ /update`;
