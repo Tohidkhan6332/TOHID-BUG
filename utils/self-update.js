@@ -211,8 +211,8 @@ async function updateFromGitHub() {
             .map(file => file.trim())
             .filter(Boolean)
             .filter(file =>
-                /^(allfunc|database|tohidstore)\\/i.test(file) &&
-                /\\.json$/i.test(file)
+                /^(allfunc|database|tohidstore)\//i.test(file) &&
+                /\.json$/i.test(file)
             );
 
         for (const file of files) {
