@@ -547,6 +547,8 @@ const canStartPairing = (userId) => {
 };
 
 const formatPlanExpiry = (expiry) => expiry ? new Date(expiry).toLocaleString() : 'N/A';
+const formatPaymentStatus = (status) => ({ pending_payment: '🟡 WAITING FOR PAYMENT', pending_review: '🟠 UNDER REVIEW', approved: '🟢 APPROVED', rejected: '🔴 REJECTED', cancelled: '⚪ CANCELLED', expired: '⚫ EXPIRED' }[status] || String(status || 'UNKNOWN').toUpperCase());
+const getPaymentRecords = () => Object.values(database.payments || {}).sort((a,b) => Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0));
 
 const PAYMENT_PLANS = {
   '7d': { name: '7 Days', price: 2, durationMs: 7 * 86400000, premium: true },
@@ -560,6 +562,7 @@ const PAYMENT_UPI_ID = 'Tohidkhan6332@fam';
 const PAYMENT_BINANCE_ID = '1123760641';
 const PAYMENT_REQUEST_TTL = 24 * 60 * 60 * 1000;
 const pendingPaymentInput = new Map();
+const pendingPaymentReject = new Map();
 
 const createPaymentId = () => 'PAY-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
 const getPaymentPlan = (key) => PAYMENT_PLANS[String(key || '').toLowerCase()] || null;
@@ -600,7 +603,7 @@ const createPaymentRequest = async (userId, planKey, method) => {
 const sendPlans = async (chatId, userId) => {
   const status = getPlanStatus(userId);
   const current = status.plan === 'premium'
-    ? '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry)
+    ? (database.premium[userId.toString()]?.lifetime === true ? '👑 PREMIUM • LIFETIME' : '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry))
     : status.plan === 'owner'
       ? '👑 OWNER'
       : status.plan === 'admin'
@@ -632,6 +635,7 @@ const sendPlans = async (chatId, userId) => {
         [{ text: '90 DAYS • $10', callback_data: 'buy_plan:90d' }],
         [{ text: 'LIFETIME • $50', callback_data: 'buy_plan:lifetime' }],
         [{ text: 'BOT SCRIPT • $100', callback_data: 'buy_plan:script' }],
+        [{ text: '📜 MY PAYMENTS', callback_data: 'my_payments' }],
         [{ text: '🏠 MENU', callback_data: 'show_main' }]
       ]
     }
@@ -1486,50 +1490,69 @@ bot.onText(/^\/coupons(?:@[\w_]+)?$/i, async (msg) => {
 });
 
 // // ==================== SERVICE PLAN COMMANDS ====================
-bot.onText(/^\/payments(?:@[\w_]+)?$/i, async (msg) => {
-  const userId = msg.from.id;
-  if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(msg.chat.id, 'admin');
-
-  const pending = Object.values(database.payments)
-    .filter(p => p.status === 'pending_review')
-    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
-    .slice(0, 20);
-
-  if (!pending.length) {
-    return bot.sendMessage(msg.chat.id, '┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆\\n│\\n├◆ No pending payment requests.\\n│\\n└ ❏', { parse_mode: 'Markdown' });
-  }
-
-  for (const request of pending) {
+const sendPaymentReviewList = async (chatId, filter = 'pending_review') => {
+  const records = getPaymentRecords().filter(p => filter === 'all' || p.status === filter).slice(0, 20);
+  if (!records.length) return bot.sendMessage(chatId, '┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆\n│\n├◆ No records found.\n│\n└ ❏', { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '📊 DASHBOARD', callback_data: 'payment_dashboard' }]] } });
+  for (const request of records) {
+    const reason = request.rejectionReason ? '\n├◆ ❌ Reason: *' + request.rejectionReason + '*' : '';
     const caption = `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆
 │
 ├◆ 🧾 ID: *${request.id}*
 ├◆ 👤 User: *${request.userId}*
 ├◆ 📦 Plan: *${request.planName}*
-├◆ 💵 Price: *${request.priceUsd}*
+├◆ 💵 Price: *$${request.priceUsd}*
 ├◆ 💳 Method: *${String(request.method || '').toUpperCase()}*
 ├◆ 🔖 TX/UTR: *${request.transactionId || 'See proof'}*
+├◆ 📌 Status: *${formatPaymentStatus(request.status)}*${reason}
 │
 └ ❏`;
-
-    const markup = {
-      inline_keyboard: [[
-        { text: '✅ APPROVE', callback_data: 'payment_approve:' + request.id },
-        { text: '❌ REJECT', callback_data: 'payment_reject:' + request.id }
-      ]]
-    };
-
-    try {
-      if (request.proofType === 'photo' && request.proofFileId) {
-        await bot.sendPhoto(msg.chat.id, request.proofFileId, { caption, parse_mode: 'Markdown', reply_markup: markup });
-      } else {
-        await bot.sendMessage(msg.chat.id, caption, { parse_mode: 'Markdown', reply_markup: markup });
-      }
-    } catch (error) {
-      console.error('[PAYMENT] Review display failed:', error.message);
-    }
+    const markup = request.status === 'pending_review' ? { inline_keyboard: [[{ text: '✅ APPROVE', callback_data: 'payment_approve:' + request.id }, { text: '❌ REJECT', callback_data: 'payment_reject:' + request.id }], [{ text: '📊 DASHBOARD', callback_data: 'payment_dashboard' }]] } : { inline_keyboard: [[{ text: '📊 DASHBOARD', callback_data: 'payment_dashboard' }]] };
+    try { if (request.proofType === 'photo' && request.proofFileId) await bot.sendPhoto(chatId, request.proofFileId, { caption, parse_mode: 'Markdown', reply_markup: markup }); else await bot.sendMessage(chatId, caption, { parse_mode: 'Markdown', reply_markup: markup }); } catch (error) { console.error('[PAYMENT] Review display failed:', error.message); }
   }
+};
+
+const sendPaymentDashboard = async (chatId) => {
+  const records = getPaymentRecords();
+  const approved = records.filter(p => p.status === 'approved');
+  const pending = records.filter(p => p.status === 'pending_review');
+  const rejected = records.filter(p => p.status === 'rejected');
+  const awaiting = records.filter(p => p.status === 'pending_payment');
+  const revenue = approved.reduce((sum,p) => sum + Number(p.priceUsd || 0), 0);
+  const recent = records.slice(0,5);
+  const recentText = recent.length ? recent.map(p => '├◆ ' + (p.status === 'approved' ? '🟢' : p.status === 'pending_review' ? '🟠' : p.status === 'rejected' ? '🔴' : '🟡') + ' ' + p.planName + ' • $' + p.priceUsd + ' • ' + p.userId).join('\n') : '├◆ No payments yet';
+  const text = `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗗𝗔𝗦𝗛𝗕𝗢𝗔𝗥𝗗⌟* ◆
+│
+├◆ ⏳ Pending Review: *${pending.length}*
+├◆ 🟡 Awaiting Payment: *${awaiting.length}*
+├◆ ✅ Approved: *${approved.length}*
+├◆ ❌ Rejected: *${rejected.length}*
+├◆ 💰 Total Revenue: *$${revenue.toFixed(2)}*
+│
+├◆ *⌜𝗥𝗘𝗖𝗘𝗡𝗧⌟*
+${recentText}
+│
+└ ❏`;
+  return bot.sendMessage(chatId,text,{parse_mode:'Markdown',reply_markup:{inline_keyboard:[[{text:'⏳ PENDING',callback_data:'payments_pending'},{text:'📜 HISTORY',callback_data:'payments_history'}],[{text:'🔄 REFRESH',callback_data:'payment_dashboard'}],[{text:'🏠 MENU',callback_data:'show_main'}]]}});
+};
+
+const sendMyPayments = async (chatId,userId) => {
+  const mine = getPaymentRecords().filter(p => p.userId === userId.toString()).slice(0,10);
+  if (!mine.length) return bot.sendMessage(chatId,'┌ ❏ ◆ *⌜𝗠𝗬 𝗣𝗔𝗬𝗠𝗘𝗡𝗧𝗦⌟* ◆\n│\n├◆ No payment history found.\n│\n└ ❏',{parse_mode:'Markdown',reply_markup:{inline_keyboard:[[{text:'👑 PLANS',callback_data:'premium_plans'}]]}});
+  const lines = mine.map(p => '├◆ 🧾 *'+p.id+'*\n│   ↳ '+p.planName+' • $'+p.priceUsd+'\n│   ↳ '+formatPaymentStatus(p.status)+(p.transactionId?'\n│   ↳ TX: '+p.transactionId:'')+(p.rejectionReason?'\n│   ↳ Reason: '+p.rejectionReason:'')).join('\n');
+  return bot.sendMessage(chatId,'┌ ❏ ◆ *⌜𝗠𝗬 𝗣𝗔𝗬𝗠𝗘𝗡𝗧𝗦⌟* ◆\n│\n'+lines+'\n│\n└ ❏',{parse_mode:'Markdown',reply_markup:{inline_keyboard:[[{text:'👑 PLANS',callback_data:'premium_plans'}],[{text:'🏠 MENU',callback_data:'show_main'}]]}});
+};
+
+bot.onText(/^\/payments(?:@[\w_]+)?$/i, async (msg) => {
+  const userId = msg.from.id;
+  if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(msg.chat.id, 'admin');
+  return sendPaymentDashboard(msg.chat.id);
 });
 
+bot.onText(/^\/mypayments(?:@[\w_]+)?$/i, async (msg) => {
+  const userId = msg.from.id;
+  if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /mypayments in private chat.');
+  return sendMyPayments(msg.chat.id, userId);
+});
 bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
@@ -1628,7 +1651,7 @@ const TELEGRAM_BUG_COMMANDS = new Set([
 const TELEGRAM_NATIVE_COMMANDS = new Set([
   'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
   'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu',
-  'plans', 'myplan', 'addpremium', 'addprem', 'delpremium', 'delprem', 'premiumusers', 'premlist',
+  'plans', 'myplan', 'mypayments', 'payments', 'addpremium', 'addprem', 'delpremium', 'delprem', 'premiumusers', 'premlist',
   'misc', 'dashboard', 'referral', 'coupon', 'createcoupon', 'coupons', 'restartbot'
 ]);
 
@@ -3494,6 +3517,10 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
     if (request.status !== 'pending_payment') {
       return bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ᴀʟʀᴇᴀᴅʏ sᴜʙᴍɪᴛᴛᴇᴅ', show_alert: true });
     }
+    if (Date.now() - Number(request.createdAt || 0) > PAYMENT_REQUEST_TTL) {
+      request.status = 'expired'; request.updatedAt = Date.now(); await saveData();
+      return bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ʀᴇǫᴜᴇsᴛ ᴇxᴘɪʀᴇᴅ', show_alert: true });
+    }
     pendingPaymentInput.set(userId.toString(), paymentId);
     await bot.answerCallbackQuery(query.id, { text: 'sᴇɴᴅ ᴘʀᴏᴏғ' }).catch(() => {});
     return bot.sendMessage(chatId,
@@ -3524,7 +3551,12 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
       return bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ɴᴏᴛ ᴀᴠᴀɪʟᴀʙʟᴇ', show_alert: true });
     }
 
-    request.status = approved ? 'approved' : 'rejected';
+    if (!approved) {
+      pendingPaymentReject.set(userId.toString(), paymentId);
+      await bot.answerCallbackQuery(query.id, { text: 'sᴇɴᴅ ʀᴇᴊᴇᴄᴛ ʀᴇᴀsᴏɴ' }).catch(() => {});
+      return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗥𝗘𝗝𝗘𝗖𝗧 𝗣𝗔𝗬𝗠𝗘𝗡𝗧⌟* ◆\n│\n├◆ 🧾 Payment ID: *${paymentId}*\n├◆ 📦 Plan: *${request.planName}*\n│\n├◆ Reply with the rejection reason.\n├◆ Example: *Invalid transaction / wrong amount*\n│\n└ ❏`, { parse_mode: 'Markdown' });
+    }
+    request.status = 'approved';
     request.reviewedBy = userId.toString();
     request.reviewedAt = Date.now();
     request.updatedAt = Date.now();
@@ -3591,6 +3623,25 @@ ${approvalText}
     return;
   }
 
+  else if (data === 'my_payments') {
+    await bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ʜɪsᴛᴏʀʏ' }).catch(() => {});
+    return sendMyPayments(chatId,userId);
+  }
+  else if (data === 'payment_dashboard') {
+    if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(chatId,'admin');
+    await bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ᴅᴀsʜʙᴏᴀʀᴅ' }).catch(() => {});
+    return sendPaymentDashboard(chatId);
+  }
+  else if (data === 'payments_pending') {
+    if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(chatId,'admin');
+    await bot.answerCallbackQuery(query.id, { text: 'ᴘᴇɴᴅɪɴɢ' }).catch(() => {});
+    return sendPaymentReviewList(chatId,'pending_review');
+  }
+  else if (data === 'payments_history') {
+    if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(chatId,'admin');
+    await bot.answerCallbackQuery(query.id, { text: 'ʜɪsᴛᴏʀʏ' }).catch(() => {});
+    return sendPaymentReviewList(chatId,'all');
+  }
   else if (data === 'show_main') {
     await bot.answerCallbackQuery(query.id);
     await sendMainMenu(chatId, userId, userName, isAdmin(userId.toString()), isOwner(userId));
@@ -4035,6 +4086,25 @@ bot.on('message', async (msg) => {
   }
 });
 
+// ==================== PAYMENT REJECTION REASON HANDLER ====================
+bot.on('message', async (msg) => {
+  if (msg.chat.type !== 'private') return;
+  const adminId = msg.from?.id?.toString();
+  if (!adminId || !pendingPaymentReject.has(adminId)) return;
+  if (!isAdmin(adminId) && !isOwner(adminId)) { pendingPaymentReject.delete(adminId); return; }
+  if (msg.text?.startsWith('/')) return;
+  const paymentId = pendingPaymentReject.get(adminId);
+  const request = database.payments[paymentId];
+  if (!request || request.status !== 'pending_review') { pendingPaymentReject.delete(adminId); return bot.sendMessage(msg.chat.id,'⚠️ This payment is no longer pending review.'); }
+  const reason = String(msg.text || msg.caption || '').trim().slice(0,300);
+  if (!reason) return bot.sendMessage(msg.chat.id,'⚠️ Please send a short rejection reason.');
+  request.status='rejected'; request.rejectionReason=reason; request.reviewedBy=adminId; request.reviewedAt=Date.now(); request.updatedAt=Date.now();
+  pendingPaymentReject.delete(adminId); await saveData();
+  addAuditLog('ᴘᴀʏᴍᴇɴᴛ_ʀᴇᴊᴇᴄᴛᴇᴅ',adminId,request.userId,{paymentId,plan:request.planKey,reason});
+  try { await bot.sendMessage(request.userId, `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗝𝗘𝗖𝗧𝗘𝗗⌟* ◆\n│\n├◆ 📦 Plan: *${request.planName}*\n├◆ 🧾 Payment ID: *${paymentId}*\n├◆ ❌ Reason: *${reason}*\n├◆ 📩 Submit a new request after correcting the issue.\n│\n└ ❏`, {parse_mode:'Markdown'}); } catch {}
+  return bot.sendMessage(msg.chat.id, `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗝𝗘𝗖𝗧𝗘𝗗⌟* ◆\n│\n├◆ 🧾 Payment ID: *${paymentId}*\n├◆ ❌ Reason: *${reason}*\n│\n└ ❏`, {parse_mode:'Markdown'});
+});
+
 // ==================== PAYMENT PROOF HANDLER ====================
 bot.on('message', async (msg) => {
   if (msg.chat.type !== 'private') return;
@@ -4071,6 +4141,14 @@ bot.on('message', async (msg) => {
     return bot.sendMessage(msg.chat.id, '⚠️ Transaction ID/UTR is required.');
   }
 
+  if (Date.now() - Number(request.createdAt || 0) > PAYMENT_REQUEST_TTL) {
+    request.status='expired'; request.updatedAt=Date.now(); pendingPaymentInput.delete(userId); await saveData();
+    return bot.sendMessage(msg.chat.id,'⚠️ This payment request has expired. Please start a new request from /plans.');
+  }
+  if (transactionId) {
+    const duplicate = Object.values(database.payments).find(p => p.id !== paymentId && !['cancelled','expired'].includes(p.status) && String(p.transactionId || '').trim().toLowerCase() === transactionId.toLowerCase());
+    if (duplicate) return bot.sendMessage(msg.chat.id,'⚠️ This transaction ID is already linked to another payment request.');
+  }
   request.transactionId = transactionId;
   request.proofType = proofType;
   request.proofFileId = proofFileId;
