@@ -888,6 +888,11 @@ creds: state.creds,
                         }
                         tracker.actualNumber = realNumber;
                         tracker.qrConnected = true;
+
+                        // Move the live tracker from the temporary QR key to the
+                        // real WhatsApp number so health checks and /unpair work.
+                        rentbotTracker.set(realNumber, tracker);
+                        rentbotTracker.delete(tohidDevNumber);
                     }
                 } catch (renameError) {
                     console.log(chalk.yellow(`⚠️ QR session rename failed: ${renameError.message}`));
