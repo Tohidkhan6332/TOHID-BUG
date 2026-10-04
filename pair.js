@@ -854,18 +854,43 @@ creds: state.creds,
 
     tohid.ev.on('creds.update', saveCreds);
     
-    const healthCheckInterval = setInterval(() => {
+    const healthCheckInterval = setInterval(async () => {
         if (tracker.disconnected) {
             clearInterval(healthCheckInterval);
             return;
         }
-        
-        tracker.lastActivity = Date.now();
-        
-        if (tohid.ws?.readyState === 1) {
+
+        const now = Date.now();
+        const wsState = tohid.ws?.readyState;
+
+        if (wsState === 1) {
+            tracker.state = 'online';
+            tracker.lastActivity = now;
             tohid.sendPresenceUpdate('available').catch(() => {});
+            return;
         }
-    }, 60000);
+
+        if (tracker.state === 'connecting' || tracker.reconnectPending) return;
+
+        const lastSeen = Number(tracker.lastActivity || tracker.lastConnectedAt || now);
+        if (now - lastSeen < 90000) return;
+
+        tracker.state = 'reconnecting';
+        tracker.reconnectPending = true;
+        tracker.lastDisconnectedAt = tracker.lastDisconnectedAt || now;
+        console.log(chalk.yellow('💓 Health monitor: reconnecting ' + tohidDevNumber + ' (socket not ready)'));
+
+        try {
+            try { tohid.ws?.close(); } catch (e) {}
+            await sleep(1500);
+            if (!tracker.disconnected) await queuePairing(tohidDevNumber);
+        } catch (error) {
+            tracker.lastError = error?.message || String(error);
+            console.log(chalk.red('❌ Health monitor reconnect failed for ' + tohidDevNumber + ': ' + tracker.lastError));
+        } finally {
+            tracker.reconnectPending = false;
+        }
+    }, 30000);
 
     return tohid;
 }
