@@ -1439,31 +1439,13 @@ const BUG_MENU_TEXT = `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆�
 ┗━━━━━━━━━━━━━━┛`;
 
 async function sendBugMenu(chatId) {
-  const target = getActiveConnection();
-
-  if (!target) {
-    return bot.sendPhoto(chatId, BUG_MENU_IMAGE, {
-      caption: `┌ ❏ ◆ *⌜𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 𝗡𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗⌟* ◆
-│
-├◆ ❌ WhatsApp is not connected yet
-├◆ 🔗 Please connect WhatsApp first
-│
-├◆ ᴜsᴇ: /pair 917849917350
-│
-└ ❏`,
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🔗 ᴄᴏɴɴᴇᴄᴛ ᴡʜᴀᴛsᴀᴘᴘ', callback_data: 'pair_guide' }]
-        ]
-      }
-    });
-  }
-
+  // BUG MENU is only the command list. It should always open,
+  // regardless of whether a WhatsApp session is currently connected.
   return bot.sendPhoto(chatId, BUG_MENU_IMAGE, {
     caption: BUG_MENU_TEXT,
     parse_mode: 'Markdown'
   });
+}
 }
 
 // ==================== TELEGRAM → WHATSAPP BUG COMMAND BRIDGE ====================
