@@ -709,6 +709,15 @@ creds: state.creds,
             }
 
         if (connection === "close") {
+            // A manual/health-monitor restart already owns the reconnect flow.
+            // Do not enqueue a second socket from the close event.
+            if (tracker.reconnectPending) {
+                tracker.state = 'reconnecting';
+                tracker.lastDisconnectedAt = Date.now();
+                tracker.lastError = lastDisconnect?.error?.message || String(lastDisconnect?.error || '');
+                return;
+            }
+
             tracker.state = 'reconnecting';
             tracker.lastDisconnectedAt = Date.now();
             tracker.lastError = lastDisconnect?.error?.message || String(lastDisconnect?.error || '');
@@ -1018,14 +1027,43 @@ async function restartActiveConnection(number) {
     if (!entry) return false;
 
     const [key, tracker] = entry;
+    tracker.reconnectPending = true;
+    tracker.disconnected = false;
+    tracker.state = 'reconnecting';
+
     try {
-        tracker.disconnected = false;
         if (tracker.connection?.ws) tracker.connection.ws.close();
         else if (tracker.connection?.end) tracker.connection.end();
+    } catch (e) {
+        tracker.lastError = e?.message || String(e);
+    }
+
+    try {
+        await sleep(1500);
+        if (!tracker.disconnected) await queuePairing(key);
+        return true;
+    } finally {
+        tracker.reconnectPending = false;
+    }
+}
+
+function stopActiveConnection(number) {
+    const normalized = String(number || '').replace(/[^0-9]/g, '');
+    const entry = [...rentbotTracker.entries()].find(([key]) => key.replace(/[^0-9]/g, '') === normalized);
+    if (!entry) return false;
+
+    const [key, tracker] = entry;
+    tracker.reconnectPending = true;
+    tracker.disconnected = true;
+    tracker.state = 'logged_out';
+
+    try {
+        tracker.connection?.end?.();
+        tracker.connection?.ws?.close?.();
     } catch (e) {}
 
-    await sleep(1500);
-    await queuePairing(key);
+    rentbotTracker.delete(key);
+    joinedGroups.delete(key);
     return true;
 }
 
@@ -1033,4 +1071,5 @@ module.exports = startpairing;
 module.exports.getActiveConnections = getActiveConnections;
 module.exports.getActiveConnection = getActiveConnection;
 module.exports.restartActiveConnection = restartActiveConnection;
+module.exports.stopActiveConnection = stopActiveConnection;
 module.exports.getConnectionHealth = getConnectionHealth;
