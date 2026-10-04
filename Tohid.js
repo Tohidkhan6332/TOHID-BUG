@@ -3904,10 +3904,11 @@ setInterval(async () => {
   console.log(chalk.magenta(`👑 ᴘʀᴇᴍɪᴜᴍ: ${Object.keys(database.premium).length}`));
   console.log(chalk.cyan(`⏱️ ᴜᴘᴛɪᴍᴇ: ${formatUptime(Date.now() - database.stats.startTime)}`));
   console.log(chalk.white('\n📢 ᴍᴏɴɪᴛᴏʀɪɴɢ ғᴏʀ ᴄᴏᴍᴍᴀɴᴅs...\n'));
-})();
 
-// Telegram must start polling only after all handlers above are registered.
-startTelegramPolling();
+  // Start polling only after persistent data has finished loading.
+  // This prevents early Telegram commands from seeing an empty/default database.
+  await startTelegramPolling();
+})();
 
 // ==================== SHUTDOWN HANDLERS ====================
 const shutdown = async (signal) => {
