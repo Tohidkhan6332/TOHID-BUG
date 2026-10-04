@@ -664,12 +664,12 @@ const sendMyAccount = async (chatId, userId) => {
   const expiryLine = premium.lifetime === true
     ? '♾️ Expiry: Lifetime'
     : status.expiry
-      ? '📅 Expiry: ' + formatPlanExpiry(status.expiry) + '\\n├◆ ⏳ Remaining: ' + formatDuration(status.remaining)
+      ? '📅 Expiry: ' + formatPlanExpiry(status.expiry) + '\n├◆ ⏳ Remaining: ' + formatDuration(status.remaining)
       : '📅 Expiry: Not active';
 
   const lastPayment = payments[0];
   const lastLine = lastPayment
-    ? '├◆ 🧾 Last payment: *' + lastPayment.id + '*\\n├◆ 📌 Status: *' + formatPaymentStatus(lastPayment.status) + '*'
+    ? '├◆ 🧾 Last payment: *' + lastPayment.id + '*\n├◆ 📌 Status: *' + formatPaymentStatus(lastPayment.status) + '*'
     : '';
 
   const text = `┌ ❏ ◆ *⌜𝗠𝗬 𝗔𝗖𝗖𝗢𝗨𝗡𝗧⌟* ◆
@@ -1621,14 +1621,13 @@ bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
   return sendPlans(msg.chat.id, userId);
 });
 
-bot.onText(/^\/(?:myplan|account|myaccount)(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/(?:myplan|account|myaccount)(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use this command in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
   return sendMyAccount(msg.chat.id, userId);
 });
-// ==================== COMMAND: START
- ====================
+// ==================== COMMAND: START ====================
 
 bot.onText(/^\/start(?:@[\w_]+)?(?:\s+.*)?$/i, async (msg) => {
   const chatId = msg.chat.id;
