@@ -210,9 +210,7 @@ async function updateFromGitHub() {
     try {
         git(['pull', '--ff-only', 'origin', UPDATE_BRANCH]);
     } catch (error) {
-        if (updateStash) {
-            try { git(['stash', 'pop', '--index', updateStash]); } catch (_) {}
-        }
+        restoreStash();
         throw error;
     }
 
