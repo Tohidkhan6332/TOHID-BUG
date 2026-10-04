@@ -470,10 +470,13 @@ const formatPlanExpiry = (expiry) => expiry ? new Date(expiry).toLocaleString() 
 
 const sendPlans = async (chatId, userId) => {
   const status = getPlanStatus(userId);
-  const current = status.plan === 'premium' ? '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry)
-NaN
-NaN
-NaN
+  const current = status.plan === 'premium'
+    ? '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry)
+    : status.plan === 'trial'
+      ? '🎁 TRIAL • EXPIRES: ' + formatPlanExpiry(status.expiry)
+      : status.plan === 'admin'
+        ? '🛡️ ADMIN / OWNER'
+        : '🆓 FREE • ' + Math.min(status.pairsUsed || 0, SERVICE_PLANS.free.maxPairings) + '/' + SERVICE_PLANS.free.maxPairings + ' pairing used';
   const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗦𝗘𝗥𝗩𝗜𝗖𝗘⌟* ◆
 │
 ├◆ ʏᴏᴜʀ ᴘʟᴀɴ: ${current}
@@ -1142,14 +1145,14 @@ ${missingList}
 };
 
 // ==================== SERVICE PLAN COMMANDS ====================
-bot.onText(/\\/plans/, async (msg) => {
+bot.onText(/\/plans/, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
   return sendPlans(msg.chat.id, userId);
 });
 
-bot.onText(/\\/myplan/, async (msg) => {
+bot.onText(/\/myplan/, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /myplan in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
@@ -3113,12 +3116,12 @@ bot.onText(/\/status/, (msg) => {
 });
 
 // ==================== MANUAL PREMIUM ADMIN CONTROLS ====================
-bot.onText(/\\/addpremium(?:\\s+(.+))?/, async (msg, match) => {
+bot.onText(/\/addpremium(?:\s+(.+))?/, async (msg, match) => {
   const chatId = msg.chat.id, adminId = msg.from.id;
   if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
-  const args = String(match?.[1] || '').trim().split(/\\s+/);
+  const args = String(match?.[1] || '').trim().split(/\s+/);
   const targetId = args.shift(), duration = args.join(' ');
-  if (!/^\\d+$/.test(targetId || '') || !duration) return bot.sendMessage(chatId, 'Usage: /addpremium USER_ID 30 days');
+  if (!/^\d+$/.test(targetId || '') || !duration) return bot.sendMessage(chatId, 'Usage: /addpremium USER_ID 30 days');
   const durationMs = parseDuration(duration);
   if (!durationMs || durationMs <= 0) return bot.sendMessage(chatId, '❌ Invalid duration. Example: 30 days or 1 month.');
   const premium = await grantPremium(targetId, durationMs, adminId);
@@ -3126,16 +3129,16 @@ bot.onText(/\\/addpremium(?:\\s+(.+))?/, async (msg, match) => {
   try { await bot.sendMessage(targetId, '👑 TOHID-BUG PREMIUM ACTIVATED\\nExpiry: ' + formatPlanExpiry(premium.expiry)); } catch (e) {}
 });
 
-bot.onText(/\\/delpremium(?:\\s+(.+))?/, async (msg, match) => {
+bot.onText(/\/delpremium(?:\s+(.+))?/, async (msg, match) => {
   const chatId = msg.chat.id, adminId = msg.from.id, targetId = String(match?.[1] || '').trim();
   if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
-  if (!/^\\d+$/.test(targetId)) return bot.sendMessage(chatId, 'Usage: /delpremium USER_ID');
+  if (!/^\d+$/.test(targetId)) return bot.sendMessage(chatId, 'Usage: /delpremium USER_ID');
   if (!database.premium[targetId]) return bot.sendMessage(chatId, '❌ User is not Premium.');
   delete database.premium[targetId]; await saveData(); addAuditLog('ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇ', adminId, targetId);
   return bot.sendMessage(chatId, '✅ Premium removed from ' + targetId + '.');
 });
 
-bot.onText(/\\/premiumusers/, async (msg) => {
+bot.onText(/\/premiumusers/, async (msg) => {
   const chatId = msg.chat.id, adminId = msg.from.id;
   if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
   const entries = Object.entries(database.premium).filter(([, d]) => Number(d?.expiry) > Date.now());
