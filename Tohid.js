@@ -3662,6 +3662,7 @@ bot.on('callback_query', async (query) => {
         reply_markup: miscKeyboard
       });
     }
+  }
 
   else if (data === 'show_tutorial') {
     await bot.answerCallbackQuery(query.id);
