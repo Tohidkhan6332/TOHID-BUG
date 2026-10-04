@@ -1253,8 +1253,8 @@ bot.onText(/^\/referral(?:@[\w_]+)?$/i, async (msg) => {
   const data = database.referrals[id];
   return bot.sendMessage(msg.chat.id,
     `🎁 *REFERRAL*
-\\n\\nYour code: \`ref_${data.code}`
-\\nShare it with new users. Successful paid activations can be credited by the owner.`,
+\n\nYour code: \`ref_${data.code}\`
+\nShare it with new users. Successful paid activations can be credited by the owner.`,
     { parse_mode: 'Markdown' }
   );
 });
