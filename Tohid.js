@@ -3361,17 +3361,14 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
 │
 └ ❏`;
 
-    const miscKeyboardRows = [];
-    if (isAdminUser || isOwnerUser) {
-      miscKeyboardRows.push([{ text: '🔐 𝗔𝗗𝗠𝗜𝗡 𝗠𝗘𝗡𝗨', callback_data: 'admin_menu' }]);
-    }
-    if (isOwnerUser) {
-      miscKeyboardRows.push([{ text: '👑 𝗢𝗪𝗡𝗘𝗥 𝗠𝗘𝗡𝗨', callback_data: 'owner_menu' }]);
-    }
-    miscKeyboardRows.push(
+    // Show all menu buttons to everyone. Permission is enforced when
+    // the menu is opened or the command is executed.
+    const miscKeyboardRows = [
+      [{ text: '🔐 𝗔𝗗𝗠𝗜𝗡 𝗠𝗘𝗡𝗨', callback_data: 'admin_menu' }],
+      [{ text: '👑 𝗢𝗪𝗡𝗘𝗥 𝗠𝗘𝗡𝗨', callback_data: 'owner_menu' }],
       [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
       [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
-    );
+    ];
 
     const miscKeyboard = { inline_keyboard: miscKeyboardRows };
 
