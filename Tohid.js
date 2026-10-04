@@ -1133,8 +1133,8 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
       ]
     ];
 
-    // Upload the repository image directly when available. This is more reliable
-    // than asking Telegram to fetch a GitHub Raw URL from its servers.
+    // Prefer a local repository image. Telegram receives the file directly,
+    // so it does not have to fetch GitHub Raw itself.
     const localMenuImages = [
       path.join(__dirname, 'media', 'Tohid.jpg'),
       path.join(__dirname, 'media', 'Tohid1.jpg'),
@@ -1148,11 +1148,19 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 
     if (!randomImage) throw new Error('No menu image is configured.');
 
-    await bot.sendPhoto(chatId, randomImage, {
-      caption: menu,
-      parse_mode: 'Markdown',
-      reply_markup: keyboard
-    });
+    try {
+      await bot.sendPhoto(chatId, randomImage, {
+        caption: menu,
+        parse_mode: 'Markdown',
+        reply_markup: keyboard
+      });
+    } catch (photoError) {
+      console.error('[sendMainMenu PHOTO ERROR]:', photoError.message);
+      await bot.sendPhoto(chatId, randomImage, {
+        caption: menu.replace(/[\*_]/g, '').replace(/\x60/g, ''),
+        reply_markup: keyboard
+      });
+    }
 
   } catch (err) {
     console.error('[sendMainMenu ERROR]:', err);
@@ -3614,28 +3622,46 @@ bot.on('callback_query', async (query) => {
 │
 └ ❏`;
 
+    const miscKeyboard = {
+      inline_keyboard: [
+        [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
+        [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+      ]
+    };
+
+    const localMiscImages = [
+      path.join(__dirname, 'media', 'Tohid.jpg'),
+      path.join(__dirname, 'media', 'Tohid1.jpg'),
+      path.join(__dirname, 'media', 'Tohid2.jpg'),
+      path.join(__dirname, 'media', 'Tohid3.jpg')
+    ].filter(imagePath => fsSync.existsSync(imagePath));
+
+    const remoteMiscImages = ASSETS.menuImages || [];
+    const availableMiscImages = localMiscImages.length ? localMiscImages : remoteMiscImages;
+    const miscImage = availableMiscImages[Math.floor(Math.random() * availableMiscImages.length)];
+
     try {
-      return await bot.sendMessage(chatId, miscText, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
-            [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
-          ]
-        }
-      });
+      if (!miscImage) throw new Error('No Misc Menu image is configured.');
+
+      try {
+        return await bot.sendPhoto(chatId, miscImage, {
+          caption: miscText,
+          parse_mode: 'Markdown',
+          reply_markup: miscKeyboard
+        });
+      } catch (photoError) {
+        console.error('[MENU] Misc menu photo/Markdown failed:', photoError.message);
+        return await bot.sendPhoto(chatId, miscImage, {
+          caption: miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''),
+          reply_markup: miscKeyboard
+        });
+      }
     } catch (error) {
-      console.error('[MENU] Misc menu Markdown send failed:', error.message);
-      return bot.sendMessage(chatId, miscText.replace(/[\*_]/g, ''), {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
-            [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
-          ]
-        }
+      console.error('[MENU] Misc menu image send failed:', error.message);
+      return bot.sendMessage(chatId, miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''), {
+        reply_markup: miscKeyboard
       });
     }
-  }
 
   else if (data === 'show_tutorial') {
     await bot.answerCallbackQuery(query.id);
