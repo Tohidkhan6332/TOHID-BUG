@@ -1133,7 +1133,20 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
       ]
     ];
 
-    const randomImage = ASSETS.menuImages[Math.floor(Math.random() * ASSETS.menuImages.length)];
+    // Upload the repository image directly when available. This is more reliable
+    // than asking Telegram to fetch a GitHub Raw URL from its servers.
+    const localMenuImages = [
+      path.join(__dirname, 'media', 'Tohid.jpg'),
+      path.join(__dirname, 'media', 'Tohid1.jpg'),
+      path.join(__dirname, 'media', 'Tohid2.jpg'),
+      path.join(__dirname, 'media', 'Tohid3.jpg')
+    ].filter(imagePath => fsSync.existsSync(imagePath));
+
+    const remoteMenuImages = ASSETS.menuImages || [];
+    const availableMenuImages = localMenuImages.length ? localMenuImages : remoteMenuImages;
+    const randomImage = availableMenuImages[Math.floor(Math.random() * availableMenuImages.length)];
+
+    if (!randomImage) throw new Error('No menu image is configured.');
 
     await bot.sendPhoto(chatId, randomImage, {
       caption: menu,
@@ -1332,7 +1345,7 @@ bot.onText(/^\/createcoupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const days = Number(args.shift());
   const maxUses = Number(args.shift() || 1);
   if (!/^[A-Z0-9_-]{3,32}$/.test(code) || !Number.isFinite(days) || days <= 0 || !Number.isFinite(maxUses) || maxUses <= 0) {
-    return bot.sendMessage(msg.chat.id, 'Usage: /createcoupon CODE DAYS MAX_USES');
+    return bot.sendMessage(msg.chat.id, 'Usage: /createcoupon CODE DAYS MAX-USES');
   }
   database.coupons[code] = { days, maxUses, uses: 0, createdBy: msg.from.id.toString(), createdAt: Date.now() };
   await saveData();
@@ -3580,7 +3593,7 @@ bot.on('callback_query', async (query) => {
 ├◆ /maintenance
 ├◆ /logs
 ├◆ /announce
-├◆ /createcoupon CODE DAYS MAX_USES
+├◆ /createcoupon CODE DAYS MAX-USES
 ├◆ /coupons`;
     }
 
@@ -3601,15 +3614,27 @@ bot.on('callback_query', async (query) => {
 │
 └ ❏`;
 
-    return bot.sendMessage(chatId, miscText, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
-          [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
-        ]
-      }
-    });
+    try {
+      return await bot.sendMessage(chatId, miscText, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
+            [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+          ]
+        }
+      });
+    } catch (error) {
+      console.error('[MENU] Misc menu Markdown send failed:', error.message);
+      return bot.sendMessage(chatId, miscText.replace(/[\*_]/g, ''), {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
+            [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+          ]
+        }
+      });
+    }
   }
 
   else if (data === 'show_tutorial') {
