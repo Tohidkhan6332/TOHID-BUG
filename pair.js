@@ -389,7 +389,9 @@ async function autoJoinGroups(tohid, tohidDevNumber) {
 }
 
 async function startpairing(tohidDevNumber, customPairingCode = null) {
-    const sessionKey = String(tohidDevNumber).replace(/[^0-9@.]/g, '');
+    // Keep one canonical session key for every entry point (number or JID).
+    tohidDevNumber = String(tohidDevNumber || '').replace(/[^0-9]/g, '');
+    const sessionKey = tohidDevNumber;
 
     // Ensure base directory exists
     ensureDirectoryExists('./tohidstore/pairing');
@@ -498,18 +500,6 @@ creds: state.creds,
         console.log(chalk.green(`✓ Pairing code saved for +${pairingNumber}`));
     };
 
-    const waitForPairingSocket = async () => {
-        const deadline = Date.now() + 15000;
-        while (Date.now() < deadline) {
-            if (tracker.connection !== tohid || tracker.disconnected || state.creds.registered) {
-                return false;
-            }
-            if (tohid.ws?.readyState === 1) return true;
-            await sleep(500);
-        }
-        return false;
-    };
-
     const requestPairingCodeWithRetry = async () => {
         if (!pairingCode || state.creds.registered || tracker.disconnected) return;
         if (tracker.connection !== tohid) return;
@@ -523,11 +513,8 @@ creds: state.creds,
         pairingRetryCount++;
 
         try {
-            const socketReady = await waitForPairingSocket();
-            if (!socketReady) {
-                throw new Error('WhatsApp socket did not become ready for pairing');
-            }
-
+            // Baileys expects this request from connection.update
+            // (connecting/qr phase), not from a WebSocket readyState poll.
             const requestPromise = tohid.requestPairingCode(
                 pairingNumber,
                 customPairingCode || undefined
