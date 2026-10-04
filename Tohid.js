@@ -140,8 +140,7 @@ const PATHS = {
   backups: path.join(__dirname, 'axis_storage', 'backups'),
   // NEW: Premium system paths
   premium: path.join(__dirname, 'axis_storage', 'premium.json'),
-  trials: path.join(__dirname, 'axis_storage', 'trials.json'),
-  serviceMode: path.join(__dirname, 'axis_storage', 'service-mode.json')
+  trials: path.join(__dirname, 'axis_storage', 'trials.json')
 };
 
 // Media Assets
@@ -400,75 +399,49 @@ const isAdmin = (userId) => database.admins.includes(userId.toString());
 
 // ==================== PREMIUM SYSTEM FUNCTIONS ====================
 
-/**
- * Check if user is premium
- */
 const isPremium = (userId) => {
   const userIdStr = userId.toString();
   const premiumData = database.premium[userIdStr];
-  
+
   if (!premiumData) return false;
-  
-  // Check if expired
+
   if (premiumData.expiry < Date.now()) {
-    // Auto-remove expired premium
     delete database.premium[userIdStr];
     saveData();
     return false;
   }
-  
+
   return true;
 };
 
-/**
- * Check if trial mode is active
- */
-const isTrialActive = () => {
-  if (!database.trialMode.active) return false;
-  if (database.trialMode.expiry && database.trialMode.expiry < Date.now()) {
-    // Auto-deactivate trial
-    database.trialMode.active = false;
-    database.trialMode.expiry = null;
-    saveData();
-    return false;
-  }
-  return true;
-};
-
-/**
- * Check if user has access (premium OR trial OR admin/owner)
- */
 const hasAccess = (userId) => {
-  return isAdmin(userId.toString()) || isOwner(userId) || isPremium(userId) || isTrialActive();
+  return isAdmin(userId.toString()) || isOwner(userId) || isPremium(userId);
 };
 
-// ==================== FREE / PREMIUM SERVICE SYSTEM ====================
-const SERVICE_PLANS = {
-  free: { name: 'FREE', maxPairings: 1 },
-  premium: { name: 'PREMIUM' }
-};
-
+// ==================== PREMIUM-ONLY SERVICE ====================
 const getPlanStatus = (userId) => {
   const id = userId.toString();
-  if (isOwner(userId) || isAdmin(id)) return { plan: 'admin', active: true, expiry: null };
+
+  if (isOwner(userId) || isAdmin(id)) {
+    return { plan: 'admin', active: true, expiry: null, remaining: null };
+  }
+
   if (isPremium(userId)) {
     const expiry = database.premium[id]?.expiry || null;
-    return { plan: 'premium', active: true, expiry, remaining: expiry ? Math.max(0, expiry - Date.now()) : null };
+    return {
+      plan: 'premium',
+      active: true,
+      expiry,
+      remaining: expiry ? Math.max(0, expiry - Date.now()) : null
+    };
   }
-  if (database.serviceMode === 'free' && isTrialActive()) {
-    const expiry = database.trialMode?.expiry || null;
-    return { plan: 'trial', active: true, expiry, remaining: expiry ? Math.max(0, expiry - Date.now()) : null };
-  }
-  if (database.serviceMode === 'premium') {
-    return { plan: 'premium_required', active: false, expiry: null };
-  }
-  const pairsUsed = Number(database.userDetails[id]?.pairs || 0);
-  return { plan: 'free', active: pairsUsed < SERVICE_PLANS.free.maxPairings, expiry: null, pairsUsed };
+
+  return { plan: 'premium_required', active: false, expiry: null, remaining: null };
 };
 
 const canStartPairing = (userId) => {
   const status = getPlanStatus(userId);
-  return ['admin', 'premium', 'trial'].includes(status.plan) || (status.plan === 'free' && status.active);
+  return status.plan === 'admin' || status.plan === 'premium';
 };
 
 const formatPlanExpiry = (expiry) => expiry ? new Date(expiry).toLocaleString() : 'N/A';
@@ -477,39 +450,52 @@ const sendPlans = async (chatId, userId) => {
   const status = getPlanStatus(userId);
   const current = status.plan === 'premium'
     ? '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry)
-    : status.plan === 'trial'
-      ? '🎁 TRIAL • EXPIRES: ' + formatPlanExpiry(status.expiry)
-      : status.plan === 'admin'
-        ? '🛡️ ADMIN / OWNER'
-        : status.plan === 'premium_required'
-        ? '🔒 PREMIUM MODE • Premium plan required'
-        : '🆓 FREE • ' + Math.min(status.pairsUsed || 0, SERVICE_PLANS.free.maxPairings) + '/' + SERVICE_PLANS.free.maxPairings + ' pairing used';
+    : status.plan === 'admin'
+      ? '🛡️ ADMIN / OWNER'
+      : '🔒 PREMIUM REQUIRED';
+
   const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗦𝗘𝗥𝗩𝗜𝗖𝗘⌟* ◆
 │
 ├◆ ʏᴏᴜʀ ᴘʟᴀɴ: ${current}
 │
-├◆ 🆓 *FREE*
-├◆ 1 WhatsApp pairing
-├◆ Basic service access
-│
-├◆ 👑 *PREMIUM*
-├◆ Full service access
+├◆ 👑 *PREMIUM ONLY*
+├◆ Full WhatsApp service access
 ├◆ Active for purchased duration
+├◆ No free or trial access
 │
 ├◆ 💳 Payment is manually verified.
 ├◆ 📩 Contact: @Tohidkhan6332
 │
 └ ❏`;
-  return bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 ᴘʀᴇᴍɪᴜᴍ', callback_data: 'premium_plans' }], [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } });
+
+  return bot.sendMessage(chatId, text, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '👑 ᴘʀᴇᴍɪᴜᴍ', callback_data: 'premium_plans' }],
+        [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+      ]
+    }
+  });
 };
 
 const grantPremium = async (userId, durationMs, adminId) => {
   const id = userId.toString();
   const currentExpiry = Number(database.premium[id]?.expiry || 0);
   const base = currentExpiry > Date.now() ? currentExpiry : Date.now();
-  database.premium[id] = { expiry: base + durationMs, addedBy: adminId.toString(), addedAt: Date.now() };
+
+  database.premium[id] = {
+    expiry: base + durationMs,
+    addedBy: adminId.toString(),
+    addedAt: Date.now()
+  };
+
   await saveData();
-  addAuditLog('ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅ', adminId, id, { durationMs, expiry: database.premium[id].expiry });
+  addAuditLog('ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅ', adminId, id, {
+    durationMs,
+    expiry: database.premium[id].expiry
+  });
+
   return database.premium[id];
 };
 
@@ -519,8 +505,8 @@ const grantPremium = async (userId, durationMs, adminId) => {
 const sendAccessDenied = async (chatId) => {
   const message = `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
 │
-├◆ ⚠️ ғʀᴇᴇ ᴘᴀɪʀɪɴɢ ʟɪᴍɪᴛ ʀᴇᴀᴄʜᴇᴅ
-├◆ 👑 ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ ғᴏʀ ғᴜʟʟ ᴀᴄᴄᴇss
+├◆ ⚠️ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʀᴇǫᴜɪʀᴇᴅ
+├◆ 👑 ᴘᴜʀᴄʜᴀsᴇ ᴘʀᴇᴍɪᴜᴍ ғᴏʀ ғᴜʟʟ ᴀᴄᴄᴇss
 ├◆
 ├◆ 📞 ᴄᴏɴᴛᴀᴄᴛ: @Tohidkhan6332
 ├◆ 📱 ᴛᴇʟᴇɢʀᴀᴍ: ${DEVELOPER_CONTACTS.telegram}
@@ -664,30 +650,10 @@ const loadDatabase = async () => {
     await fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2));
   }
 
-  // Load service mode
-  if (await fileExists(PATHS.serviceMode)) {
-    try {
-      const modeData = JSON.parse(await fs.readFile(PATHS.serviceMode, 'utf8'));
-      database.serviceMode = modeData.mode === 'premium' ? 'premium' : 'free';
-    } catch (err) {
-      console.error('sᴇʀᴠɪᴄᴇ ᴍᴏᴅᴇ ʟᴏᴀᴅ ᴇʀʀᴏʀ:', err.message);
-      database.serviceMode = 'free';
-    }
-  } else {
-    await fs.writeFile(PATHS.serviceMode, JSON.stringify({ mode: database.serviceMode }, null, 2));
-  }
+  // Premium-only service; no free/trial mode.
 
-  // NEW: Load trial data
-  if (await fileExists(PATHS.trials)) {
-    try {
-      database.trialMode = JSON.parse(await fs.readFile(PATHS.trials, 'utf8'));
-    } catch (err) {
-      console.error('ᴛʀɪᴀʟ ʟᴏᴀᴅ ᴇʀʀᴏʀ:', err.message);
-      database.trialMode = { active: false, expiry: null, startedBy: null, startedAt: null };
-    }
-  } else {
-    await fs.writeFile(PATHS.trials, JSON.stringify(database.trialMode, null, 2));
-  }
+
+
 };
 
 /**
@@ -706,8 +672,7 @@ const saveData = async () => {
       fs.writeFile(PATHS.audit, JSON.stringify(database.audit.slice(-SYSTEM.maxLogs), null, 2)),
       // NEW: Save premium and trial data
       fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2)),
-      fs.writeFile(PATHS.trials, JSON.stringify(database.trialMode, null, 2)),
-      fs.writeFile(PATHS.serviceMode, JSON.stringify({ mode: database.serviceMode }, null, 2))
+
     ]);
   } catch (err) {
     console.error('sᴀᴠᴇ ᴇʀʀᴏʀ:', err.message);
@@ -959,7 +924,6 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
     const uptime = formatUptime(Date.now() - database.stats.startTime);
     const sessions = await getSessions();
     const userPremium = isPremium(userId);
-    const trialActive = isTrialActive();
 
     // === MENU BASE ===
     menu = `┌ ❏ ◆ *⌜𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨⌟* ◆
@@ -979,21 +943,13 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ sᴇssɪᴏɴs: ${sessions.length}/${SYSTEM.sessionLimit}
 ├◆ ᴛᴏᴅᴀʏ: ${formatNumber(database.stats.dailyConnections)}`;
 
-    // === PREMIUM / TRIAL ===
+    // === PREMIUM STATUS ===
     if (!isAdminUser && !isOwnerUser) {
-      if (userPremium) {
-        const premData = database.premium?.[userId.toString()];
-        const expiryText = premData?.expiry
-          ? new Date(premData.expiry).toLocaleDateString()
-          : 'Unknown';
-
-        menu += `\n├◆ 👑 ᴘʀᴇᴍɪᴜᴍ: ᴀᴄᴛɪᴠᴇ (ᴇxᴘɪʀᴇs: ${expiryText})`;
-      } else if (trialActive) {
-        const trialExpiryText = database.trialMode?.expiry
-          ? new Date(database.trialMode.expiry).toLocaleDateString()
-          : 'Unknown';
-
-        menu += `\n├◆ 🎁 ᴛʀɪᴀʟ ᴍᴏᴅᴇ: ᴀᴄᴛɪᴠᴇ (ᴇɴᴅs: ${trialExpiryText})`;
+      const premData = database.premium?.[userId.toString()];
+      if (userPremium && premData?.expiry) {
+        menu += `\n├◆ 👑 ᴘʀᴇᴍɪᴜᴍ: ᴀᴄᴛɪᴠᴇ (ᴇxᴘɪʀᴇs: ${new Date(premData.expiry).toLocaleDateString()})`;
+      } else {
+        menu += '\n├◆ 🔒 ᴘʀᴇᴍɪᴜᴍ: ʀᴇǫᴜɪʀᴇᴅ';
       }
     }
 
@@ -1009,7 +965,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /runtime - sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ
 ├◆ /stats   - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs
 ├◆ /report  - ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ
-├◆ /plans   - ғʀᴇᴇ / ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs
+├◆ /plans   - ᴘʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇ ᴘʟᴀɴ
 ├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
 ├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
 ├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ
@@ -1189,29 +1145,10 @@ bot.onText(/\/myplan/, async (msg) => {
 ├◆ ᴘᴀɪʀɪɴɢs ᴜsᴇᴅ: ${pairsUsed}`;
   if (status.expiry) text += `├◆ ᴇxᴘɪʀʏ: ${formatPlanExpiry(status.expiry)}
 ├◆ ʀᴇᴍᴀɪɴɪɴɢ: ${formatDuration(status.remaining)}`;
-  else if (status.plan === 'free') text += '├◆ ғʀᴇᴇ ʟɪᴍɪᴛ: 1 ᴘᴀɪʀɪɴɢ\\n';
+  else if (status.plan === 'premium_required') text += '├◆ ᴘʀᴇᴍɪᴜᴍ: ʀᴇǫᴜɪʀᴇᴅ\\n';
   text += '│\\n└ ❏';
   return bot.sendMessage(msg.chat.id, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 ᴜᴘɢʀᴀᴅᴇ', callback_data: 'premium_plans' }]] } });
 });
-// ==================== SERVICE MODE COMMANDS ====================
-bot.onText(/^\/freemode(?:@[\\w_]+)?$/i, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Owner only.*', { parse_mode: 'Markdown' });
-  database.serviceMode = 'free';
-  await saveData();
-  return bot.sendMessage(chatId, '🆓 *FREE MODE ENABLED*\\n\\nFree users can use the normal 1-pairing limit.', { parse_mode: 'Markdown' });
-});
-
-bot.onText(/^\/premiummode(?:@[\\w_]+)?$/i, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Owner only.*', { parse_mode: 'Markdown' });
-  database.serviceMode = 'premium';
-  await saveData();
-  return bot.sendMessage(chatId, '👑 *PREMIUM MODE ENABLED*\\n\\nOnly Premium/Admin/Owner users can start a WhatsApp pairing.', { parse_mode: 'Markdown' });
-});
-
 // ==================== COMMAND: START ====================
 
 bot.onText(/\/start/, async (msg) => {
@@ -1307,7 +1244,7 @@ const TELEGRAM_NATIVE_COMMANDS = new Set([
   'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
   'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu',
   'plans', 'myplan', 'addpremium', 'delpremium', 'premiumusers',
-  'misc', 'freemode', 'premiummode'
+  'misc'
 ]);
 
 bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
@@ -3363,17 +3300,21 @@ bot.on('callback_query', async (query) => {
 
   else if (data === 'misc_menu') {
     await bot.answerCallbackQuery(query.id, { text: 'ᴍɪsᴄ ᴍᴇɴᴜ' });
-    const modeLabel = database.serviceMode === 'premium' ? '👑 PREMIUM MODE' : '🆓 FREE MODE';
     return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗠𝗜𝗦𝗖 𝗠𝗘𝗡𝗨⌟* ◆
 │
-├◆ ᴄᴜʀʀᴇɴᴛ ᴍᴏᴅᴇ: ${modeLabel}
+├◆ 👑 ᴘʀᴇᴍɪᴜᴍ-ᴏɴʟʏ sᴇʀᴠɪᴄᴇ
+├◆ 💳 ᴘᴀʏᴍᴇɴᴛ: ᴍᴀɴᴜᴀʟ ᴠᴇʀɪғɪᴇᴅ
+├◆ 📩 sᴜᴘᴘᴏʀᴛ: @Tohidkhan6332
 │
-├◆ /freemode     - ᴇɴᴀʙʟᴇ ғʀᴇᴇ ᴍᴏᴅᴇ
-├◆ /premiummode  - ᴇɴᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴏɴʟʏ
-│
-├◆ ᴏɴʟʏ ᴏᴡɴᴇʀ ᴄᴀɴ ᴄʜᴀɴɢᴇ ᴛʜᴇ ᴍᴏᴅᴇ
-│
-└ ❏`, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } });
+└ ❏`, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '👑 ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs', callback_data: 'premium_plans' }],
+          [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+        ]
+      }
+    });
   }
 
   else if (data === 'show_tutorial') {
