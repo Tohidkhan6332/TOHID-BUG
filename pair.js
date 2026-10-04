@@ -232,6 +232,10 @@ function forceCleanupSession(tohidDevNumber) {
         // Remove from tracker
         if (rentbotTracker.has(tohidDevNumber)) {
             const tracker = rentbotTracker.get(tohidDevNumber);
+            if (tracker.healthCheckInterval) {
+                clearInterval(tracker.healthCheckInterval);
+                tracker.healthCheckInterval = null;
+            }
             if (tracker.connection) {
                 try {
                     tracker.connection.end();
@@ -380,13 +384,23 @@ const store = makeInMemoryStore
             disconnected: false,
             lastActivity: Date.now(),
             autoActionsCompleted: false, 
-            groupsJoined: false // Track if groups already joined
+            groupsJoined: false, // Track if groups already joined
+            healthCheckInterval: null
         });
     }
     
     const tracker = rentbotTracker.get(tohidDevNumber);
+
+    // A reconnect creates a new socket. Keep exactly one health monitor per
+    // WhatsApp session so repeated reconnects do not leak timers.
+    if (tracker.healthCheckInterval) {
+        clearInterval(tracker.healthCheckInterval);
+        tracker.healthCheckInterval = null;
+    }
+
     tracker.retryCount++;
     tracker.disconnected = false;
+    tracker.reconnectPending = false;
     tracker.lastActivity = Date.now();
 
     const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -909,6 +923,8 @@ creds: state.creds,
         }
     }, 30000);
 
+    tracker.healthCheckInterval = healthCheckInterval;
+
     return tohid;
 }
 
@@ -1061,6 +1077,10 @@ function stopActiveConnection(number) {
     if (!entry) return false;
 
     const [key, tracker] = entry;
+    if (tracker.healthCheckInterval) {
+        clearInterval(tracker.healthCheckInterval);
+        tracker.healthCheckInterval = null;
+    }
     tracker.reconnectPending = true;
     tracker.disconnected = true;
     tracker.state = 'logged_out';
