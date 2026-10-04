@@ -222,13 +222,17 @@ async function sendCommandResponse(chatId, text, options = {}) {
   const image = getCommandResponseImage();
   if (!image) return originalSendMessage(chatId, text, options);
 
-  // Telegram photo captions are limited to 1024 characters. Long command
-  // responses stay as normal messages instead of failing.
-  if (String(text ?? '').length > 1024) {
-    return originalSendMessage(chatId, text, options);
-  }
-
+  // Telegram photo captions are limited to 1024 characters. For long
+  // responses, send the image first and keep the complete response as text.
   try {
+    if (String(text ?? '').length > 1024) {
+      await bot.sendPhoto(chatId, image, {
+        ...options,
+        caption: '📌 TOHID-AI'
+      });
+      return originalSendMessage(chatId, text, options);
+    }
+
     return await bot.sendPhoto(chatId, image, {
       ...options,
       caption: text
