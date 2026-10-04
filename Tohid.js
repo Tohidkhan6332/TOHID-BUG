@@ -1812,7 +1812,8 @@ Use: /${commandName} https://chat.whatsapp.com/XXXXXXXXXXXX`,
 bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
-  const input = match ? match[1] : null;
+  let input = match ? match[1] : null;
+  let qrMode = false;
   const isGroup = msg.chat.type !== 'private';
 
   // Maintenance check
@@ -1857,10 +1858,16 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 │
 ├◆ ᴜsᴀɢᴇ: /pair 9178499xxxxx
 ├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
+├◆ QR: /pair qr 9178499xxxxx
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
     );
+  }
+
+  if (/^qr\s+/i.test(input)) {
+    qrMode = true;
+    input = input.replace(/^qr\s+/i, '').trim();
   }
 
   const validation = validatePhone(input);
@@ -1980,7 +1987,11 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   try {
     const pairModule = require('./pair');
     const jid = cleanNumber + '@s.whatsapp.net';
-    await pairModule(jid, customCode ? customCode.toUpperCase() : null);
+    await pairModule(
+      jid,
+      customCode ? customCode.toUpperCase() : null,
+      qrMode ? 'qr' : 'code'
+    );
     await sleep(4000);
     
     clearInterval(loadingInterval);
@@ -1992,7 +2003,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       'tohidstore',
       'pairing',
       cleanNumber,
-      'pairing.json'
+      qrMode ? 'qr.json' : 'pairing.json'
     );
 
     // The pairing code is generated asynchronously. Wait briefly for the
@@ -2006,7 +2017,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
           const rawPairing = await fs.readFile(pairingFile, 'utf-8');
           const parsedPairing = JSON.parse(rawPairing);
 
-          if (parsedPairing?.code) {
+          if (qrMode ? parsedPairing?.qr : parsedPairing?.code) {
             cuObj = parsedPairing;
             break;
           }
@@ -2018,11 +2029,12 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       await sleep(500);
     }
 
-    if (!cuObj?.code) {
-      throw new Error('ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
+    if (qrMode ? !cuObj?.qr : !cuObj?.code) {
+      throw new Error(qrMode ? 'ǫʀ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ' : 'ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
     }
 
-    const code = cuObj.code;
+    const code = cuObj?.code || null;
+    const qrPayload = cuObj?.qr || null;
 
     // Keep the shared pair module loaded so its connection tracker and health monitor
     // continue to see every active WhatsApp session.
@@ -2072,8 +2084,41 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     
     await saveData();
 
-    await bot.editMessageText(
-      `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗦𝗨𝗖𝗖𝗘𝗦𝗦𝗙𝗨𝗟⌟* ◆
+    if (qrMode) {
+      const qrBuffer = await QRCode.toBuffer(qrPayload, {
+        type: 'png',
+        width: 900,
+        margin: 2,
+        errorCorrectionLevel: 'M'
+      });
+
+      await bot.deleteMessage(chatId, processingMsg.message_id).catch(() => {});
+      await bot.sendPhoto(chatId, qrBuffer, {
+        caption:
+          `┌ ❏ ◆ *⌜𝗤𝗥 𝗣𝗔𝗜𝗥𝗜𝗡𝗚⌟* ◆
+│
+├◆ ✅ ǫʀ ᴄᴏᴅᴇ ɢᴇɴᴇʀᴀᴛᴇᴅ
+├◆ 📱 ɴᴜᴍʙᴇʀ: +${cleanNumber}
+│
+├◆ 1. ᴏᴘᴇɴ ᴡʜᴀᴛsᴀᴘᴘ → sᴇᴛᴛɪɴɢs
+├◆ 2. ᴛᴀᴘ "ʟɪɴᴋᴇᴅ ᴅᴇᴠɪᴄᴇs"
+├◆ 3. ᴛᴀᴘ "ʟɪɴᴋ ᴀ ᴅᴇᴠɪᴄᴇ"
+├◆ 4. sᴄᴀɴ ᴛʜᴇ ǫʀ ᴄᴏᴅᴇ ᴀʙᴏᴠᴇ
+│
+└ ❏`,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '📖 ᴛᴜᴛᴏʀɪᴀʟ', callback_data: 'show_tutorial' },
+              { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }
+            ]
+          ]
+        }
+      });
+    } else {
+      await bot.editMessageText(
+        `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗦𝗨𝗖𝗖𝗘𝗦𝗦𝗙𝗨𝗟⌟* ◆
 │
 ├◆ ✅ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!
 │
@@ -2087,27 +2132,28 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 │
 ├◆ 1. ᴏᴘᴇɴ ᴡʜᴀᴛsᴀᴘᴘ → sᴇᴛᴛɪɴɢs
 ├◆ 2. ᴛᴀᴘ "ʟɪɴᴋᴇᴅ ᴅᴇᴠɪᴄᴇs"
-├◆ 3. sᴇʟᴇᴄᴛ "ʟɪɴᴋ ᴀ ᴅᴇᴠɪᴄᴇ"
+├◆ 3. ᴛᴀᴘ "ʟɪɴᴋ ᴀ ᴅᴇᴠɪᴄᴇ"
 ├◆ 4. ᴇɴᴛᴇʀ ᴄᴏᴅᴇ ᴀʙᴏᴠᴇ
 ├◆
 ├◆ ⚡ ᴄᴏᴅᴇ ᴇxᴘɪʀᴇs ɪɴ 𝟱 ᴍɪɴᴜᴛᴇs
 │
 └ ❏`,
-      {
-        chat_id: chatId,
-        message_id: processingMsg.message_id,
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '📋 ᴄᴏᴘʏ ᴄᴏᴅᴇ', copy_text: { text: code } }],
-            [
-              { text: '📖 ᴛᴜᴛᴏʀɪᴀʟ', callback_data: 'show_tutorial' },
-              { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }
+        {
+          chat_id: chatId,
+          message_id: processingMsg.message_id,
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '📋 ᴄᴏᴘʏ ᴄᴏᴅᴇ', copy_text: { text: code } }],
+              [
+                { text: '📖 ᴛᴜᴛᴏʀɪᴀʟ', callback_data: 'show_tutorial' },
+                { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }
+              ]
             ]
-          ]
+          }
         }
-      }
-    );
+      );
+    }
 
     addAuditLog('ᴘᴀɪʀ', userId, cleanNumber);
 
