@@ -1204,6 +1204,8 @@ const deleteSession = async (phone) => {
   const cleanPhone = String(phone).replace(/[^0-9]/g, '');
   const sessionPaths = [
     path.join(__dirname, 'tohidstore', 'pairing', cleanPhone),
+    // Remove the malformed JID-named folder created by the old pairing flow.
+    path.join(__dirname, 'tohidstore', 'pairing', `${cleanPhone}@s.whatsapp.net`),
     path.join(PATHS.sessions, `${cleanPhone}@s.whatsapp.net`),
     path.join(PATHS.sessions, cleanPhone)
   ];
