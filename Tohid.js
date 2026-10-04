@@ -453,17 +453,36 @@ const sendPlans = async (chatId, userId) => {
         ? '🛡️ ADMIN'
         : '🔒 PREMIUM REQUIRED';
 
+  let planDetails;
+  if (status.plan === 'owner') {
+    planDetails = `├◆ 👑 *OWNER ACCESS*
+├◆ Full system access
+├◆ No subscription required
+├◆ Owner privileges enabled`;
+  } else if (status.plan === 'admin') {
+    planDetails = `├◆ 🛡️ *ADMIN ACCESS*
+├◆ Full administrative access
+├◆ No subscription required
+├◆ Admin privileges enabled`;
+  } else if (status.plan === 'premium') {
+    planDetails = `├◆ 👑 *PREMIUM ONLY*
+├◆ Full WhatsApp service access
+├◆ Active until: ${formatPlanExpiry(status.expiry)}
+├◆ No free or trial access
+│
+├◆ 💳 Payment is manually verified.
+├◆ 📩 Contact: @Tohidkhan6332`;
+  } else {
+    planDetails = `├◆ 🔒 *PREMIUM REQUIRED*
+├◆ Purchase Premium to access the WhatsApp service
+├◆ 📩 Contact: @Tohidkhan6332`;
+  }
+
   const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗦𝗘𝗥𝗩𝗜𝗖𝗘⌟* ◆
 │
 ├◆ ʏᴏᴜʀ ᴘʟᴀɴ: ${current}
 │
-├◆ 👑 *PREMIUM ONLY*
-├◆ Full WhatsApp service access
-├◆ Active for purchased duration
-├◆ No free or trial access
-│
-├◆ 💳 Payment is manually verified.
-├◆ 📩 Contact: @Tohidkhan6332
+${planDetails}
 │
 └ ❏`;
 
