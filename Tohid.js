@@ -437,10 +437,70 @@ const isTrialActive = () => {
  * Check if user has access (premium OR trial OR admin/owner)
  */
 const hasAccess = (userId) => {
-  return isAdmin(userId.toString()) || 
-         isOwner(userId) || 
-         isPremium(userId) || 
-         isTrialActive();
+  return isAdmin(userId.toString()) || isOwner(userId) || isPremium(userId) || isTrialActive();
+};
+
+// ==================== FREE / PREMIUM SERVICE SYSTEM ====================
+const SERVICE_PLANS = {
+  free: { name: 'FREE', maxPairings: 1 },
+  premium: { name: 'PREMIUM' }
+};
+
+const getPlanStatus = (userId) => {
+  const id = userId.toString();
+  if (isOwner(userId) || isAdmin(id)) return { plan: 'admin', active: true, expiry: null };
+  if (isPremium(userId)) {
+    const expiry = database.premium[id]?.expiry || null;
+    return { plan: 'premium', active: true, expiry, remaining: expiry ? Math.max(0, expiry - Date.now()) : null };
+  }
+  if (isTrialActive()) {
+    const expiry = database.trialMode?.expiry || null;
+    return { plan: 'trial', active: true, expiry, remaining: expiry ? Math.max(0, expiry - Date.now()) : null };
+  }
+  const pairsUsed = Number(database.userDetails[id]?.pairs || 0);
+  return { plan: 'free', active: pairsUsed < SERVICE_PLANS.free.maxPairings, expiry: null, pairsUsed };
+};
+
+const canStartPairing = (userId) => {
+  const status = getPlanStatus(userId);
+  return ['admin', 'premium', 'trial'].includes(status.plan) || (status.plan === 'free' && status.active);
+};
+
+const formatPlanExpiry = (expiry) => expiry ? new Date(expiry).toLocaleString() : 'N/A';
+
+const sendPlans = async (chatId, userId) => {
+  const status = getPlanStatus(userId);
+  const current = status.plan === 'premium' ? '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry)
+NaN
+NaN
+NaN
+  const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗦𝗘𝗥𝗩𝗜𝗖𝗘⌟* ◆
+│
+├◆ ʏᴏᴜʀ ᴘʟᴀɴ: ${current}
+│
+├◆ 🆓 *FREE*
+├◆ 1 WhatsApp pairing
+├◆ Basic service access
+│
+├◆ 👑 *PREMIUM*
+├◆ Full service access
+├◆ Active for purchased duration
+│
+├◆ 💳 Payment is manually verified.
+├◆ 📩 Contact: @Tohidkhan6332
+│
+└ ❏`;
+  return bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 ᴘʀᴇᴍɪᴜᴍ', callback_data: 'premium_plans' }], [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } });
+};
+
+const grantPremium = async (userId, durationMs, adminId) => {
+  const id = userId.toString();
+  const currentExpiry = Number(database.premium[id]?.expiry || 0);
+  const base = currentExpiry > Date.now() ? currentExpiry : Date.now();
+  database.premium[id] = { expiry: base + durationMs, addedBy: adminId.toString(), addedAt: Date.now() };
+  await saveData();
+  addAuditLog('ᴘʀᴇᴍɪᴜᴍ_ᴀᴅᴅ', adminId, id, { durationMs, expiry: database.premium[id].expiry });
+  return database.premium[id];
 };
 
 /**
@@ -449,11 +509,10 @@ const hasAccess = (userId) => {
 const sendAccessDenied = async (chatId) => {
   const message = `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆
 │
-├◆ ⚠️ ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ
+├◆ ⚠️ ғʀᴇᴇ ᴘᴀɪʀɪɴɢ ʟɪᴍɪᴛ ʀᴇᴀᴄʜᴇᴅ
+├◆ 👑 ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ ғᴏʀ ғᴜʟʟ ᴀᴄᴄᴇss
 ├◆
-├◆ 📞 ᴄᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ғᴏʀ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss:
-├◆
-├◆ 👤 ᴅᴇᴠᴇʟᴏᴘᴇʀ: @Tohidkhan6332
+├◆ 📞 ᴄᴏɴᴛᴀᴄᴛ: @Tohidkhan6332
 ├◆ 📱 ᴛᴇʟᴇɢʀᴀᴍ: ${DEVELOPER_CONTACTS.telegram}
 ├◆ 💬 ᴡʜᴀᴛsᴀᴘᴘ: ${DEVELOPER_CONTACTS.whatsapp}
 │
@@ -926,6 +985,8 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /runtime - sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ
 ├◆ /stats   - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs
 ├◆ /report  - ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ
+├◆ /plans   - ғʀᴇᴇ / ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs
+├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
 ├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
 ├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ
 │
@@ -943,6 +1004,9 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /ban
 ├◆ /unban
 ├◆ /checkuser
+├◆ /addpremium USER_ID 30 days
+├◆ /delpremium USER_ID
+├◆ /premiumusers
 ├◆ /maintenance
 ├◆ /logs
 ├◆ /announce
@@ -989,7 +1053,8 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
         { text: '📊 sᴛᴀᴛs', callback_data: 'bot_stats' }
       ],
       [
-        { text: '🐞 𝐁𝐔𝐆 𝐌𝐄𝐍𝐔', callback_data: 'show_bug_menu' }
+        { text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' },
+        { text: '🐞 𝐁𝐔𝐆 𝐌𝐄ɴᴜ', callback_data: 'show_bug_menu' }
       ],
       [
         ...(safeUrl(SOCIAL?.telegram?.primary) ? [{
@@ -1076,6 +1141,30 @@ ${missingList}
   }
 };
 
+// ==================== SERVICE PLAN COMMANDS ====================
+bot.onText(/\\/plans/, async (msg) => {
+  const userId = msg.from.id;
+  if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
+  if (await checkBanned(userId, msg.chat.id)) return;
+  return sendPlans(msg.chat.id, userId);
+});
+
+bot.onText(/\\/myplan/, async (msg) => {
+  const userId = msg.from.id;
+  if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /myplan in private chat.');
+  if (await checkBanned(userId, msg.chat.id)) return;
+  const status = getPlanStatus(userId);
+  const pairsUsed = Number(database.userDetails[userId.toString()]?.pairs || 0);
+  let text = `┌ ❏ ◆ *⌜𝗠𝗬 𝗣𝗟𝗔𝗡⌟* ◆
+│
+├◆ ᴘʟᴀɴ: ${status.plan.toUpperCase()}
+├◆ ᴘᴀɪʀɪɴɢs ᴜsᴇᴅ: ${pairsUsed}`;
+  if (status.expiry) text += `├◆ ᴇxᴘɪʀʏ: ${formatPlanExpiry(status.expiry)}
+├◆ ʀᴇᴍᴀɪɴɪɴɢ: ${formatDuration(status.remaining)}`;
+  else if (status.plan === 'free') text += '├◆ ғʀᴇᴇ ʟɪᴍɪᴛ: 1 ᴘᴀɪʀɪɴɢ\\n';
+  text += '│\\n└ ❏';
+  return bot.sendMessage(msg.chat.id, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 ᴜᴘɢʀᴀᴅᴇ', callback_data: 'premium_plans' }]] } });
+});
 // ==================== COMMAND: START ====================
 
 bot.onText(/\/start/, async (msg) => {
@@ -1169,7 +1258,8 @@ const TELEGRAM_BUG_COMMANDS = new Set([
 
 const TELEGRAM_NATIVE_COMMANDS = new Set([
   'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
-  'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu'
+  'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu',
+  'plans', 'myplan', 'addpremium', 'delpremium', 'premiumusers'
 ]);
 
 bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
@@ -1319,8 +1409,8 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
     }
   }
 
-  // NEW: Check premium access for non-admin users
-  if (!isAdmin(userId.toString()) && !isOwner(userId) && !hasAccess(userId)) {
+  // Free users get one pairing; Premium/admin/trial users get full service access.
+  if (!canStartPairing(userId)) {
     return sendAccessDenied(chatId);
   }
 
@@ -3022,6 +3112,37 @@ bot.onText(/\/status/, (msg) => {
     );
 });
 
+// ==================== MANUAL PREMIUM ADMIN CONTROLS ====================
+bot.onText(/\\/addpremium(?:\\s+(.+))?/, async (msg, match) => {
+  const chatId = msg.chat.id, adminId = msg.from.id;
+  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
+  const args = String(match?.[1] || '').trim().split(/\\s+/);
+  const targetId = args.shift(), duration = args.join(' ');
+  if (!/^\\d+$/.test(targetId || '') || !duration) return bot.sendMessage(chatId, 'Usage: /addpremium USER_ID 30 days');
+  const durationMs = parseDuration(duration);
+  if (!durationMs || durationMs <= 0) return bot.sendMessage(chatId, '❌ Invalid duration. Example: 30 days or 1 month.');
+  const premium = await grantPremium(targetId, durationMs, adminId);
+  await bot.sendMessage(chatId, '✅ Premium activated for ' + targetId + '\\nExpiry: ' + formatPlanExpiry(premium.expiry));
+  try { await bot.sendMessage(targetId, '👑 TOHID-BUG PREMIUM ACTIVATED\\nExpiry: ' + formatPlanExpiry(premium.expiry)); } catch (e) {}
+});
+
+bot.onText(/\\/delpremium(?:\\s+(.+))?/, async (msg, match) => {
+  const chatId = msg.chat.id, adminId = msg.from.id, targetId = String(match?.[1] || '').trim();
+  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
+  if (!/^\\d+$/.test(targetId)) return bot.sendMessage(chatId, 'Usage: /delpremium USER_ID');
+  if (!database.premium[targetId]) return bot.sendMessage(chatId, '❌ User is not Premium.');
+  delete database.premium[targetId]; await saveData(); addAuditLog('ᴘʀᴇᴍɪᴜᴍ_ʀᴇᴍᴏᴠᴇ', adminId, targetId);
+  return bot.sendMessage(chatId, '✅ Premium removed from ' + targetId + '.');
+});
+
+bot.onText(/\\/premiumusers/, async (msg) => {
+  const chatId = msg.chat.id, adminId = msg.from.id;
+  if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
+  const entries = Object.entries(database.premium).filter(([, d]) => Number(d?.expiry) > Date.now());
+  if (!entries.length) return bot.sendMessage(chatId, '👑 No active Premium users.');
+  const lines = entries.slice(0, 50).map(([id, d], i) => (i + 1) + '. ' + id + ' — ' + formatPlanExpiry(d.expiry));
+  return bot.sendMessage(chatId, '👑 *PREMIUM USERS*\\n\\n' + lines.join('\\n'), { parse_mode: 'Markdown' });
+});
 // ==================== TELEGRAM TUTORIAL CONTROLS ====================
 bot.onText(/^\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
@@ -3175,6 +3296,11 @@ bot.on('callback_query', async (query) => {
         show_alert: true
       });
     }
+  }
+
+  else if (data === 'premium_plans') {
+    await bot.answerCallbackQuery(query.id);
+    return sendPlans(chatId, userId);
   }
 
   else if (data === 'show_main') {
