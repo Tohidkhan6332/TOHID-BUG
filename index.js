@@ -9,6 +9,7 @@ const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('
 const processGuard = require('./utils/process-guard');
 attachGlobalHandlers();
 processGuard.install();
+startSessionMonitor();
 
 // ─── AUTO RESTART ─────────────────────────────────────────────────────
 // Disabled: a timed process.exit() can leave the Telegram bot offline when
