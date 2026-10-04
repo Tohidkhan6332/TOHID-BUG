@@ -3542,7 +3542,7 @@ bot.on('callback_query', async (query) => {
   }
 
   else if (data === 'misc_menu') {
-    await bot.answerCallbackQuery(query.id, { text: 'ᴍɪsᴄ ᴍᴇɴᴜ' });
+    await bot.answerCallbackQuery(query.id, { text: 'ᴍɪsᴄ ᴍᴇɴᴜ' }).catch(() => {});
 
     const isOwnerUser = isOwner(userId);
     const isAdminUser = isAdmin(userId.toString());
@@ -3685,7 +3685,7 @@ bot.on('callback_query', async (query) => {
   }
 
   else if (data === 'bot_stats') {
-    await bot.answerCallbackQuery(query.id, { text: 'ʟᴏᴀᴅɪɴɢ...' });
+    await bot.answerCallbackQuery(query.id, { text: 'ʟᴏᴀᴅɪɴɢ...' }).catch(() => {});
     
     const sessions = await getSessions();
     const avgSpeed = database.stats.pairingSpeed.length > 0 
@@ -3705,19 +3705,32 @@ bot.on('callback_query', async (query) => {
 
     stats += `\n│\n└ ❏`;
 
-    // The main menu is sent as a photo, so edit the caption rather than
-    // trying to edit it as a text message.
-    await bot.editMessageCaption(stats, {
-      chat_id: chatId,
-      message_id: msg.message_id,
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'bot_stats' }],
-          [{ text: '🏠 ᴍᴀɪɴ ᴍᴇɴᴜ', callback_data: 'show_main' }]
-        ]
-      }
-    });
+    // Main menu is normally a photo. Fall back to a text response if
+    // Telegram cannot edit the original caption.
+    try {
+      await bot.editMessageCaption(stats, {
+        chat_id: chatId,
+        message_id: msg.message_id,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'bot_stats' }],
+            [{ text: '🏠 ᴍᴀɪɴ ᴍᴇɴᴜ', callback_data: 'show_main' }]
+          ]
+        }
+      });
+    } catch (error) {
+      console.error('[MENU] Stats caption edit failed:', error.message);
+      await bot.sendMessage(chatId, stats, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'bot_stats' }],
+            [{ text: '🏠 ᴍᴀɪɴ ᴍᴇɴᴜ', callback_data: 'show_main' }]
+          ]
+        }
+      });
+    }
   }
 
   else if (data.startsWith('copy_')) {
