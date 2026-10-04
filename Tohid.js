@@ -1985,7 +1985,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       );
       i = (i + 1) % dots.length;
     } catch (e) {}
-  }, 300);
+  }, 2000);
 
   try {
     const pairModule = require('./pair');
