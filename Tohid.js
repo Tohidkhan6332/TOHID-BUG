@@ -1207,17 +1207,18 @@ const deleteSession = async (phone) => {
     path.join(PATHS.sessions, `${cleanPhone}@s.whatsapp.net`),
     path.join(PATHS.sessions, cleanPhone)
   ];
+  let removed = false;
   for (const sessionPath of sessionPaths) {
     try {
       if (await fileExists(sessionPath)) {
         await fs.rm(sessionPath, { recursive: true, force: true });
-        return true;
+        removed = true;
       }
     } catch (err) {
       console.error('sᴇssɪᴏɴ ᴅᴇʟᴇᴛɪᴏɴ ᴇʀʀᴏʀ:', err.message);
     }
   }
-  return false;
+  return removed;
 };
 
 // ==================== AUDIT LOGGING ====================
@@ -1906,18 +1907,24 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   }
 
   if (sessions.includes(`${cleanNumber}@s.whatsapp.net`)) {
-    // A failed pairing may leave only pairing.json behind. That is not an
-    // authenticated WhatsApp session and must not block a fresh /pair.
+    // A credentials folder can survive a 401/logged-out disconnect. Do not
+    // treat the presence of creds.json alone as an active WhatsApp session.
     const sessionDetails = await getSessionDetails();
     const existing = sessionDetails.find(
       session => String(session.number) === String(cleanNumber)
     );
+    const health = getConnectionHealth().find(
+      session => String(session.number) === String(cleanNumber)
+    );
 
-    if (existing?.status === 'ᴀᴄᴛɪᴠᴇ ✅') {
+    const liveStates = new Set(['online', 'connecting', 'reconnecting']);
+
+    if (existing?.status === 'ᴀᴄᴛɪᴠᴇ ✅' && liveStates.has(health?.state)) {
       return bot.sendMessage(chatId,
         `┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗘𝗫𝗜𝗦𝗧𝗦⌟* ◆
 │
 ├◆ sᴇssɪᴏɴ ᴀʟʀᴇᴀᴅʏ ᴇxɪsᴛs
+├◆ sᴛᴀᴛᴜs: ${health.state}
 ├◆ ᴜsᴇ /unpair ${cleanNumber}
 │
 └ ❏`,
@@ -1925,7 +1932,8 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       );
     }
 
-    // Remove incomplete/corrupt pairing state before retrying.
+    // Stale, logged-out, corrupt or no-longer-tracked credentials are safe
+    // to remove before starting a fresh pairing flow.
     await deleteSession(cleanNumber);
   }
 
@@ -3535,24 +3543,30 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
     const verification = await verifyMembership(userId);
     
     if (verification.verified) {
-      await bot.editMessageText(
-        `┌ ❏ ◆ *⌜𝗩𝗘𝗥𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡 𝗦𝗨𝗖𝗖𝗘𝗦𝗦⌟* ◆
+      const verificationText = `┌ ❏ ◆ *⌜𝗩𝗘𝗥𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡 𝗦𝗨𝗖𝗖𝗘𝗦𝗦⌟* ◆
 │
 ├◆ ᴀᴄᴄᴇss ɢʀᴀɴᴛᴇᴅ
 ├◆ ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ
 │
-└ ❏`,
-        {
-          chat_id: chatId,
-          message_id: msg.message_id,
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🚀 ᴄᴏɴᴛɪɴᴜᴇ', callback_data: 'show_main' }]
-            ]
-          }
+└ ❏`;
+      const verificationOptions = {
+        chat_id: chatId,
+        message_id: msg.message_id,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🚀 ᴄᴏɴᴛɪɴᴜᴇ', callback_data: 'show_main' }]
+          ]
         }
-      );
+      };
+
+      // sendMembershipRequired() sends a photo with a caption. Edit the
+      // caption for that message; use editMessageText only for text messages.
+      if (Array.isArray(msg.photo) && msg.photo.length > 0) {
+        await bot.editMessageCaption(verificationText, verificationOptions);
+      } else {
+        await bot.editMessageText(verificationText, verificationOptions);
+      }
     } else {
       await bot.answerCallbackQuery(query.id, {
         text: 'ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴀʟʟ ᴄʜᴀɴɴᴇʟs ғɪʀsᴛ',
