@@ -2,7 +2,12 @@
   "name": "TOHID-AI",
   "description": "TOHID-AI WhatsApp multi-session bot by MR TOHID",
   "repository": "https://github.com/Tohidkhan6332/TOHID-BUG",
-  "keywords": ["whatsapp-bot", "baileys", "telegram-bot", "tohid-ai"],
+  "keywords": [
+    "whatsapp-bot",
+    "baileys",
+    "telegram-bot",
+    "tohid-ai"
+  ],
   "stack": "heroku-24",
   "buildpacks": [
     {
@@ -18,10 +23,6 @@
   "env": {
     "TELEGRAM_BOT_TOKEN": {
       "description": "Telegram bot token used by TOHID-AI.",
-      "required": true
-    },
-    "STARTUP_PASSWORD": {
-      "description": "Secure startup password used by TOHID-AI.",
       "required": true
     },
     "HEROKU_API_KEY": {
