@@ -11710,7 +11710,7 @@ case 'apkdl': {
                 await devtrust.sendPresenceUpdate("composing", m.chat);
 
                 try {
-                    const res = await axios.get(`http://www.omdbapi.com/?t=${encodeURIComponent(text)}&apikey=6372bb60`);
+                    const res = await axios.get(`http://www.omdbapi.com/?t=${encodeURIComponent(text)}&apikey=${encodeURIComponent(process.env.OMDB_API_KEY || '')}`);
                     if (res.data.Response === "False") return reply("❌ *Movie not found*");
 
                     const data = res.data;
@@ -13297,7 +13297,7 @@ break;
 
                 try {
                     const style = command.toUpperCase();
-                    const apiUrl = `https://api.nexoracle.com/image-creating/${command}?apikey=d0634e61e8789b051e&text1=${encodeURIComponent(text1)}&text2=${encodeURIComponent(text2)}`;
+                    const apiUrl = `https://api.nexoracle.com/image-creating/${command}?apikey=${encodeURIComponent(process.env.NEXORACLE_API_KEY || '')}&text1=${encodeURIComponent(text1)}&text2=${encodeURIComponent(text2)}`;
 
                     await devtrust.sendMessage(m.chat,
                         addNewsletterContext({
@@ -15484,7 +15484,7 @@ case 'xnxx': {
     
     const loadingMsg = await reply(`🔍 *Fetching...*\n⏳ Please wait...`);
     try {
-        const apiUrl = `https://zyrexapi.vercel.app/download/xnxx?apikey=Zyrex&url=${encodeURIComponent(q)}`;
+        const apiUrl = `https://zyrexapi.vercel.app/download/xnxx?apikey=${encodeURIComponent(process.env.ZYREX_API_KEY || '')}&url=${encodeURIComponent(q)}`;
         const { data } = await axios.get(apiUrl, { timeout: 60000, headers: { 'Accept':'application/json' } });
 
         // FIX: log respons lengkap supaya bisa debug
@@ -16760,7 +16760,7 @@ case 'fb': {
     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
     try {
-        const res  = await fetch(`https://api.theresav.biz.id/download/fb?url=${encodeURIComponent(fbUrl)}&apikey=GNaiK`);
+        const res  = await fetch(`https://api.theresav.biz.id/download/fb?url=${encodeURIComponent(fbUrl)}&apikey=${encodeURIComponent(process.env.THRESAV_API_KEY || '')}`);
         const json = await res.json();
 
         if (!json.status || !json.result || !json.result.links?.length) throw new Error('API returned no links');
