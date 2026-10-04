@@ -1124,41 +1124,15 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
     if (!randomImage) throw new Error('No menu image is configured.');
 
     try {
-      // Telegram photo captions are limited to 1024 characters.
-      // Main/admin/owner menus can exceed that limit, so never send the
-      // complete menu as a photo caption.
-      if (Array.from(menu).length > 1024) {
-        await bot.sendPhoto(chatId, randomImage, {
-          caption: '📌 TOHID-AI • MAIN MENU',
-          reply_markup: keyboard
-        });
-
-        await originalSendMessage(chatId, menu, {
-          parse_mode: 'Markdown'
-        });
-      } else {
-        await bot.sendPhoto(chatId, randomImage, {
-          caption: menu,
-          parse_mode: 'Markdown',
-          reply_markup: keyboard
-        });
-      }
+      // Main menu is intentionally image + inline buttons only.
+      await bot.sendPhoto(chatId, randomImage, {
+        reply_markup: keyboard
+      });
     } catch (photoError) {
       console.error('[sendMainMenu PHOTO ERROR]:', photoError.message);
-
-      // Do not retry an oversized caption. If the photo fails for any
-      // reason, keep the menu functional by sending the full text menu.
-      try {
-        await originalSendMessage(chatId, menu, {
-          parse_mode: 'Markdown',
-          reply_markup: keyboard
-        });
-      } catch (menuError) {
-        console.error('[sendMainMenu TEXT FALLBACK ERROR]:', menuError.message);
-        await originalSendMessage(chatId, menu || '⚠️ Menu gagal dimuat', {
-          reply_markup: keyboard
-        });
-      }
+      await originalSendMessage(chatId, '⚠️ Main menu image unavailable.', {
+        reply_markup: keyboard
+      });
     }
 
   } catch (err) {
@@ -3430,7 +3404,7 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
             caption: '📌 TOHID-AI • MISC MENU',
             reply_markup: miscKeyboard
           });
-          return await bot.sendMessage(chatId, miscText, {
+          return await originalSendMessage(chatId, miscText, {
             parse_mode: 'Markdown',
             reply_markup: miscKeyboard
           });
@@ -3449,7 +3423,7 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
       }
     } catch (error) {
       console.error('[MENU] Misc menu image send failed:', error.message);
-      return bot.sendMessage(chatId, miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''), {
+      return originalSendMessage(chatId, miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''), {
         reply_markup: miscKeyboard
       });
     }
