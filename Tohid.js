@@ -2114,7 +2114,6 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
           }
         }
       );
-    }
 
     addAuditLog('ᴘᴀɪʀ', userId, cleanNumber);
 
