@@ -1002,6 +1002,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /restartbot NUMBER - ʀᴇsᴛᴀʀᴛ ʏᴏᴜʀ ʙᴏᴛ
 ├◆ /ping    - ʟᴀᴛᴇɴᴄʏ ᴄʜᴇᴄᴋ
 ├◆ /runtime - sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ
+├◆ /sessionstatus - ᴡʜᴀᴛsᴀᴘᴘ sᴇssɪᴏɴ ʜᴇᴀʟᴛʜ
 ├◆ /stats   - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs
 ├◆ /report  - ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ
 ├◆ /plans   - ᴘʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇ ᴘʟᴀɴ
