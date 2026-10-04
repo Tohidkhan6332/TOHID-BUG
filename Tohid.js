@@ -3318,7 +3318,7 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
     const isOwnerUser = isOwner(userId);
     const isAdminUser = isAdmin(userId.toString());
 
-    let miscText = `┌ ❏ ◆ *⌜𝗠𝗜𝗦𝗖 𝗠𝗘𝗡𝗨⌟* ◆
+    const miscText = `┌ ❏ ◆ *⌜𝗠𝗜𝗦𝗖 𝗠𝗘𝗡𝗨⌟* ◆
 │
 ├◆ *⌜𝗨𝗦𝗘𝗥 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦⌟*
 │
@@ -3340,8 +3340,62 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
 │
 └ ❏`;
 
+    const miscKeyboardRows = [];
     if (isAdminUser || isOwnerUser) {
-      miscText += `\n┌ ❏ ◆ *⌜𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗡𝗧𝗥𝗢𝗟⌟* ◆
+      miscKeyboardRows.push([{ text: '🔐 𝗔𝗗𝗠𝗜𝗡 𝗠𝗘𝗡𝗨', callback_data: 'admin_menu' }]);
+    }
+    if (isOwnerUser) {
+      miscKeyboardRows.push([{ text: '👑 𝗢𝗪𝗡𝗘𝗥 𝗠𝗘𝗡𝗨', callback_data: 'owner_menu' }]);
+    }
+    miscKeyboardRows.push(
+      [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
+      [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+    );
+
+    const miscKeyboard = { inline_keyboard: miscKeyboardRows };
+
+    const localMiscImages = [
+      path.join(__dirname, 'media', 'Tohid.jpg'),
+      path.join(__dirname, 'media', 'Tohid1.jpg'),
+      path.join(__dirname, 'media', 'Tohid2.jpg'),
+      path.join(__dirname, 'media', 'Tohid3.jpg')
+    ].filter(imagePath => fsSync.existsSync(imagePath));
+
+    const remoteMiscImages = ASSETS.menuImages || [];
+    const availableMiscImages = localMiscImages.length ? localMiscImages : remoteMiscImages;
+    const miscImage = availableMiscImages[Math.floor(Math.random() * availableMiscImages.length)];
+
+    try {
+      if (!miscImage) throw new Error('No Misc Menu image is configured.');
+
+      return await bot.sendPhoto(chatId, miscImage, {
+        caption: miscText,
+        parse_mode: 'Markdown',
+        reply_markup: miscKeyboard
+      });
+    } catch (error) {
+      console.error('[MENU] Misc menu image send failed:', error.message);
+      return originalSendMessage(chatId, miscText, {
+        parse_mode: 'Markdown',
+        reply_markup: miscKeyboard
+      });
+    }
+  }
+
+  else if (data === 'admin_menu') {
+    const isAdminUser = isAdmin(userId.toString());
+    const isOwnerUser = isOwner(userId);
+
+    if (!isAdminUser && !isOwnerUser) {
+      return bot.answerCallbackQuery(query.id, {
+        text: 'ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴏᴘᴇɴ ᴛʜɪs ᴍᴇɴᴜ',
+        show_alert: true
+      });
+    }
+
+    await bot.answerCallbackQuery(query.id, { text: 'ᴀᴅᴍɪɴ ᴍᴇɴᴜ' }).catch(() => {});
+
+    const adminText = `┌ ❏ ◆ *⌜𝗔𝗗𝗠𝗜𝗡 𝗠𝗘𝗡𝗨⌟* ◆
 │
 ├◆ /users
 ├◆ /listpair
@@ -3360,10 +3414,50 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
 ├◆ /coupons
 │
 └ ❏`;
+
+    const adminKeyboard = {
+      inline_keyboard: [
+        [{ text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' }],
+        [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+      ]
+    };
+
+    const images = [
+      path.join(__dirname, 'media', 'Tohid.jpg'),
+      path.join(__dirname, 'media', 'Tohid1.jpg'),
+      path.join(__dirname, 'media', 'Tohid2.jpg'),
+      path.join(__dirname, 'media', 'Tohid3.jpg')
+    ].filter(imagePath => fsSync.existsSync(imagePath));
+    const availableImages = images.length ? images : (ASSETS.menuImages || []);
+    const image = availableImages[Math.floor(Math.random() * availableImages.length)];
+
+    try {
+      if (!image) throw new Error('No Admin Menu image is configured.');
+      return await bot.sendPhoto(chatId, image, {
+        caption: adminText,
+        parse_mode: 'Markdown',
+        reply_markup: adminKeyboard
+      });
+    } catch (error) {
+      console.error('[MENU] Admin menu image send failed:', error.message);
+      return originalSendMessage(chatId, adminText, {
+        parse_mode: 'Markdown',
+        reply_markup: adminKeyboard
+      });
+    }
+  }
+
+  else if (data === 'owner_menu') {
+    if (!isOwner(userId)) {
+      return bot.answerCallbackQuery(query.id, {
+        text: 'ᴏɴʟʏ ᴛʜᴇ ᴏᴡɴᴇʀ ᴄᴀɴ ᴏᴘᴇɴ ᴛʜɪs ᴍᴇɴᴜ',
+        show_alert: true
+      });
     }
 
-    if (isOwnerUser) {
-      miscText += `\n┌ ❏ ◆ *⌜𝗢𝗪𝗡𝗘𝗥 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦⌟* ◆
+    await bot.answerCallbackQuery(query.id, { text: 'ᴏᴡɴᴇʀ ᴍᴇɴᴜ' }).catch(() => {});
+
+    const ownerText = `┌ ❏ ◆ *⌜𝗢𝗪𝗡𝗘𝗥 𝗠𝗘𝗡𝗨⌟* ◆
 │
 ├◆ /addadmin
 ├◆ /removeadmin
@@ -3374,61 +3468,38 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
 ├◆ /update
 │
 └ ❏`;
-    }
 
-    const miscKeyboard = {
+    const ownerKeyboard = {
       inline_keyboard: [
-        [{ text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' }],
+        [{ text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' }],
         [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
       ]
     };
 
-    const localMiscImages = [
+    const images = [
       path.join(__dirname, 'media', 'Tohid.jpg'),
       path.join(__dirname, 'media', 'Tohid1.jpg'),
       path.join(__dirname, 'media', 'Tohid2.jpg'),
       path.join(__dirname, 'media', 'Tohid3.jpg')
     ].filter(imagePath => fsSync.existsSync(imagePath));
-
-    const remoteMiscImages = ASSETS.menuImages || [];
-    const availableMiscImages = localMiscImages.length ? localMiscImages : remoteMiscImages;
-    const miscImage = availableMiscImages[Math.floor(Math.random() * availableMiscImages.length)];
+    const availableImages = images.length ? images : (ASSETS.menuImages || []);
+    const image = availableImages[Math.floor(Math.random() * availableImages.length)];
 
     try {
-      if (!miscImage) throw new Error('No Misc Menu image is configured.');
-
-      try {
-        // Telegram photo captions are limited to 1024 characters.
-        if (Array.from(miscText).length > 1024) {
-          await bot.sendPhoto(chatId, miscImage, {
-            caption: '📌 TOHID-AI • MISC MENU',
-            reply_markup: miscKeyboard
-          });
-          return await originalSendMessage(chatId, miscText, {
-            parse_mode: 'Markdown',
-            reply_markup: miscKeyboard
-          });
-        }
-
-        return await bot.sendPhoto(chatId, miscImage, {
-          caption: miscText,
-          parse_mode: 'Markdown',
-          reply_markup: miscKeyboard
-        });
-      } catch (photoError) {
-        console.error('[MENU] Misc menu photo/Markdown failed:', photoError.message);
-        return await originalSendMessage(chatId, miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''), {
-          reply_markup: miscKeyboard
-        });
-      }
+      if (!image) throw new Error('No Owner Menu image is configured.');
+      return await bot.sendPhoto(chatId, image, {
+        caption: ownerText,
+        parse_mode: 'Markdown',
+        reply_markup: ownerKeyboard
+      });
     } catch (error) {
-      console.error('[MENU] Misc menu image send failed:', error.message);
-      return originalSendMessage(chatId, miscText.replace(/[\*_]/g, '').replace(/\x60/g, ''), {
-        reply_markup: miscKeyboard
+      console.error('[MENU] Owner menu image send failed:', error.message);
+      return originalSendMessage(chatId, ownerText, {
+        parse_mode: 'Markdown',
+        reply_markup: ownerKeyboard
       });
     }
   }
-
   else if (data === 'show_tutorial') {
     await bot.answerCallbackQuery(query.id);
 
