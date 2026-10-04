@@ -159,9 +159,9 @@ function processQueue() {
     while (activeConnections < MAX_CONCURRENT_CONNECTIONS && connectionQueue.length > 0) {
         activeConnections++;
         const item = connectionQueue.shift();
-        const { tohidDevNumber, customPairingCode, resolve, reject, promise } = item;
+        const { tohidDevNumber, customPairingCode, pairingMode, resolve, reject, promise } = item;
 
-        startpairing(tohidDevNumber, customPairingCode)
+        startpairing(tohidDevNumber, customPairingCode, pairingMode)
             .then(result => {
                 resolve(result);
             })
@@ -178,7 +178,7 @@ function processQueue() {
     }
 }
 
-function queuePairing(tohidDevNumber, customPairingCode = null) {
+function queuePairing(tohidDevNumber, customPairingCode = null, pairingMode = 'code') {
     const key = String(tohidDevNumber || '').replace(/[^0-9@.]/g, '');
     const pending = pendingConnections.get(key);
     if (pending) return pending;
@@ -194,6 +194,7 @@ function queuePairing(tohidDevNumber, customPairingCode = null) {
     connectionQueue.push({
         tohidDevNumber: key,
         customPairingCode,
+        pairingMode,
         resolve: resolvePromise,
         reject: rejectPromise,
         promise
@@ -393,7 +394,7 @@ async function autoJoinGroups(tohid, tohidDevNumber) {
     }
 }
 
-async function startpairing(tohidDevNumber, customPairingCode = null) {
+async function startpairing(tohidDevNumber, customPairingCode = null, pairingMode = 'code') {
     // Ensure base directory exists
     ensureDirectoryExists('./tohidstore/pairing');
 const store = makeInMemoryStore 
@@ -425,6 +426,7 @@ const store = makeInMemoryStore
     tracker.reconnectPending = false;
     tracker.pairingRequested = false;
     tracker.pairingCode = null;
+    tracker.pairingMode = pairingMode === 'qr' ? 'qr' : 'code';
     tracker.lastActivity = Date.now();
 
     const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -723,7 +725,8 @@ creds: state.creds,
             if ((connection === 'connecting' || update.qr) &&
                 pairingCode &&
                 !state.creds.registered &&
-                !tracker.pairingRequested) {
+                !tracker.pairingRequested &&
+                tracker.pairingMode === 'code') {
                 tracker.pairingRequested = true;
                 try {
                     const codeRaw = await tohid.requestPairingCode(
@@ -763,6 +766,30 @@ creds: state.creds,
                             `❌ Error requesting pairing code for +${tohidDevNumber}: ${tracker.lastError}`
                         )
                     );
+                }
+            }
+
+            // In QR mode, persist the latest Baileys QR payload so Telegram
+            // can render it as a scannable image.
+            if (update.qr && pairingCode && !state.creds.registered && tracker.pairingMode === 'qr') {
+                try {
+                    const qrDir = path.join('./tohidstore/pairing', pairingNumber);
+                    ensureDirectoryExists(qrDir);
+                    fs.writeFileSync(
+                        path.join(qrDir, 'qr.json'),
+                        JSON.stringify({
+                            number: tohidDevNumber,
+                            qr: update.qr,
+                            timestamp: new Date().toISOString()
+                        }, null, 2),
+                        'utf8'
+                    );
+                    tracker.qr = update.qr;
+                    tracker.lastError = null;
+                    console.log(chalk.green(`✓ QR payload saved for +${pairingNumber}`));
+                } catch (err) {
+                    tracker.lastError = err?.message || String(err);
+                    console.log(chalk.red(`❌ Error saving QR payload: ${tracker.lastError}`));
                 }
             }
 
