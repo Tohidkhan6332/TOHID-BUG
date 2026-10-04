@@ -79,14 +79,60 @@ async function restartProcess() {
   return { platform, method: 'supervisor-exit' };
 }
 
+async function runWithRetry(command, args = [], options = {}, attempts = 3, delayMs = 2500) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await run(command, args, options);
+    } catch (error) {
+      lastError = error;
+      const message = String(error?.message || '');
+      const transient = /ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENETUNREACH|socket hang up|network/i.test(message);
+      if (!transient || attempt === attempts) throw error;
+      console.warn(`[UPDATE] ${command} network error (attempt ${attempt}/${attempts}): ${message}`);
+      await sleep(delayMs * attempt);
+    }
+  }
+  throw lastError;
+}
+
 async function localGitUpdate() {
   if (!fs.existsSync(path.join(process.cwd(), '.git'))) {
     throw new Error('No .git directory found. Configure the hosting provider API variables or deploy the repository with Git.');
   }
-  const pull = await run('git', ['pull', '--rebase', '--autostash', 'origin', GITHUB_BRANCH]);
+
+  // Termux/VPS networks can reset long-lived HTTPS Git connections.
+  // Force HTTP/1.1 and retry transient network failures before giving up.
+  try {
+    await run('git', ['config', '--local', 'http.version', 'HTTP/1.1']);
+  } catch (error) {
+    console.warn('[UPDATE] Could not set Git HTTP/1.1:', error.message);
+  }
+
+  const pull = await runWithRetry(
+    'git',
+    ['pull', '--rebase', '--autostash', 'origin', GITHUB_BRANCH],
+    {},
+    3,
+    2500
+  );
+
   let install = null;
-  if (fs.existsSync(path.join(process.cwd(), 'package.json'))) install = await run('npm', ['install', '--no-audit', '--no-fund']);
-  return { source: 'git', pullOutput: String((pull.stdout || '') + (pull.stderr || '')).trim(), installOutput: String((install?.stdout || '') + (install?.stderr || '')).trim() };
+  if (fs.existsSync(path.join(process.cwd(), 'package.json'))) {
+    install = await runWithRetry(
+      'npm',
+      ['install', '--no-audit', '--no-fund', '--prefer-online'],
+      {},
+      3,
+      2500
+    );
+  }
+
+  return {
+    source: 'git',
+    pullOutput: String((pull.stdout || '') + (pull.stderr || '')).trim(),
+    installOutput: String((install?.stdout || '') + (install?.stderr || '')).trim()
+  };
 }
 
 async function renderUpdate() {
