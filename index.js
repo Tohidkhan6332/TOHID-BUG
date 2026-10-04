@@ -4,7 +4,7 @@ const readline = require('readline');
 const chalk = require('chalk');
 const figlet = require('figlet');
 const { startupPassword } = require('./tohidstore/token');
-const AUTH_FILE = './auth.json';
+const AUTH_FILE = path.join(__dirname, 'auth.json');
 const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('./debug.js');
 const processGuard = require('./utils/process-guard');
 attachGlobalHandlers();
@@ -53,7 +53,8 @@ const initializeBot = async () => {
         return;
     }
 
-    if (!startupPassword) {
+    const configuredPassword = String(startupPassword ?? '').trim();
+    if (!configuredPassword) {
         console.log(chalk.red('❌ STARTUP_PASSWORD is not configured. Set it in the environment before starting the bot.'));
         return;
     }
@@ -81,7 +82,8 @@ const initializeBot = async () => {
     console.log(chalk.bold.yellow('🔐 Enter password to start bot:'));
 
     rl.question(chalk.green('Password: '), function (input) {
-        if (input !== startupPassword) {
+        const enteredPassword = String(input ?? '').trim();
+        if (enteredPassword !== configuredPassword) {
             console.log(chalk.red('\\n❌ Incorrect password. Exiting...'));
             rl.close();
             process.exit(1);
