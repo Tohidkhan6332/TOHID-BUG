@@ -1219,17 +1219,41 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
     if (!randomImage) throw new Error('No menu image is configured.');
 
     try {
-      await bot.sendPhoto(chatId, randomImage, {
-        caption: menu,
-        parse_mode: 'Markdown',
-        reply_markup: keyboard
-      });
+      // Telegram photo captions are limited to 1024 characters.
+      // Main/admin/owner menus can exceed that limit, so never send the
+      // complete menu as a photo caption.
+      if (Array.from(menu).length > 1024) {
+        await bot.sendPhoto(chatId, randomImage, {
+          caption: '📌 TOHID-AI • MAIN MENU',
+          reply_markup: keyboard
+        });
+
+        await bot.sendMessage(chatId, menu, {
+          parse_mode: 'Markdown'
+        });
+      } else {
+        await bot.sendPhoto(chatId, randomImage, {
+          caption: menu,
+          parse_mode: 'Markdown',
+          reply_markup: keyboard
+        });
+      }
     } catch (photoError) {
       console.error('[sendMainMenu PHOTO ERROR]:', photoError.message);
-      await bot.sendPhoto(chatId, randomImage, {
-        caption: menu.replace(/[\*_]/g, '').replace(/\x60/g, ''),
-        reply_markup: keyboard
-      });
+
+      // Do not retry an oversized caption. If the photo fails for any
+      // reason, keep the menu functional by sending the full text menu.
+      try {
+        await bot.sendMessage(chatId, menu, {
+          parse_mode: 'Markdown',
+          reply_markup: keyboard
+        });
+      } catch (menuError) {
+        console.error('[sendMainMenu TEXT FALLBACK ERROR]:', menuError.message);
+        await originalSendMessage(chatId, menu || '⚠️ Menu gagal dimuat', {
+          reply_markup: keyboard
+        });
+      }
     }
 
   } catch (err) {
