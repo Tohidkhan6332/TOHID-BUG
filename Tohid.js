@@ -3004,7 +3004,7 @@ bot.onText(/\/status/, (msg) => {
 });
 
 // ==================== TELEGRAM TUTORIAL CONTROLS ====================
-bot.onText(/^\\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
