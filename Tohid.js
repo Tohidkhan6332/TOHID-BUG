@@ -1238,13 +1238,13 @@ ${lines}
   );
 };
 
-bot.onText(/^\\/dashboard(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/dashboard(?:@[\w_]+)?$/i, async (msg) => {
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /dashboard in private chat.');
   if (await checkBanned(msg.from.id, msg.chat.id)) return;
   return sendDashboard(msg.chat.id, msg.from.id);
 });
 
-bot.onText(/^\\/referral(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/referral(?:@[\w_]+)?$/i, async (msg) => {
   const id = msg.from.id.toString();
   if (!database.referrals[id]) {
     database.referrals[id] = { code: 'TOHID-' + id, referredBy: null, successful: 0, bonusDays: 0 };
@@ -1259,7 +1259,7 @@ bot.onText(/^\\/referral(?:@[\\w_]+)?$/i, async (msg) => {
   );
 });
 
-bot.onText(/^\\/coupon(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/coupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const id = msg.from.id.toString();
   const code = String(match?.[1] || '').trim().toUpperCase();
   if (!code) return bot.sendMessage(msg.chat.id, 'Usage: /coupon CODE');
@@ -1282,7 +1282,7 @@ bot.onText(/^\\/coupon(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
   return bot.sendMessage(msg.chat.id, `✅ Coupon applied.\\n👑 Premium bonus: ${coupon.days} day(s)\\n📅 Expiry: ${formatPlanExpiry(database.premium[id].expiry)}`);
 });
 
-bot.onText(/^\\/createcoupon(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/createcoupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, '❌ Admin only.');
   const args = String(match?.[1] || '').trim().split(/\\s+/);
   const code = String(args.shift() || '').toUpperCase();
@@ -1296,7 +1296,7 @@ bot.onText(/^\\/createcoupon(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) =>
   return bot.sendMessage(msg.chat.id, `✅ Coupon created: ${code}\\n🎁 ${days} day(s)\\n🔢 Uses: ${maxUses}`);
 });
 
-bot.onText(/^\\/coupons(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/coupons(?:@[\w_]+)?$/i, async (msg) => {
   if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, '❌ Admin only.');
   const entries = Object.entries(database.coupons);
   if (!entries.length) return bot.sendMessage(msg.chat.id, '🎟️ No coupons.');
@@ -1940,7 +1940,7 @@ bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
 
 // ==================== USER BOT RESTART ====================
 
-bot.onText(/^\/restartbot(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/restartbot(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const input = String(match?.[1] || '').trim().replace(/[^0-9]/g, '');
@@ -3218,7 +3218,7 @@ bot.onText(/\/premiumusers/, async (msg) => {
   return bot.sendMessage(chatId, '👑 *PREMIUM USERS*\\n\\n' + lines.join('\\n'), { parse_mode: 'Markdown' });
 });
 // ==================== TELEGRAM TUTORIAL CONTROLS ====================
-bot.onText(/^\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/settutorial(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
@@ -3259,7 +3259,7 @@ bot.onText(/^\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
   );
 });
 
-bot.onText(/^\/deltutorial(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/deltutorial(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
@@ -3268,7 +3268,7 @@ bot.onText(/^\/deltutorial(?:@[\\w_]+)?$/i, async (msg) => {
   return bot.sendMessage(chatId, '🗑️ *Tutorial video link removed.*\\n\\nWATCH NOW will stay unavailable until you add a new link.', { parse_mode: 'Markdown' });
 });
 
-bot.onText(/^\/tutorialstatus(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/tutorialstatus(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
@@ -3295,7 +3295,7 @@ bot.onText(/^\/tutorialstatus(?:@[\\w_]+)?$/i, async (msg) => {
   );
 });
 
-bot.onText(/^\/restart(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/restart(?:@[\w_]+)?$/i, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
     if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
@@ -3312,7 +3312,7 @@ bot.onText(/^\/restart(?:@[\\w_]+)?$/i, async (msg) => {
 });
 
 // ==================== GITHUB UPDATE ====================
-bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/update(?:@[\w_]+)?$/i, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
     if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
