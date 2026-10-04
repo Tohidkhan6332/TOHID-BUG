@@ -693,8 +693,16 @@ creds: state.creds,
 
     // Enhanced connection.update handler
     tohid.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect } = update;
-        const tracker = rentbotTracker.get(tohidDevNumber);
+        try {
+            const { connection, lastDisconnect } = update;
+            const tracker = rentbotTracker.get(tohidDevNumber);
+
+            // A WhatsApp logout/disconnect must never be allowed to bubble out
+            // of this connection handler and affect the Telegram control bot.
+            if (!tracker) {
+                console.log(chalk.yellow(`⚠️ Tracker missing for ${tohidDevNumber}; ignoring WhatsApp update.`));
+                return;
+            }
 
         if (connection === "close") {
             let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
@@ -824,6 +832,10 @@ creds: state.creds,
             }
         } else if (connection === "connecting") {
             console.log(chalk.blue(`🔄 Connecting ${tohidDevNumber}...`));
+        }
+        } catch (error) {
+            // Isolate WhatsApp connection errors from the Telegram process.
+            console.log(chalk.red(`❌ WhatsApp connection handler error for ${tohidDevNumber}:`), error?.message || error);
         }
     });
 
