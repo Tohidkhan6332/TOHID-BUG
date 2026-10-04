@@ -71,7 +71,7 @@ function isValidTelegramUrl(value) {
     // Only HTTPS Telegram links are accepted.
     if (parsed.protocol !== 'https:') return false;
 
-    const hostname = parsed.hostname.toLowerCase().replace(/^www\\./, '');
+    const hostname = parsed.hostname.toLowerCase().replace(/^www\./, '');
     if (!['t.me', 'telegram.me'].includes(hostname)) return false;
 
     // Tutorial must point to a specific Telegram message/post,
@@ -90,7 +90,7 @@ function isValidTelegramUrl(value) {
     // Public channel/group post:
     // https://t.me/ChannelUsername/123
     return /^[A-Za-z0-9_]{5,32}$/.test(parts[0]) &&
-      /^\\d+$/.test(parts[1]);
+      /^\d+$/.test(parts[1]);
   } catch {
     return false;
   }
