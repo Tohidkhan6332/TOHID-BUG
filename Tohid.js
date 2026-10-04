@@ -1732,7 +1732,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
   try {
     const pairModule = require('./pair');
     const jid = cleanNumber + '@s.whatsapp.net';
-    await pairModule(jid);
+    await pairModule(jid, customCode ? customCode.toUpperCase() : null);
     await sleep(4000);
     
     clearInterval(loadingInterval);
