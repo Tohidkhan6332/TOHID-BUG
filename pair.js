@@ -423,6 +423,8 @@ const store = makeInMemoryStore
     tracker.retryCount++;
     tracker.disconnected = false;
     tracker.reconnectPending = false;
+    tracker.pairingRequested = false;
+    tracker.pairingCode = null;
     tracker.lastActivity = Date.now();
 
     const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -445,7 +447,7 @@ creds: state.creds,
     },
     msgRetryCounterCache, 
     version,
-    browser: ["Ubuntu", "Edge", "20.04"],
+    browser: Browsers.ubuntu('Chrome'),
     getMessage: async key => {
     if (!store) return undefined;
     const jid = key.remoteJid;
@@ -470,46 +472,11 @@ creds: state.creds,
     
     if (store) store.bind(tohid.ev);
 
-    if (pairingCode && !state.creds.registered) {
-        if (useMobile) {
-            throw new Error('Cannot use pairing code with mobile API');
-        }
-
-        let phoneNumber = tohidDevNumber.replace(/[^0-9]/g, '');
-        
-        if (!phoneNumber) {
-            throw new Error('Invalid phone number');
-        }
-        
-        setTimeout(async () => {
-            try {
-                let code = await tohid.requestPairingCode(phoneNumber, customPairingCode || undefined);
-                code = code?.match(/.{1,4}/g)?.join("-") || code;
-                
-                console.log(chalk.bgGreen.black(`📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`));
-
-                // Store each user's pairing code separately.
-                // This prevents one user's code from overwriting another user's code.
-                const pairingNumber = phoneNumber;
-                const userPairingDir = path.join('./tohidstore/pairing', pairingNumber);
-                ensureDirectoryExists(userPairingDir);
-
-                const userPairingFile = path.join(userPairingDir, 'pairing.json');
-                fs.writeFileSync(
-                    userPairingFile,
-                    JSON.stringify({
-                        number: tohidDevNumber,
-                        code: code,
-                        timestamp: new Date().toISOString()
-                    }, null, 2),
-                    'utf8'
-                );
-
-                console.log(chalk.green(`✓ Pairing code saved for +${pairingNumber}`));
-            } catch (err) {
-                console.log(chalk.red(`❌ Error requesting pairing code: ${err.message}`));
-            }
-        }, 3000);
+    // Pairing code is requested from connection.update below, after WhatsApp
+    // has entered the connecting/QR phase. This avoids a startup timing race.
+    const pairingNumber = tohidDevNumber.replace(/[^0-9]/g, '');
+    if (pairingCode && !state.creds.registered && useMobile) {
+        throw new Error('Cannot use pairing code with mobile API');
     }
 
     tohid.newsletterMsg = async (key, content = {}, timeout = 5000) => {
@@ -744,6 +711,54 @@ creds: state.creds,
         try {
             const { connection, lastDisconnect } = update;
             const tracker = rentbotTracker.get(tohidDevNumber);
+
+            // Request pairing code only after the WhatsApp socket is ready for
+            // pairing. The QR event also fires in pairing-code mode.
+            if ((connection === 'connecting' || update.qr) &&
+                pairingCode &&
+                !state.creds.registered &&
+                !tracker.pairingRequested) {
+                tracker.pairingRequested = true;
+                try {
+                    const codeRaw = await tohid.requestPairingCode(
+                        pairingNumber,
+                        customPairingCode || undefined
+                    );
+                    const code = codeRaw?.match(/.{1,4}/g)?.join("-") || codeRaw;
+
+                    console.log(
+                        chalk.bgGreen.black(
+                            `📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`
+                        )
+                    );
+
+                    const userPairingDir = path.join('./tohidstore/pairing', pairingNumber);
+                    ensureDirectoryExists(userPairingDir);
+                    const userPairingFile = path.join(userPairingDir, 'pairing.json');
+
+                    fs.writeFileSync(
+                        userPairingFile,
+                        JSON.stringify({
+                            number: tohidDevNumber,
+                            code,
+                            timestamp: new Date().toISOString()
+                        }, null, 2),
+                        'utf8'
+                    );
+
+                    tracker.pairingCode = code;
+                    tracker.lastError = null;
+                    console.log(chalk.green(`✓ Pairing code saved for +${pairingNumber}`));
+                } catch (err) {
+                    tracker.pairingRequested = false;
+                    tracker.lastError = err?.message || String(err);
+                    console.log(
+                        chalk.red(
+                            `❌ Error requesting pairing code for +${tohidDevNumber}: ${tracker.lastError}`
+                        )
+                    );
+                }
+            }
 
             // A WhatsApp logout/disconnect must never be allowed to bubble out
             // of this connection handler and affect the Telegram control bot.
