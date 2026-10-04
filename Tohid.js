@@ -1620,7 +1620,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
       `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥 𝗚𝗨𝗜𝗗𝗘⌟* ◆
 │
 ├◆ ᴜsᴀɢᴇ: /pair 9178499xxxxx
-├◆ ᴜsᴇ: /pair 9178499xxxxx
+├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
@@ -1640,19 +1640,19 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
   }
 
   const [number, customCode] = input.split('|');
-  if (customCode) {
+  const cleanNumber = number.replace(/[^0-9]/g, '');
+
+  if (customCode && !/^[A-Za-z0-9]{8}$/.test(customCode)) {
     return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗖𝗨𝗦𝗧𝗢𝗠 𝗖𝗢𝗗𝗘 𝗡𝗢𝗧 𝗦𝗨𝗣𝗣𝗢𝗥𝗧𝗘𝗗⌟* ◆
+      `┌ ❏ ◆ *⌜𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗖𝗨𝗦𝗧𝗢𝗠 𝗖𝗢𝗗𝗘⌟* ◆
 │
-├◆ WhatsApp generates the real pairing code.
-├◆ Please use: /pair ${number}
+├◆ ᴄᴜsᴛᴏᴍ ᴄᴏᴅᴇ ᴍᴜsᴛ ʙᴇ 𝟴 ᴀʟᴘʜᴀɴᴜᴍᴇʀɪᴄ ᴄʜᴀʀᴀᴄᴛᴇʀs
+├◆ ᴇxᴀᴍᴘʟᴇ: AB12CD34
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
     );
   }
-
-  const cleanNumber = number.replace(/[^0-9]/g, '');
 
   const sessions = await getSessions();
   if (sessions.length >= SYSTEM.sessionLimit) {
