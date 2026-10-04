@@ -4156,7 +4156,7 @@ ${approvalText}
         }
       });
     } catch (error) {
-      await bot.deleteMessage(chatId, processing?.message_id).catch(() => {});
+      console.error('[QR PAIR] Failed:', error?.stack || error);
       return bot.sendMessage(chatId,
         `❌ QR pairing failed: ${error.message || 'unknown error'}`,
         { parse_mode: 'Markdown' }
