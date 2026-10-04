@@ -147,8 +147,7 @@ const PATHS = {
 // Media Assets
 const ASSETS = {
   menuImages: [
-    'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg',
-    'https://i.ibb.co/7dv7MhbH/upload-1790713524230-be1ab286-jpg.jpg',
+    'https://github.com/Tohidkhan6332.png',
   ],
   pairingVideos: [
     'https://h.uguu.se/qWcJAzsK.mp4',
@@ -1103,8 +1102,10 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
   } catch (err) {
     console.error('[sendMainMenu ERROR]:', err);
 
+    // Keep the inline keyboard even if Telegram cannot fetch the remote menu image.
     await bot.sendMessage(chatId, menu || '⚠️ Menu gagal dimuat', {
-      parse_mode: 'Markdown'
+      parse_mode: 'Markdown',
+      reply_markup: keyboard
     });
   }
 }
@@ -1358,7 +1359,7 @@ bot.onText(/\/start/, async (msg) => {
 });
 
 // ==================== BUG MENU HELPERS ====================
-const BUG_MENU_IMAGE = ASSETS.menuImages?.[0] || "https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg";
+const BUG_MENU_IMAGE = ASSETS.menuImages?.[0] || "https://github.com/Tohidkhan6332.png";
 
 const BUG_MENU_TEXT = `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆━┓
 │❖ /tohid-invis 9178xxxxxxx
