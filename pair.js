@@ -776,7 +776,7 @@ creds: state.creds,
 
             // In QR mode, persist the latest Baileys QR payload so Telegram
             // can render it as a scannable image.
-            if (update.qr && pairingCode && !state.creds.registered && tracker.pairingMode === 'qr') {
+            if (update.qr && !state.creds.registered && tracker.pairingMode === 'qr') {
                 try {
                     const qrDir = path.join('./tohidstore/pairing', pairingNumber);
                     ensureDirectoryExists(qrDir);
