@@ -157,15 +157,29 @@ async function updateFromGitHub() {
         }
     }
 
-    git(['fetch', 'origin', UPDATE_BRANCH, '--prune']);
+    const restoreStash = () => {
+        if (!updateStash) return;
+        try {
+            git(['stash', 'pop', '--index', updateStash]);
+            updateStash = null;
+        } catch (restoreError) {
+            console.error('[UPDATE] Could not restore local runtime stash:', restoreError.message);
+        }
+    };
 
-    const currentSha = git(['rev-parse', 'HEAD']);
-    const latestSha = git(['rev-parse', `origin/${UPDATE_BRANCH}`]);
+    let currentSha;
+    let latestSha;
+    try {
+        git(['fetch', 'origin', UPDATE_BRANCH, '--prune']);
+        currentSha = git(['rev-parse', 'HEAD']);
+        latestSha = git(['rev-parse', `origin/${UPDATE_BRANCH}`]);
+    } catch (error) {
+        restoreStash();
+        throw error;
+    }
 
     if (currentSha === latestSha) {
-        if (updateStash) {
-            git(['stash', 'pop', '--index', updateStash]);
-        }
+        restoreStash();
         return {
             updated: false,
             currentSha,
@@ -179,15 +193,19 @@ async function updateFromGitHub() {
     try {
         git(['merge-base', '--is-ancestor', currentSha, latestSha]);
     } catch {
-        if (updateStash) {
-            try { git(['stash', 'pop', '--index', updateStash]); } catch (_) {}
-        }
+        restoreStash();
         throw new Error(
             'The local branch cannot be fast-forwarded to GitHub main. Manual intervention is required.'
         );
     }
 
-    const dependenciesChanged = isPackageChange(currentSha, latestSha);
+    let dependenciesChanged;
+    try {
+        dependenciesChanged = isPackageChange(currentSha, latestSha);
+    } catch (error) {
+        restoreStash();
+        throw error;
+    }
 
     try {
         git(['pull', '--ff-only', 'origin', UPDATE_BRANCH]);
@@ -223,7 +241,10 @@ async function updateFromGitHub() {
             }
         }
 
-        try { git(['stash', 'drop', updateStash]); } catch (_) {}
+        try {
+            git(['stash', 'drop', updateStash]);
+            updateStash = null;
+        } catch (_) {}
     }
 
     if (dependenciesChanged) {
