@@ -1,9 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
 const chalk = require('chalk');
 const figlet = require('figlet');
-const { startupPassword } = require('./tohidstore/token');
 const AUTH_FILE = path.join(__dirname, 'auth.json');
 const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('./debug.js');
 const processGuard = require('./utils/process-guard');
@@ -18,22 +16,6 @@ function startAutoRestart() {
     console.log(chalk.cyan('⏱️  Scheduled auto-restart disabled — bot will stay online.'));
 }
 // ───────────────────────────────────────────────────────────────────────
-
-function isAuthenticated() {
-    if (!fs.existsSync(AUTH_FILE)) return false;
-    try {
-        const data = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
-        return data?.authenticated === true;
-    } catch (error) {
-        console.log(chalk.yellow('⚠️ Invalid auth.json detected; startup authentication will be reset.'));
-        try { fs.unlinkSync(AUTH_FILE); } catch (_) {}
-        return false;
-    }
-}
-
-function setAuthenticated(value) {
-    fs.writeFileSync(AUTH_FILE, JSON.stringify({ authenticated: value }));
-}
 
 const initializeBot = async () => {
     console.clear();
@@ -194,8 +176,7 @@ function launchBot() {
     console.log(chalk.gray('Press Ctrl+C to stop the bot\\n'));
 }
 
-// Keep terminal output enabled so startup, password prompts, pairing,
-// and runtime errors remain visible in Termux and VPS logs.
+// Keep terminal output enabled so startup, pairing, and runtime errors remain visible in Termux and VPS logs.
 // Graceful shutdown
 process.on('SIGINT', () => {
     console.log(chalk.yellow('\n\n⚠️  Shutting down gracefully...'));
