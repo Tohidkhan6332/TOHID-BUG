@@ -1438,14 +1438,14 @@ bot.onText(/^\/coupons(?:@[\w_]+)?$/i, async (msg) => {
 });
 
 // // ==================== SERVICE PLAN COMMANDS ====================
-bot.onText(/^\/plans(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
   return sendPlans(msg.chat.id, userId);
 });
 
-bot.onText(/^\/myplan(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/myplan(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /myplan in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
@@ -1463,7 +1463,7 @@ bot.onText(/^\/myplan(?:@[\\w_]+)?$/i, async (msg) => {
 });
 // ==================== COMMAND: START ====================
 
-bot.onText(/^\/start(?:@[\\w_]+)?(?:\\s+.*)?$/i, async (msg) => {
+bot.onText(/^\/start(?:@[\w_]+)?(?:\s+.*)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const userName = msg.from.first_name || 'ᴜsᴇʀ';
@@ -1650,7 +1650,7 @@ Use: /${commandName} https://chat.whatsapp.com/XXXXXXXXXXXX`,
 
 // ==================== COMMAND: PAIR ====================
 
-bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const input = match ? match[1] : null;
@@ -2016,7 +2016,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
 
 // ==================== COMMAND: UNPAIR ====================
 
-bot.onText(/^\/unpair(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/unpair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const input = match ? match[1] : null;
@@ -2179,234 +2179,9 @@ bot.onText(/^\/restartbot(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   }
 });
 
-// ==================== PREMIUM COMMANDS ====================
+// ==================== PREMIUM COMMANDS ====================\n// Premium command handlers are defined in the manual premium controls section below.\n\n// ==================== COMMAND: PING ====================
 
-
-
-/**
- * /addprem <user_id> <duration> - Add premium access
- */
-bot.onText(/\/addprem(?:\s+(\d+)\s+(.+))?/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  const targetId = match ? match[1] : null;
-  const durationStr = match ? match[2] : null;
-
-  // Admin only check
-  if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, 
-      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, 
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  if (!targetId || !durationStr) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗔𝗗𝗗 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗚𝗨𝗜𝗗𝗘⌟* ◆
-│
-├◆ ᴜsᴀɢᴇ: /addprem <ᴜsᴇʀ_ɪᴅ> <ᴅᴜʀᴀᴛɪᴏɴ>
-├◆
-├◆ ᴇxᴀᴍᴘʟᴇs:
-├◆ /addprem 123456789 3 ᴅᴀʏs
-├◆ /addprem 123456789 1 ᴡᴇᴇᴋ
-├◆ /addprem 123456789 24 ʜᴏᴜʀs
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  const durationMs = parseDuration(durationStr);
-  if (!durationMs) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗗𝗨𝗥𝗔𝗧𝗜𝗢𝗡⌟* ◆
-│
-├◆ ᴜsᴇ ғᴏʀᴍᴀᴛs ʟɪᴋᴇ: 3 ᴅᴀʏs, 1 ᴡᴇᴇᴋ, 24 ʜᴏᴜʀs
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  const expiry = Date.now() + durationMs;
-  
-  // Add to premium database
-  database.premium[targetId] = {
-    expiry: expiry,
-    addedBy: userId.toString(),
-    addedAt: Date.now()
-  };
-
-  await saveData();
-
-  // Notify admin
-  await bot.sendMessage(chatId,
-    `┌ ❏ ◆ *⌜𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗔𝗗𝗗𝗘𝗗⌟* ◆
-│
-├◆ 👤 ᴜsᴇʀ ɪᴅ: ${targetId}
-├◆ ⏱️ ᴅᴜʀᴀᴛɪᴏɴ: ${durationStr}
-├◆ 📅 ᴇxᴘɪʀʏ: ${new Date(expiry).toLocaleString()}
-│
-└ ❏`,
-    { parse_mode: 'Markdown' }
-  );
-
-  // Notify user
-  try {
-    await bot.sendMessage(targetId,
-      `┌ ❏ ◆ *⌜𝗖𝗢𝗡𝗚𝗥𝗔𝗧𝗨𝗟𝗔𝗧𝗜𝗢𝗡𝗦! 🎉⌟* ◆
-│
-├◆ ʏᴏᴜ ᴀʀᴇ ɴᴏᴡ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ
-├◆
-├◆ 👑 ᴀᴄᴄᴇss: ᴜɴʟɪᴍɪᴛᴇᴅ
-├◆ ⏱️ ᴅᴜʀᴀᴛɪᴏɴ: ${durationStr}
-├◆ 📅 ᴇxᴘɪʀʏ: ${new Date(expiry).toLocaleString()}
-│
-└ ❏
-┌ ❏ ◆ *⌜𝗧𝗛𝗔𝗡𝗞 𝗬𝗢𝗨⌟* ◆
-│
-├◆ ᴇɴᴊᴏʏ ᴘʀᴇᴍɪᴜᴍ ғᴇᴀᴛᴜʀᴇs!
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  } catch (error) {
-    // User might have blocked the bot, ignore
-  }
-
-  addAuditLog('ᴀᴅᴅᴘʀᴇᴍ', userId, targetId, { duration: durationStr, expiry });
-});
-
-/**
- * /delprem <user_id> - Remove premium access
- */
-bot.onText(/\/delprem(?:\s+(\d+))?/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  const targetId = match ? match[1] : null;
-
-  // Admin only check
-  if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, 
-      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, 
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  if (!targetId) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗗𝗘𝗟 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗚𝗨𝗜𝗗𝗘⌟* ◆
-│
-├◆ ᴜsᴀɢᴇ: /delprem <ᴜsᴇʀ_ɪᴅ>
-├◆
-├◆ ᴇxᴀᴍᴘʟᴇ: /delprem 123456789
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  if (!database.premium[targetId]) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗡𝗢𝗧 𝗙𝗢𝗨𝗡𝗗⌟* ◆
-│
-├◆ ᴜsᴇʀ ɪs ɴᴏᴛ ᴀ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀ
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  // Remove from premium
-  delete database.premium[targetId];
-  await saveData();
-
-  // Notify admin
-  await bot.sendMessage(chatId,
-    `┌ ❏ ◆ *⌜𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗥𝗘𝗠𝗢𝗩𝗘𝗗⌟* ◆
-│
-├◆ 👤 ᴜsᴇʀ ɪᴅ: ${targetId}
-│
-└ ❏`,
-    { parse_mode: 'Markdown' }
-  );
-
-  // Notify user
-  try {
-    await bot.sendMessage(targetId,
-      `┌ ❏ ◆ *⌜𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗘𝗫𝗣𝗜𝗥𝗘𝗗⌟* ◆
-│
-├◆ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴄᴇss ʜᴀs ʙᴇᴇɴ ʀᴇᴍᴏᴠᴇᴅ
-├◆
-├◆ 📞 ᴄᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ғᴏʀ ʀᴇɴᴇᴡᴀʟ
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  } catch (error) {
-    // User might have blocked the bot, ignore
-  }
-
-  addAuditLog('ᴅᴇʟᴘʀᴇᴍ', userId, targetId);
-});
-
-/**
- * /premlist - List all premium users
- */
-bot.onText(/\/premlist/, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-
-  if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-    return bot.sendMessage(chatId, 
-      `┌ ❏ ◆ *⌜𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗⌟* ◆\n│\n├◆ ᴀᴅᴍɪɴ ᴏɴʟʏ\n│\n└ ❏`, 
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  const premiumUsers = Object.entries(database.premium)
-    .filter(([_, data]) => data.expiry > Date.now())
-    .map(([id, data]) => ({
-      id,
-      expiry: new Date(data.expiry).toLocaleString(),
-      addedBy: data.addedBy,
-      addedAt: new Date(data.addedAt).toLocaleString()
-    }));
-
-  if (premiumUsers.length === 0) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗡𝗢 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗨𝗦𝗘𝗥𝗦⌟* ◆
-│
-├◆ ɴᴏ ᴀᴄᴛɪᴠᴇ ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
-
-  let listText = `┌ ❏ ◆ *⌜𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗨𝗦𝗘𝗥𝗦 𝗟𝗜𝗦𝗧⌟* ◆
-│
-├◆ ᴛᴏᴛᴀʟ: ${premiumUsers.length}
-│\n`;
-
-  premiumUsers.slice(0, 20).forEach((user, index) => {
-    listText += `├◆ ${index + 1}. ɪᴅ: ${user.id}\n`;
-    listText += `├◆    ⏱️ ᴇxᴘɪʀʏ: ${user.expiry}\n`;
-    if (index < premiumUsers.length - 1) listText += `│\n`;
-  });
-
-  if (premiumUsers.length > 20) {
-    listText += `├◆ ... ᴀɴᴅ ${premiumUsers.length - 20} ᴍᴏʀᴇ\n`;
-  }
-
-  listText += `└ ❏`;
-
-  bot.sendMessage(chatId, listText, { parse_mode: 'Markdown' });
-});
-
-// ==================== COMMAND: PING ====================
-
-bot.onText(/^\/ping(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/ping(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const start = Date.now();
@@ -2455,7 +2230,7 @@ bot.onText(/^\/ping(?:@[\\w_]+)?$/i, async (msg) => {
 
 // ==================== COMMAND: RUNTIME ====================
 
-bot.onText(/^\/runtime(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/runtime(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2496,7 +2271,7 @@ bot.onText(/^\/runtime(?:@[\\w_]+)?$/i, async (msg) => {
 
 // ==================== COMMAND: STATS ====================
 
-bot.onText(/^\/stats(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/stats(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2546,7 +2321,7 @@ bot.onText(/^\/stats(?:@[\\w_]+)?$/i, async (msg) => {
 
 // ==================== COMMAND: REPORT ====================
 
-bot.onText(/\/report(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/report(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const message = match ? match[1] : null;
@@ -2633,7 +2408,7 @@ bot.onText(/\/report(?:\s+(.+))?/, async (msg, match) => {
 
 // ==================== COMMAND: TUTORIAL ====================
 
-bot.onText(/^\/tutorial(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/tutorial(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2689,7 +2464,7 @@ bot.onText(/^\/tutorial(?:@[\\w_]+)?$/i, async (msg) => {
 
 // ==================== COMMAND: HELP ====================
 
-bot.onText(/^\/help(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/help(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2771,7 +2546,7 @@ bot.onText(/^\/help(?:@[\\w_]+)?$/i, async (msg) => {
 // ==================== ADMIN COMMANDS ====================
 
 // /users - FIXED with proper formatting
-bot.onText(/^\/users(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/users(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2798,7 +2573,7 @@ ${userText}${database.stats.totalUsers > 10 ? `├◆ ... ᴀɴᴅ ${database.st
 });
 
 // /listpair - COMPLETELY FIXED with detailed session information
-bot.onText(/^\/listpair(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/listpair(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2845,7 +2620,7 @@ ${sessionList}${sessions.length > 15 ? `├◆ ... ᴀɴᴅ ${sessions.length - 
 });
 
 // /broadcast
-bot.onText(/\/broadcast(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/broadcast(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const message = match ? match[1] : null;
@@ -2950,7 +2725,7 @@ bot.onText(/\/broadcast(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /clean
-bot.onText(/^\/clean(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/clean(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2996,7 +2771,7 @@ bot.onText(/^\/clean(?:@[\\w_]+)?$/i, async (msg) => {
 });
 
 // /ban
-bot.onText(/\/ban(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/ban(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const input = match ? match[1] : null;
@@ -3047,7 +2822,7 @@ bot.onText(/\/ban(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /unban
-bot.onText(/\/unban(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/unban(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const input = match ? match[1] : null;
@@ -3089,7 +2864,7 @@ bot.onText(/\/unban(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /checkuser
-bot.onText(/\/checkuser(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/checkuser(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const targetId = match ? match[1] : null;
@@ -3134,7 +2909,7 @@ bot.onText(/\/checkuser(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /maintenance
-bot.onText(/\/maintenance(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/maintenance(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const mode = match ? match[1] : null;
@@ -3158,14 +2933,14 @@ bot.onText(/\/maintenance(?:\s+(.+))?/, async (msg, match) => {
     );
   }
 
-  if (!['ᴏɴ', 'ᴏғғ'].includes(mode.toLowerCase())) {
+  if (!['on', 'off', 'ᴏɴ', 'ᴏғғ'].includes(mode.toLowerCase())) {
     return bot.sendMessage(chatId,
       `┌ ❏ ◆ *⌜𝗜𝗡𝗩𝗔𝗟𝗜𝗗⌟* ◆\n│\n├◆ ᴜsᴇ /maintenance ᴏɴ ᴏʀ /maintenance ᴏғғ\n│\n└ ❏`,
       { parse_mode: 'Markdown' }
     );
   }
 
-  database.maintenance = mode.toLowerCase() === 'ᴏɴ';
+  database.maintenance = ['on', 'ᴏɴ'].includes(mode.toLowerCase());
   await saveData();
 
   bot.sendMessage(chatId,
@@ -3181,7 +2956,7 @@ bot.onText(/\/maintenance(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /logs
-bot.onText(/^\/logs(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/logs(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -3208,7 +2983,7 @@ bot.onText(/^\/logs(?:@[\\w_]+)?$/i, async (msg) => {
 });
 
 // /announce
-bot.onText(/\/announce(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/announce(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const input = match ? match[1] : null;
@@ -3301,7 +3076,7 @@ bot.onText(/\/announce(?:\s+(.+))?/, async (msg, match) => {
 // ==================== OWNER COMMANDS ====================
 
 // /addadmin
-bot.onText(/\/addadmin(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/addadmin(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const targetId = match ? match[1] : null;
@@ -3341,7 +3116,7 @@ bot.onText(/\/addadmin(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /removeadmin
-bot.onText(/\/removeadmin(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/removeadmin(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const targetId = match ? match[1] : null;
@@ -3385,7 +3160,7 @@ bot.onText(/\/removeadmin(?:\s+(.+))?/, async (msg, match) => {
   addAuditLog('ʀᴇᴍᴏᴠᴇᴀᴅᴍɪɴ', userId, targetId);
 });
 
-bot.onText(/^\/status(?:@[\\w_]+)?$/i, (msg) => {
+bot.onText(/^\/status(?:@[\w_]+)?$/i, (msg) => {
     const chatId = msg.chat.id;
     const uptime = process.uptime();
     const hours = Math.floor(uptime / 3600);
@@ -3403,7 +3178,7 @@ bot.onText(/^\/status(?:@[\\w_]+)?$/i, (msg) => {
 });
 
 // ==================== MANUAL PREMIUM ADMIN CONTROLS ====================
-bot.onText(/\/addpremium(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/addpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id, adminId = msg.from.id;
   if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
   const args = String(match?.[1] || '').trim().split(/\s+/);
@@ -3416,7 +3191,7 @@ bot.onText(/\/addpremium(?:\s+(.+))?/, async (msg, match) => {
   try { await bot.sendMessage(targetId, '👑 TOHID-BUG PREMIUM ACTIVATED\\nExpiry: ' + formatPlanExpiry(premium.expiry)); } catch (e) {}
 });
 
-bot.onText(/\/delpremium(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/delpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id, adminId = msg.from.id, targetId = String(match?.[1] || '').trim();
   if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
   if (!/^\d+$/.test(targetId)) return bot.sendMessage(chatId, 'Usage: /delpremium USER_ID');
@@ -3425,7 +3200,7 @@ bot.onText(/\/delpremium(?:\s+(.+))?/, async (msg, match) => {
   return bot.sendMessage(chatId, '✅ Premium removed from ' + targetId + '.');
 });
 
-bot.onText(/^\/(?:premiumusers|premlist)(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/(?:premiumusers|premlist)(?:@[\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id, adminId = msg.from.id;
   if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
   const entries = Object.entries(database.premium).filter(([, d]) => Number(d?.expiry) > Date.now());
@@ -3565,7 +3340,7 @@ bot.onText(/^\/update(?:@[\w_]+)?$/i, async (msg) => {
     }
 });
 // ==================== CALLBACK HANDLER ====================
-bot.on('callback_query', async (query) => {
+bot.on('callback_query', async (query) => commandResponseContext.run(true, async () => {
   const msg = query.message;
   const data = query.data;
   const userId = query.from.id;
@@ -3853,6 +3628,38 @@ bot.on('callback_query', async (query) => {
     }
   }
 
+  else if (data === 'session_status') {
+    await bot.answerCallbackQuery(query.id, { text: 'sᴇssɪᴏɴ sᴛᴀᴛᴜs' }).catch(() => {});
+    const allHealth = getConnectionHealth();
+    const visible = isOwner(userId) || isAdmin(userId.toString())
+      ? allHealth
+      : allHealth.filter(item => getUserBots(userId).includes(String(item.number).replace(/[^0-9]/g, '')));
+    if (!visible.length) {
+      return bot.sendMessage(chatId,
+        '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗛𝗘𝗔𝗟𝗧𝗛⌟* ◆\\n│\\n├◆ 📱 ɴᴏ ᴀᴄᴛɪᴠᴇ sᴇssɪᴏɴs ғᴏᴜɴᴅ\\n│\\n└ ❏',
+        { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } }
+      );
+    }
+    const icon = state => state === 'online' ? '🟢' : state === 'connecting' || state === 'reconnecting' ? '🟡' : state === 'logged_out' ? '🔴' : '⚪';
+    const lines = visible.slice(0, 20).map(item =>
+      '├◆ ' + icon(item.state) + ' +' + item.number + ' — *' + item.state.toUpperCase() + '*\\n' +
+      '│   ↳ ᴜᴘᴛɪᴍᴇ: ' + (item.lastConnectedAt ? formatDuration(Math.max(0, Date.now() - item.lastConnectedAt)) : 'N/A') +
+      ' | ʀᴇᴛʀʏ: ' + item.retryCount
+    ).join('\\n');
+    return bot.sendMessage(chatId,
+      '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗛𝗘𝗔𝗟𝗧𝗛⌟* ◆\\n│\\n' + lines + '\\n│\\n└ ❏',
+      { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'session_status' }, { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } }
+    );
+  }
+
+  else if (data === 'show_report') {
+    await bot.answerCallbackQuery(query.id, { text: 'ʀᴇᴘᴏʀᴛ' }).catch(() => {});
+    return bot.sendMessage(chatId,
+      '┌ ❏ ◆ *⌜𝗥𝗘𝗣𝗢𝗥𝗧 𝗚𝗨𝗜𝗗𝗘⌟* ◆\\n│\\n├◆ ᴜsᴀɢᴇ: /report ʙᴏᴛ ɴᴏᴛ ʀᴇsᴘᴏɴᴅɪɴɢ\\n│\\n└ ❏',
+      { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } }
+    );
+  }
+
   else if (data.startsWith('copy_')) {
     const code = data.replace('copy_', '');
     await bot.answerCallbackQuery(query.id, {
@@ -3890,10 +3697,10 @@ bot.on('callback_query', async (query) => {
       }
     );
   }
-});
+}));
 
 // ==================== ADMIN REPLY COMMAND ====================
-bot.onText(/\/reply (\d+) (.+)/, async (msg, match) => {
+bot.onText(/^\/reply(?:@[\w_]+)?\s+(\d+)\s+(.+)$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const targetId = match[1];
