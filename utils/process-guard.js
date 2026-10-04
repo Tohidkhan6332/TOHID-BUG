@@ -1,5 +1,3 @@
-const os = require("node:os");
-
 let installed = false;
 let timer = null;
 
