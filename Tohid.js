@@ -147,8 +147,10 @@ const PATHS = {
 // Media Assets
 const ASSETS = {
   menuImages: [
-    // Direct image endpoint; Telegram can fetch this reliably without GitHub HTML redirects.
-    'https://avatars.githubusercontent.com/u/113549923?v=4',
+    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
+    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
+    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
+    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg',
   ],
   pairingVideos: [
     'https://h.uguu.se/qWcJAzsK.mp4',
