@@ -247,7 +247,7 @@ async function validateSession(tohidDevNumber) {
 
 // Force cleanup function
 function forceCleanupSession(tohidDevNumber) {
-    const sessionPath = `./tohidstore/pairing/${tohidDevNumber}`;
+    const sessionPath = `./tohidstore/pairing/${sessionKey}`;
     
     try {
         if (fs.existsSync(sessionPath)) {
@@ -398,6 +398,13 @@ async function autoJoinGroups(tohid, tohidDevNumber) {
 }
 
 async function startpairing(tohidDevNumber, customPairingCode = null, pairingMode = 'code') {
+    // QR pairing starts without a real WhatsApp number. Keep the temporary
+    // session under a deterministic qr_<chatId> key until WhatsApp reveals
+    // the real number after the QR scan.
+    const sessionKey = pairingMode === 'qr'
+        ? `qr_${String(tohidDevNumber).replace(/[^0-9]/g, '')}`
+        : String(tohidDevNumber).replace(/[^0-9@.]/g, '');
+
     // Ensure base directory exists
     ensureDirectoryExists('./tohidstore/pairing');
 const store = makeInMemoryStore 
