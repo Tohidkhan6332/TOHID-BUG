@@ -41,7 +41,7 @@ const os = require('os');
 const { BOT_TOKEN } = require('./tohidstore/token');
 const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
-const { getActiveConnection, getActiveConnections } = require('./pair');
+const { getActiveConnection, getActiveConnections, restartActiveConnection } = require('./pair');
 const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
 
 function getTutorialVideoUrl() {
@@ -993,6 +993,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 │
 ├◆ /pair    - ᴘᴀɪʀ ᴡʜᴀᴛsᴀᴘᴘ
 ├◆ /unpair  - ʀᴇᴍᴏᴠᴇ sᴇssɪᴏɴ
+├◆ /restartbot NUMBER - ʀᴇsᴛᴀʀᴛ ʏᴏᴜʀ ʙᴏᴛ
 ├◆ /ping    - ʟᴀᴛᴇɴᴄʏ ᴄʜᴇᴄᴋ
 ├◆ /runtime - sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ
 ├◆ /stats   - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs
@@ -1001,6 +1002,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
 ├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
 ├◆ /dashboard - ᴜsᴇʀ ᴅᴀsʜʙᴏᴀʀᴅ
+├◆ /restartbot NUMBER - ʀᴇsᴛᴀʀᴛ ʏᴏᴜʀ ʙᴏᴛ
 ├◆ /referral - ʀᴇғᴇʀʀᴀʟ ᴄᴏᴅᴇ
 ├◆ /coupon CODE - ʀᴇᴅᴇᴇᴍ ᴄᴏᴜᴘᴏɴ
 ├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ
@@ -1180,6 +1182,8 @@ const sendDashboard = async (chatId, userId) => {
   const bots = getUserBots(userId);
   const active = bots.filter(number => Boolean(getActiveConnection(number))).length;
   const slotLimit = getSlotLimit(userId);
+  const privileged = isOwner(userId) || isAdmin(id);
+  const globalBots = getActiveConnections().length;
 
   let text = `┌ ❏ ◆ *⌜𝗨𝗦𝗘𝗥 𝗗𝗔𝗦𝗛𝗕𝗢𝗔𝗥𝗗⌟* ◆
 │
@@ -1418,7 +1422,7 @@ const TELEGRAM_NATIVE_COMMANDS = new Set([
   'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
   'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu',
   'plans', 'myplan', 'addpremium', 'delpremium', 'premiumusers',
-  'misc', 'dashboard', 'referral', 'coupon', 'createcoupon', 'coupons'
+  'misc', 'dashboard', 'referral', 'coupon', 'createcoupon', 'coupons', 'restartbot'
 ]);
 
 bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
@@ -1890,6 +1894,21 @@ bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
 
   const cleanNumber = input.split('|')[0].replace(/[^0-9]/g, '');
 
+  const ownedBots = getUserBots(userId);
+  const slotLimit = getSlotLimit(userId);
+  if (!isOwner(userId) && !isAdmin(userId.toString()) && !ownedBots.includes(cleanNumber) && ownedBots.length >= slotLimit) {
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗕𝗢𝗧 𝗦𝗟𝗢𝗧 𝗟𝗜𝗠𝗜𝗧⌟* ◆
+│
+├◆ ⚠️ ᴍᴀxɪᴍᴜᴍ ʙᴏᴛ sʟᴏᴛs ʀᴇᴀᴄʜᴇᴅ
+├◆ 🤖 ᴜsᴇᴅ: ${ownedBots.length}/${slotLimit}
+├◆ 👑 ᴜᴘɢʀᴀᴅᴇ ᴏʀ ᴄᴏɴᴛᴀᴄᴛ ᴛʜᴇ ᴏᴡɴᴇʀ ғᴏʀ ᴍᴏʀᴇ sʟᴏᴛs
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
   if (await deleteSession(cleanNumber)) {
     database.activeSessions.delete(cleanNumber);
     if (database.userDetails[userId]) {
@@ -1919,7 +1938,34 @@ bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
   }
 });
 
+// ==================== USER BOT RESTART ====================
+
+bot.onText(/^\/restartbot(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const input = String(match?.[1] || '').trim().replace(/[^0-9]/g, '');
+  if (!input) return bot.sendMessage(chatId, 'Usage: /restartbot NUMBER');
+  if (await checkBanned(userId, chatId)) return;
+
+  const owned = getUserBots(userId);
+  if (!isOwner(userId) && !isAdmin(userId.toString()) && !owned.includes(input)) {
+    return bot.sendMessage(chatId, '❌ You can only restart your own WhatsApp bot.');
+  }
+
+  const target = getActiveConnection(input);
+  if (!target) return bot.sendMessage(chatId, '🔴 Bot is not currently connected.');
+  try {
+    await bot.sendMessage(chatId, `🔄 Restarting WhatsApp bot +${input}...`);
+    const restarted = await restartActiveConnection(input);
+    return bot.sendMessage(chatId, restarted ? `🟢 Restart requested for +${input}.` : '❌ Restart failed.');
+  } catch (error) {
+    return bot.sendMessage(chatId, '❌ Restart failed: ' + String(error.message || error).slice(0, 500));
+  }
+});
+
 // ==================== PREMIUM COMMANDS ====================
+
+
 
 /**
  * /addprem <user_id> <duration> - Add premium access
