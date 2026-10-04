@@ -8,6 +8,7 @@ const AUTH_FILE = './auth.json';
 const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('./debug.js');
 const processGuard = require('./utils/process-guard');
 attachGlobalHandlers();
+processGuard.install();
 
 // ─── AUTO RESTART ─────────────────────────────────────────────────────
 // Disabled: a timed process.exit() can leave the Telegram bot offline when
