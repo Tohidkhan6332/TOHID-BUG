@@ -97,41 +97,94 @@ async function runWithRetry(command, args = [], options = {}, attempts = 3, dela
 }
 
 async function localGitUpdate() {
-  if (!fs.existsSync(path.join(process.cwd(), '.git'))) {
-    throw new Error('No .git directory found. Configure the hosting provider API variables or deploy the repository with Git.');
+  const gitDir = path.join(process.cwd(), '.git');
+  if (!fs.existsSync(gitDir)) {
+    throw new Error('No .git directory found. This deployment is not a Git checkout.');
   }
 
-  // Termux/VPS networks can reset long-lived HTTPS Git connections.
-  // Force HTTP/1.1 and retry transient network failures before giving up.
+  const gitOptions = {
+    env: {
+      ...process.env,
+      GIT_TERMINAL_PROMPT: '0',
+      GIT_ASKPASS: 'echo'
+    }
+  };
+
+  // Do not use `git pull --rebase` here. A running bot can have local
+  // changes or a diverged checkout, which makes self-update fail before
+  // the latest GitHub commit is applied. Fetch the exact remote branch and
+  // reset the code checkout to it instead.
   try {
-    await run('git', ['config', '--local', 'http.version', 'HTTP/1.1']);
+    await run('git', ['config', '--local', 'http.version', 'HTTP/1.1'], gitOptions);
+    await run('git', ['config', '--local', 'credential.interactive', 'false'], gitOptions);
   } catch (error) {
-    console.warn('[UPDATE] Could not set Git HTTP/1.1:', error.message);
+    console.warn('[UPDATE] Git local config warning:', error.message);
   }
 
-  const pull = await runWithRetry(
-    'git',
-    ['pull', '--rebase', '--autostash', 'origin', GITHUB_BRANCH],
-    {},
-    3,
-    2500
-  );
+  let fetch;
+  try {
+    fetch = await runWithRetry(
+      'git',
+      ['fetch', '--prune', '--no-tags', 'origin', GITHUB_BRANCH],
+      gitOptions,
+      4,
+      3000
+    );
+  } catch (error) {
+    const details = String(error.stderr || error.stdout || error.message || '').trim();
+    throw new Error('GitHub fetch failed. ' + details.slice(-1800));
+  }
+
+  let reset;
+  try {
+    reset = await run(
+      'git',
+      ['reset', '--hard', 'FETCH_HEAD'],
+      gitOptions
+    );
+  } catch (error) {
+    const details = String(error.stderr || error.stdout || error.message || '').trim();
+    throw new Error('Applying GitHub update failed. ' + details.slice(-1800));
+  }
 
   let install = null;
   if (fs.existsSync(path.join(process.cwd(), 'package.json'))) {
-    install = await runWithRetry(
-      'npm',
-      ['install', '--no-audit', '--no-fund', '--prefer-online'],
-      {},
-      3,
-      2500
-    );
+    try {
+      install = await runWithRetry(
+        'npm',
+        ['install', '--no-audit', '--no-fund', '--prefer-online'],
+        {
+          ...gitOptions,
+          env: {
+            ...gitOptions.env,
+            npm_config_audit: 'false',
+            npm_config_fund: 'false'
+          }
+        },
+        3,
+        3000
+      );
+    } catch (error) {
+      const details = String(error.stderr || error.stdout || error.message || '').trim();
+      throw new Error('Dependencies install failed. ' + details.slice(-1800));
+    }
   }
+
+  let head = null;
+  try {
+    head = await run('git', ['rev-parse', 'HEAD'], gitOptions);
+  } catch (_) {}
 
   return {
     source: 'git',
-    pullOutput: String((pull.stdout || '') + (pull.stderr || '')).trim(),
-    installOutput: String((install?.stdout || '') + (install?.stderr || '')).trim()
+    pullOutput: String(
+      (fetch.stdout || '') +
+      (fetch.stderr || '') +
+      (reset.stdout || '') +
+      (reset.stderr || '')
+    ).trim(),
+    installOutput: String((install?.stdout || '') + (install?.stderr || '')).trim(),
+    commit: String(head?.stdout || '').trim()
   };
 }
 
