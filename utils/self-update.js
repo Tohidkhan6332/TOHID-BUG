@@ -214,6 +214,24 @@ async function updateFromGitHub() {
         throw error;
     }
 
+
+
+    if (dependenciesChanged) {
+        try {
+            run('npm', ['install', '--no-audit', '--no-fund'], { timeout: 15 * 60 * 1000 });
+        } catch (error) {
+            // Roll the source tree back first, then restore the runtime stash.
+            try {
+                git(['reset', '--hard', currentSha]);
+            } catch (_) {}
+            restoreStash();
+            throw new Error(
+                'Source update was rolled back because npm install failed: ' +
+                (error.stderr || error.message || 'unknown npm error')
+            );
+        }
+    }
+
     // Restore only runtime JSON state from the backup. Code/config edits remain
     // on GitHub's version. This prevents .update from losing live bot data.
     if (updateStash) {
@@ -243,21 +261,6 @@ async function updateFromGitHub() {
             git(['stash', 'drop', updateStash]);
             updateStash = null;
         } catch (_) {}
-    }
-
-    if (dependenciesChanged) {
-        try {
-            run('npm', ['install', '--no-audit', '--no-fund'], { timeout: 15 * 60 * 1000 });
-        } catch (error) {
-            // Roll the source tree back if dependency installation fails.
-            try {
-                git(['reset', '--hard', currentSha]);
-            } catch (_) {}
-            throw new Error(
-                'Source update was rolled back because npm install failed: ' +
-                (error.stderr || error.message || 'unknown npm error')
-            );
-        }
     }
 
     return {
