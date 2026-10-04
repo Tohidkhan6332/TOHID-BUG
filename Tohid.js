@@ -1446,7 +1446,6 @@ async function sendBugMenu(chatId) {
     parse_mode: 'Markdown'
   });
 }
-}
 
 // ==================== TELEGRAM → WHATSAPP BUG COMMAND BRIDGE ====================
 // Owner-only. These are the only WhatsApp BUG commands exposed directly on Telegram.
