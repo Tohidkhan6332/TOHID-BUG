@@ -1620,7 +1620,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
       `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥 𝗚𝗨𝗜𝗗𝗘⌟* ◆
 │
 ├◆ ᴜsᴀɢᴇ: /pair 9178499xxxxx
-├◆ ᴏʀ: /pair 9178499xxxxx|1234
+├◆ ᴜsᴇ: /pair 9178499xxxxx
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
@@ -1640,6 +1640,18 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
   }
 
   const [number, customCode] = input.split('|');
+  if (customCode) {
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗖𝗨𝗦𝗧𝗢𝗠 𝗖𝗢𝗗𝗘 𝗡𝗢𝗧 𝗦𝗨𝗣𝗣𝗢𝗥𝗧𝗘𝗗⌟* ◆
+│
+├◆ WhatsApp generates the real pairing code.
+├◆ Please use: /pair ${number}
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+
   const cleanNumber = number.replace(/[^0-9]/g, '');
 
   const sessions = await getSessions();
@@ -1762,7 +1774,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
       throw new Error('ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
     }
 
-    const code = customCode || cuObj.code;
+    const code = cuObj.code;
 
     // Keep the shared pair module loaded so its connection tracker and health monitor
     // continue to see every active WhatsApp session.
