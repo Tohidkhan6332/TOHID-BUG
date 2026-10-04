@@ -30,6 +30,7 @@
 require('dotenv').config();
 require('./setting/config');
 const TelegramBot = require('node-telegram-bot-api');
+const QRCode = require('qrcode');
 const { execFile, spawn } = require('child_process');
 const { restartProcess, updateFromGitHub, detectPlatform, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH } = require('./utils/runtime-manager');
 const fsSync = require('fs');
@@ -141,7 +142,8 @@ const PATHS = {
   // NEW: Premium system paths
   premium: path.join(__dirname, 'axis_storage', 'premium.json'),
   referrals: path.join(__dirname, 'axis_storage', 'referrals.json'),
-  coupons: path.join(__dirname, 'axis_storage', 'coupons.json')
+  coupons: path.join(__dirname, 'axis_storage', 'coupons.json'),
+  payments: path.join(__dirname, 'axis_storage', 'payments.json')
 };
 
 // Media Assets
@@ -342,7 +344,8 @@ let database = {
   // NEW: Premium system stores
   premium: {}, // Format: { "user_id": { expiry, addedBy, addedAt, slots } }
   referrals: {}, // { userId: { code, referredBy, successful, bonusDays } }
-  coupons: {} // { CODE: { days, maxUses, uses, createdBy, createdAt } }
+  coupons: {},
+  payments: {} // { paymentId: { planKey, planName, priceUsd, method, userId, status, ... } }
 };
 
 // Rate Limit Store
@@ -545,6 +548,55 @@ const canStartPairing = (userId) => {
 
 const formatPlanExpiry = (expiry) => expiry ? new Date(expiry).toLocaleString() : 'N/A';
 
+const PAYMENT_PLANS = {
+  '7d': { name: '7 Days', price: 2, durationMs: 7 * 86400000, premium: true },
+  '30d': { name: '30 Days', price: 5, durationMs: 30 * 86400000, premium: true },
+  '90d': { name: '90 Days', price: 10, durationMs: 90 * 86400000, premium: true },
+  'lifetime': { name: 'Lifetime', price: 50, durationMs: null, premium: true },
+  'script': { name: 'Bot Script', price: 100, durationMs: null, premium: false }
+};
+
+const PAYMENT_UPI_ID = 'Tohidkhan6332@fam';
+const PAYMENT_BINANCE_ID = '1123760641';
+const PAYMENT_REQUEST_TTL = 24 * 60 * 60 * 1000;
+const pendingPaymentInput = new Map();
+
+const createPaymentId = () => 'PAY-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+const getPaymentPlan = (key) => PAYMENT_PLANS[String(key || '').toLowerCase()] || null;
+
+const createPaymentRequest = async (userId, planKey, method) => {
+  const plan = getPaymentPlan(planKey);
+  if (!plan || !['upi', 'binance'].includes(method)) return null;
+
+  for (const existing of Object.values(database.payments)) {
+    if (existing.userId === userId.toString() && existing.status === 'pending_payment') {
+      existing.status = 'cancelled';
+      existing.updatedAt = Date.now();
+    }
+  }
+
+  const id = createPaymentId();
+  database.payments[id] = {
+    id,
+    userId: userId.toString(),
+    planKey,
+    planName: plan.name,
+    priceUsd: plan.price,
+    method,
+    status: 'pending_payment',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    transactionId: '',
+    proofType: '',
+    proofFileId: '',
+    proofCaption: '',
+    reviewedBy: null,
+    reviewedAt: null
+  };
+  await saveData();
+  return database.payments[id];
+};
+
 const sendPlans = async (chatId, userId) => {
   const status = getPlanStatus(userId);
   const current = status.plan === 'premium'
@@ -555,36 +607,20 @@ const sendPlans = async (chatId, userId) => {
         ? '🛡️ ADMIN'
         : '🔒 PREMIUM REQUIRED';
 
-  let planDetails;
-  if (status.plan === 'owner') {
-    planDetails = `├◆ 👑 *OWNER ACCESS*
-├◆ Full system access
-├◆ No subscription required
-├◆ Owner privileges enabled`;
-  } else if (status.plan === 'admin') {
-    planDetails = `├◆ 🛡️ *ADMIN ACCESS*
-├◆ Full administrative access
-├◆ No subscription required
-├◆ Admin privileges enabled`;
-  } else if (status.plan === 'premium') {
-    planDetails = `├◆ 👑 *PREMIUM ONLY*
-├◆ Full WhatsApp service access
-├◆ Active until: ${formatPlanExpiry(status.expiry)}
-├◆ No free or trial access
-│
-├◆ 💳 Payment is manually verified.
-├◆ 📩 Contact: @Tohidkhan6332`;
-  } else {
-    planDetails = `├◆ 🔒 *PREMIUM REQUIRED*
-├◆ Purchase Premium to access the WhatsApp service
-├◆ 📩 Contact: @Tohidkhan6332`;
-  }
-
-  const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗦𝗘𝗥𝗩𝗜𝗖𝗘⌟* ◆
+  const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗣𝗥𝗘𝗠𝗜𝗨𝗠⌟* ◆
 │
 ├◆ ʏᴏᴜʀ ᴘʟᴀɴ: ${current}
 │
-${planDetails}
+├◆ *⌜𝗣𝗥𝗜𝗖𝗘 𝗟𝗜𝗦𝗧⌟*
+├◆ 7 Days — *$2*
+├◆ 30 Days — *$5*
+├◆ 90 Days — *$10*
+├◆ Lifetime — *$50*
+├◆ Bot Script — *$100*
+│
+├◆ 💳 Manual payment verification
+├◆ 🇮🇳 UPI: ${PAYMENT_UPI_ID}
+├◆ 🟡 Binance ID: ${PAYMENT_BINANCE_ID}
 │
 └ ❏`;
 
@@ -592,10 +628,91 @@ ${planDetails}
     parse_mode: 'Markdown',
     reply_markup: {
       inline_keyboard: [
-        [{ text: '👑 ᴘʀᴇᴍɪᴜᴍ', callback_data: 'premium_plans' }],
-        [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+        [{ text: '7 DAYS • $2', callback_data: 'buy_plan:7d' }, { text: '30 DAYS • $5', callback_data: 'buy_plan:30d' }],
+        [{ text: '90 DAYS • $10', callback_data: 'buy_plan:90d' }],
+        [{ text: 'LIFETIME • $50', callback_data: 'buy_plan:lifetime' }],
+        [{ text: 'BOT SCRIPT • $100', callback_data: 'buy_plan:script' }],
+        [{ text: '🏠 MENU', callback_data: 'show_main' }]
       ]
     }
+  });
+};
+
+const sendPaymentMethod = async (chatId, planKey) => {
+  const plan = getPaymentPlan(planKey);
+  if (!plan) return bot.sendMessage(chatId, '❌ Invalid payment plan.');
+
+  return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧⌟* ◆
+│
+├◆ 📦 Plan: *${plan.name}*
+├◆ 💵 Price: *${plan.price}*
+│
+├◆ Select payment method:
+│
+└ ❏`, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🇮🇳 UPI / QR', callback_data: 'payment_method:upi:' + planKey }],
+        [{ text: '🟡 BINANCE', callback_data: 'payment_method:binance:' + planKey }],
+        [{ text: '⬅️ PLANS', callback_data: 'premium_plans' }]
+      ]
+    }
+  });
+};
+
+const sendPaymentInstructions = async (chatId, userId, planKey, method) => {
+  const plan = getPaymentPlan(planKey);
+  if (!plan || !['upi', 'binance'].includes(method)) return bot.sendMessage(chatId, '❌ Invalid payment selection.');
+
+  const request = await createPaymentRequest(userId, planKey, method);
+  if (!request) return bot.sendMessage(chatId, '❌ Could not create payment request. Please try again.');
+
+  const keyboard = {
+    inline_keyboard: [
+      [{ text: '✅ I HAVE PAID — SUBMIT PROOF', callback_data: 'payment_submit:' + request.id }],
+      [{ text: '🔄 CHANGE METHOD', callback_data: 'buy_plan:' + planKey }],
+      [{ text: '🏠 MENU', callback_data: 'show_main' }]
+    ]
+  };
+
+  if (method === 'upi') {
+    try {
+      const upiUri = 'upi://pay?pa=' + encodeURIComponent(PAYMENT_UPI_ID) + '&pn=' + encodeURIComponent('TOHID') + '&cu=INR';
+      const qrBuffer = await QRCode.toBuffer(upiUri, { width: 700, margin: 2 });
+      return bot.sendPhoto(chatId, qrBuffer, {
+        caption: `┌ ❏ ◆ *⌜𝗨𝗣𝗜 𝗣𝗔𝗬𝗠𝗘𝗡𝗧⌟* ◆
+│
+├◆ 📦 Plan: *${plan.name}*
+├◆ 💵 Price: *${plan.price}*
+├◆ 🆔 UPI: *${PAYMENT_UPI_ID}*
+│
+├◆ 📌 Scan QR or pay to the UPI ID above.
+├◆ 💱 UPI accepts INR; send the INR equivalent agreed for this plan.
+├◆ ⚠️ Payment is manually verified.
+│
+└ ❏`,
+        parse_mode: 'Markdown',
+        reply_markup: keyboard
+      });
+    } catch (error) {
+      console.error('[PAYMENT] UPI QR generation failed:', error.message);
+      return bot.sendMessage(chatId, `UPI ID: ${PAYMENT_UPI_ID}`, { reply_markup: keyboard });
+    }
+  }
+
+  return bot.sendMessage(chatId, `┌ ❏ ◆ *⌜𝗕𝗜𝗡𝗔𝗡𝗖𝗘 𝗣𝗔𝗬𝗠𝗘𝗡𝗧⌟* ◆
+│
+├◆ 📦 Plan: *${plan.name}*
+├◆ 💵 Price: *${plan.price}*
+├◆ 🆔 Binance ID: *${PAYMENT_BINANCE_ID}*
+│
+├◆ 📌 Send the exact plan amount through Binance.
+├◆ ⚠️ Payment is manually verified.
+│
+└ ❏`, {
+    parse_mode: 'Markdown',
+    reply_markup: keyboard
   });
 };
 
@@ -780,8 +897,11 @@ const loadDatabase = async () => {
   if (await fileExists(PATHS.coupons)) {
     try { database.coupons = JSON.parse(await fs.readFile(PATHS.coupons, 'utf8')); } catch { database.coupons = {}; }
   }
-
-
+  if (await fileExists(PATHS.payments)) {
+    try { database.payments = JSON.parse(await fs.readFile(PATHS.payments, 'utf8')); } catch { database.payments = {}; }
+  } else {
+    await fs.writeFile(PATHS.payments, JSON.stringify(database.payments, null, 2));
+  }
 
 };
 
@@ -802,7 +922,8 @@ const saveData = async () => {
       // Save premium, referral and coupon data
       fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2)),
       fs.writeFile(PATHS.referrals, JSON.stringify(database.referrals, null, 2)),
-      fs.writeFile(PATHS.coupons, JSON.stringify(database.coupons, null, 2))
+      fs.writeFile(PATHS.coupons, JSON.stringify(database.coupons, null, 2)),
+      fs.writeFile(PATHS.payments, JSON.stringify(database.payments, null, 2))
     ]);
   } catch (err) {
     console.error('sᴀᴠᴇ ᴇʀʀᴏʀ:', err.message);
@@ -1365,6 +1486,50 @@ bot.onText(/^\/coupons(?:@[\w_]+)?$/i, async (msg) => {
 });
 
 // // ==================== SERVICE PLAN COMMANDS ====================
+bot.onText(/^\/payments(?:@[\w_]+)?$/i, async (msg) => {
+  const userId = msg.from.id;
+  if (!isAdmin(userId.toString()) && !isOwner(userId)) return sendOwnerContact(msg.chat.id, 'admin');
+
+  const pending = Object.values(database.payments)
+    .filter(p => p.status === 'pending_review')
+    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
+    .slice(0, 20);
+
+  if (!pending.length) {
+    return bot.sendMessage(msg.chat.id, '┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆\\n│\\n├◆ No pending payment requests.\\n│\\n└ ❏', { parse_mode: 'Markdown' });
+  }
+
+  for (const request of pending) {
+    const caption = `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗩𝗜𝗘𝗪⌟* ◆
+│
+├◆ 🧾 ID: *${request.id}*
+├◆ 👤 User: *${request.userId}*
+├◆ 📦 Plan: *${request.planName}*
+├◆ 💵 Price: *${request.priceUsd}*
+├◆ 💳 Method: *${String(request.method || '').toUpperCase()}*
+├◆ 🔖 TX/UTR: *${request.transactionId || 'See proof'}*
+│
+└ ❏`;
+
+    const markup = {
+      inline_keyboard: [[
+        { text: '✅ APPROVE', callback_data: 'payment_approve:' + request.id },
+        { text: '❌ REJECT', callback_data: 'payment_reject:' + request.id }
+      ]]
+    };
+
+    try {
+      if (request.proofType === 'photo' && request.proofFileId) {
+        await bot.sendPhoto(msg.chat.id, request.proofFileId, { caption, parse_mode: 'Markdown', reply_markup: markup });
+      } else {
+        await bot.sendMessage(msg.chat.id, caption, { parse_mode: 'Markdown', reply_markup: markup });
+      }
+    } catch (error) {
+      console.error('[PAYMENT] Review display failed:', error.message);
+    }
+  }
+});
+
 bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
@@ -3309,6 +3474,123 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
     return sendPlans(chatId, userId);
   }
 
+  else if (data.startsWith('buy_plan:')) {
+    await bot.answerCallbackQuery(query.id, { text: 'ᴘʟᴀɴ sᴇʟᴇᴄᴛᴇᴅ' }).catch(() => {});
+    return sendPaymentMethod(chatId, data.split(':')[1]);
+  }
+
+  else if (data.startsWith('payment_method:')) {
+    await bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ᴍᴇᴛʜᴏᴅ sᴇʟᴇᴄᴛᴇᴅ' }).catch(() => {});
+    const [, method, planKey] = data.split(':');
+    return sendPaymentInstructions(chatId, userId, planKey, method);
+  }
+
+  else if (data.startsWith('payment_submit:')) {
+    const paymentId = data.split(':')[1];
+    const request = database.payments[paymentId];
+    if (!request || request.userId !== userId.toString()) {
+      return bot.answerCallbackQuery(query.id, { text: 'ɪɴᴠᴀʟɪᴅ ᴘᴀʏᴍᴇɴᴛ ʀᴇǫᴜᴇsᴛ', show_alert: true });
+    }
+    if (request.status !== 'pending_payment') {
+      return bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ᴀʟʀᴇᴀᴅʏ sᴜʙᴍɪᴛᴛᴇᴅ', show_alert: true });
+    }
+    pendingPaymentInput.set(userId.toString(), paymentId);
+    await bot.answerCallbackQuery(query.id, { text: 'sᴇɴᴅ ᴘʀᴏᴏғ' }).catch(() => {});
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗦𝗨𝗕𝗠𝗜𝗧 𝗣𝗔𝗬𝗠𝗘𝗡𝗧⌟* ◆
+│
+├◆ 🧾 Payment ID: *${paymentId}*
+├◆ 📦 Plan: *${request.planName}*
+├◆ 💵 Price: *${request.priceUsd}*
+│
+├◆ Send *Transaction ID / UTR* as text
+├◆ OR send a *payment screenshot* with transaction ID in caption.
+│
+├◆ An admin/owner will manually verify it.
+│
+└ ❏`, { parse_mode: 'Markdown' });
+  }
+
+  else if (data.startsWith('payment_approve:') || data.startsWith('payment_reject:')) {
+    const approved = data.startsWith('payment_approve:');
+    const paymentId = data.split(':')[1];
+
+    if (!isAdmin(userId.toString()) && !isOwner(userId)) {
+      return bot.answerCallbackQuery(query.id, { text: 'ᴀᴅᴍɪɴ/ᴏᴡɴᴇʀ ᴏɴʟʏ', show_alert: true });
+    }
+
+    const request = database.payments[paymentId];
+    if (!request || request.status !== 'pending_review') {
+      return bot.answerCallbackQuery(query.id, { text: 'ᴘᴀʏᴍᴇɴᴛ ɴᴏᴛ ᴀᴠᴀɪʟᴀʙʟᴇ', show_alert: true });
+    }
+
+    request.status = approved ? 'approved' : 'rejected';
+    request.reviewedBy = userId.toString();
+    request.reviewedAt = Date.now();
+    request.updatedAt = Date.now();
+
+    if (approved) {
+      const plan = getPaymentPlan(request.planKey);
+      if (plan?.premium) {
+        if (request.planKey === 'lifetime') {
+          database.premium[request.userId] = {
+            expiry: null,
+            lifetime: true,
+            addedBy: userId.toString(),
+            addedAt: Date.now(),
+            slots: Number(database.premium[request.userId]?.slots || 3)
+          };
+          addAuditLog('ᴘʀᴇᴍɪᴜᴍ_PAYMENT_APPROVED', userId, request.userId, { paymentId, plan: request.planKey });
+        } else {
+          await grantPremium(request.userId, plan.durationMs, userId);
+        }
+      } else {
+        addAuditLog('ʙᴏᴛ_ꜱᴄʀɪᴘᴛ_PAYMENT_APPROVED', userId, request.userId, { paymentId, plan: request.planKey });
+      }
+
+      await saveData();
+
+      try {
+        const approvalText = plan?.premium
+          ? request.planKey === 'lifetime'
+            ? '├◆ 👑 Premium: *LIFETIME*'
+            : '├◆ 👑 Premium: *ACTIVE*\n├◆ 📅 Expiry: *' + formatPlanExpiry(database.premium[request.userId]?.expiry) + '*'
+          : '├◆ 📦 Bot Script order: *APPROVED*\n├◆ 📩 Contact @Tohidkhan6332 for delivery';
+
+        await bot.sendMessage(request.userId,
+          `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗔𝗣𝗣𝗥𝗢𝗩𝗘𝗗⌟* ◆
+│
+├◆ 📦 Plan: *${request.planName}*
+├◆ 💵 Paid: *${request.priceUsd}*
+├◆ 🧾 Payment ID: *${paymentId}*
+${approvalText}
+│
+└ ❏`, { parse_mode: 'Markdown' });
+      } catch {}
+    } else {
+      await saveData();
+      try {
+        await bot.sendMessage(request.userId,
+          `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗥𝗘𝗝𝗘𝗖𝗧𝗘𝗗⌟* ◆
+│
+├◆ 📦 Plan: *${request.planName}*
+├◆ 🧾 Payment ID: *${paymentId}*
+├◆ 📩 Contact @Tohidkhan6332 or submit a new request.
+│
+└ ❏`, { parse_mode: 'Markdown' });
+      } catch {}
+    }
+
+    await bot.answerCallbackQuery(query.id, { text: approved ? 'ᴘᴀʏᴍᴇɴᴛ ᴀᴘᴘʀᴏᴠᴇᴅ' : 'ᴘᴀʏᴍᴇɴᴛ ʀᴇᴊᴇᴄᴛᴇᴅ' });
+    try {
+      await bot.editMessageReplyMarkup(
+        { inline_keyboard: [[{ text: approved ? '✅ APPROVED' : '❌ REJECTED', callback_data: 'payment_done:' + paymentId }]] },
+        { chat_id: chatId, message_id: msg.message_id }
+      );
+    } catch {}
+    return;
+  }
+
   else if (data === 'show_main') {
     await bot.answerCallbackQuery(query.id);
     await sendMainMenu(chatId, userId, userName, isAdmin(userId.toString()), isOwner(userId));
@@ -3426,6 +3708,7 @@ bot.on('callback_query', async (query) => commandResponseContext.run(true, async
 ├◆ /announce
 ├◆ /createcoupon CODE DAYS MAX-USES
 ├◆ /coupons
+├◆ /payments
 │
 └ ❏`;
 
@@ -3750,6 +4033,103 @@ bot.on('message', async (msg) => {
   if (telegramBotUsername && msg.text && msg.text.includes(`@${telegramBotUsername}`)) {
     await handleGroupMessage(msg);
   }
+});
+
+// ==================== PAYMENT PROOF HANDLER ====================
+bot.on('message', async (msg) => {
+  if (msg.chat.type !== 'private') return;
+
+  const userId = msg.from?.id?.toString();
+  if (!userId || !pendingPaymentInput.has(userId)) return;
+
+  const paymentId = pendingPaymentInput.get(userId);
+  const request = database.payments[paymentId];
+  if (!request || request.userId !== userId || request.status !== 'pending_payment') {
+    pendingPaymentInput.delete(userId);
+    return;
+  }
+
+  if (msg.text?.startsWith('/')) return;
+
+  let transactionId = '';
+  let proofType = '';
+  let proofFileId = '';
+  let proofCaption = '';
+
+  if (msg.photo?.length) {
+    proofType = 'photo';
+    proofFileId = msg.photo[msg.photo.length - 1].file_id;
+    proofCaption = String(msg.caption || '').trim().slice(0, 500);
+    transactionId = proofCaption;
+  } else if (msg.text) {
+    transactionId = String(msg.text).trim().slice(0, 200);
+  } else {
+    return bot.sendMessage(msg.chat.id, '⚠️ Send a transaction ID/UTR as text or a payment screenshot.');
+  }
+
+  if (!transactionId && proofType !== 'photo') {
+    return bot.sendMessage(msg.chat.id, '⚠️ Transaction ID/UTR is required.');
+  }
+
+  request.transactionId = transactionId;
+  request.proofType = proofType;
+  request.proofFileId = proofFileId;
+  request.proofCaption = proofCaption;
+  request.status = 'pending_review';
+  request.updatedAt = Date.now();
+  pendingPaymentInput.delete(userId);
+  await saveData();
+
+  const reviewText = `┌ ❏ ◆ *⌜𝗡𝗘𝗪 𝗣𝗔𝗬𝗠𝗘𝗡𝗧⌟* ◆
+│
+├◆ 🧾 ID: *${paymentId}*
+├◆ 👤 User: *${userId}*
+├◆ 📦 Plan: *${request.planName}*
+├◆ 💵 Price: *${request.priceUsd}*
+├◆ 💳 Method: *${String(request.method).toUpperCase()}*
+├◆ 🔖 TX/UTR: *${transactionId || 'Screenshot attached'}*
+│
+└ ❏`;
+
+  const reviewMarkup = {
+    inline_keyboard: [[
+      { text: '✅ APPROVE', callback_data: 'payment_approve:' + paymentId },
+      { text: '❌ REJECT', callback_data: 'payment_reject:' + paymentId }
+    ]]
+  };
+
+  const recipients = [...new Set([
+    ...database.admins.map(id => id.toString()),
+    ...OWNERS.all.map(id => id.toString())
+  ])];
+
+  for (const adminId of recipients) {
+    try {
+      if (proofType === 'photo') {
+        await bot.sendPhoto(adminId, proofFileId, {
+          caption: reviewText + (proofCaption ? '\\n├◆ 📝 Caption: ' + proofCaption : ''),
+          parse_mode: 'Markdown',
+          reply_markup: reviewMarkup
+        });
+      } else {
+        await bot.sendMessage(adminId, reviewText, {
+          parse_mode: 'Markdown',
+          reply_markup: reviewMarkup
+        });
+      }
+    } catch (error) {
+      console.error('[PAYMENT] Admin notification failed:', error.message);
+    }
+  }
+
+  return bot.sendMessage(msg.chat.id,
+    `┌ ❏ ◆ *⌜𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗦𝗨𝗕𝗠𝗜𝗧𝗧𝗘𝗗⌟* ◆
+│
+├◆ 🧾 Payment ID: *${paymentId}*
+├◆ ⏳ Status: *PENDING REVIEW*
+├◆ 👑 Admin/Owner will verify your payment manually.
+│
+└ ❏`, { parse_mode: 'Markdown' });
 });
 
 // ==================== AUTO-REPLY SYSTEM ====================
