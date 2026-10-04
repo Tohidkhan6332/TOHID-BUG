@@ -276,9 +276,17 @@ function cleanupExpiredSessions() {
             }
             
             try {
+                // Never delete a valid registered WhatsApp session just because its
+                // directory has not changed recently. Auth files may remain unchanged
+                // for days while the socket is healthy.
+                const credsPath = path.join(folderPath, 'creds.json');
                 const stats = fs.statSync(folderPath);
-                if (stats.mtimeMs < oneDayAgo) {
-                    console.log(chalk.yellow(`🗑️ Cleaning up old session: ${folder}`));
+                const hasCreds = fs.existsSync(credsPath);
+
+                // Only clean abandoned, incomplete folders that are both missing
+                // credentials and older than one day.
+                if (!hasCreds && stats.mtimeMs < oneDayAgo) {
+                    console.log(chalk.yellow(`🗑️ Cleaning abandoned session folder: ${folder}`));
                     deleteFolderRecursive(folderPath);
                     rentbotTracker.delete(folder);
                     joinedGroups.delete(folder);
