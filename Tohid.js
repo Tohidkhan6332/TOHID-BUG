@@ -1228,7 +1228,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
           reply_markup: keyboard
         });
 
-        await bot.sendMessage(chatId, menu, {
+        await originalSendMessage(chatId, menu, {
           parse_mode: 'Markdown'
         });
       } else {
@@ -1244,7 +1244,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
       // Do not retry an oversized caption. If the photo fails for any
       // reason, keep the menu functional by sending the full text menu.
       try {
-        await bot.sendMessage(chatId, menu, {
+        await originalSendMessage(chatId, menu, {
           parse_mode: 'Markdown',
           reply_markup: keyboard
         });
@@ -1260,7 +1260,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
     console.error('[sendMainMenu ERROR]:', err);
 
     // Keep the inline keyboard even if Telegram cannot fetch the remote menu image.
-    await bot.sendMessage(chatId, menu || '⚠️ Menu gagal dimuat', {
+    await originalSendMessage(chatId, menu || '⚠️ Menu gagal dimuat', {
       parse_mode: 'Markdown',
       reply_markup: keyboard
     });
