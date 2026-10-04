@@ -1070,6 +1070,9 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
           text: '👥 ɢʀᴏᴜᴘ',
           url: safeUrl(SOCIAL.telegram.group)
         }] : [])
+      ],
+      [
+        { text: '👨‍💻 ᴅᴇᴠᴇʟᴏᴘᴇʀ', url: 'https://t.me/Tohidkhan6332' }
       ]
     ];
 
