@@ -1820,6 +1820,52 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
     );
 
     addAuditLog('ᴘᴀɪʀ', userId, cleanNumber);
+
+    // Keep the pairing-code message intact, then notify the Telegram user
+    // when the WhatsApp socket actually reaches the online state.
+    const connectionWatchDeadline = Date.now() + SYSTEM.codeExpiry;
+    const watchPairingConnection = async () => {
+      while (Date.now() < connectionWatchDeadline) {
+        try {
+          const health = getConnectionHealth().find(
+            session => String(session.number) === String(cleanNumber)
+          );
+
+          if (health?.state === 'online') {
+            await bot.sendMessage(
+              chatId,
+              `┌ ❏ ◆ *⌜𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗⌟* ◆
+│
+├◆ 🟢 ᴄᴏɴɴᴇᴄᴛɪᴏɴ sᴜᴄᴄᴇssғᴜʟ
+├◆ ɴᴜᴍʙᴇʀ: +${cleanNumber}
+├◆ 🤖 ʙᴏᴛ ɪs ɴᴏᴡ ᴏɴʟɪɴᴇ
+│
+└ ❏`,
+              {
+                parse_mode: 'Markdown',
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '📊 sᴇssɪᴏɴ sᴛᴀᴛᴜs', callback_data: 'session_status' }],
+                    [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+                  ]
+                }
+              }
+            );
+            return;
+          }
+
+          if (health?.state === 'logged_out' || health?.state === 'invalid_session') {
+            return;
+          }
+        } catch (watchError) {
+          console.log('[PAIR] Connection notification check failed:', watchError.message);
+        }
+
+        await sleep(3000);
+      }
+    };
+
+    void watchPairingConnection();
     setTimeout(() => database.activeSessions.delete(cleanNumber), SYSTEM.codeExpiry);
 
   } catch (error) {
