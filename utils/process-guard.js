@@ -11,17 +11,26 @@ function install(options = {}) {
   const memoryLimitBytes = Number(options.memoryBytes || process.env.PROCESS_GUARD_MEMORY_BYTES || (10 * 1024 ** 3));
   const sustainedChecks = Math.max(1, Number(options.sustainedChecks || process.env.PROCESS_GUARD_SUSTAINED_CHECKS || 3));
   let highCpuChecks = 0;
-  const sampleCpu = () => {
-    const cpus = os.cpus(); let idle = 0; let total = 0;
-    for (const cpu of cpus) { const t = cpu.times; idle += t.idle; total += t.user + t.nice + t.sys + t.irq + t.idle; }
-    return { idle, total };
-  };
-  let previous = sampleCpu();
+  // Measure this Node process, not total host CPU usage. The previous
+  // implementation could restart the bot simply because another process
+  // on the VPS/Termux host was busy.
+  let previousCpu = process.cpuUsage();
+  let previousTime = process.hrtime.bigint();
+
   timer = setInterval(() => {
-    const current = sampleCpu();
-    const totalDelta = current.total - previous.total; const idleDelta = current.idle - previous.idle;
-    previous = current;
-    const cpuPercent = totalDelta > 0 ? ((totalDelta - idleDelta) / totalDelta) * 100 : 0;
+    const currentCpu = process.cpuUsage();
+    const currentTime = process.hrtime.bigint();
+
+    const elapsedMicros = Number(currentTime - previousTime) / 1000;
+    const userMicros = currentCpu.user - previousCpu.user;
+    const systemMicros = currentCpu.system - previousCpu.system;
+    const cpuPercent = elapsedMicros > 0
+      ? ((userMicros + systemMicros) / elapsedMicros) * 100
+      : 0;
+
+    previousCpu = currentCpu;
+    previousTime = currentTime;
+
     const rss = process.memoryUsage().rss;
     if (cpuPercent >= cpuLimit) highCpuChecks += 1; else highCpuChecks = 0;
     if (rss >= memoryLimitBytes || highCpuChecks >= sustainedChecks) {
