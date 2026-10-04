@@ -1057,7 +1057,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
       ],
       [
         { text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' },
-        { text: '🐞 𝐁𝐔𝐆 𝐌𝐄ɴᴜ', callback_data: 'show_bug_menu' }
+        { text: '🐞 ʙᴜɢ ᴍᴇɴᴜ', callback_data: 'show_bug_menu' }
       ],
       [
         ...(safeUrl(SOCIAL?.telegram?.primary) ? [{
