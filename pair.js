@@ -419,6 +419,10 @@ creds: state.creds,
 })
     
     tracker.connection = tohid;
+    tracker.state = 'connecting';
+    tracker.lastConnectedAt = tracker.lastConnectedAt || null;
+    tracker.lastDisconnectedAt = null;
+    tracker.lastError = null;
     
     if (store) store.bind(tohid.ev);
 
@@ -705,6 +709,9 @@ creds: state.creds,
             }
 
         if (connection === "close") {
+            tracker.state = 'reconnecting';
+            tracker.lastDisconnectedAt = Date.now();
+            tracker.lastError = lastDisconnect?.error?.message || String(lastDisconnect?.error || '');
             let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
             console.log(chalk.yellow(`🔌 Connection closed for ${tohidDevNumber}, reason: ${reason}`));
 
@@ -715,6 +722,7 @@ creds: state.creds,
                 forceCleanupSession(tohidDevNumber);
                 
                 tracker.disconnected = true;
+                tracker.state = 'logged_out';
                 tracker.connection = null;
                 
                 console.log(chalk.red(`🚫 ${tohidDevNumber} will NOT reconnect. User must re-pair.`));
@@ -767,7 +775,10 @@ creds: state.creds,
             console.log(chalk.bgGreen.black(`✅ Connected: ${tohidDevNumber}`));
             tracker.retryCount = 0;
             tracker.disconnected = false;
+            tracker.state = 'online';
             tracker.lastActivity = Date.now();
+            tracker.lastConnectedAt = Date.now();
+            tracker.lastError = null;
             
             // Add small delay to ensure everything is initialized
             await sleep(5000);
@@ -831,6 +842,8 @@ creds: state.creds,
                 console.log(chalk.yellow(`⚠️ Auto-actions failed: ${e.message}`));
             }
         } else if (connection === "connecting") {
+            tracker.state = 'connecting';
+            tracker.lastActivity = Date.now();
             console.log(chalk.blue(`🔄 Connecting ${tohidDevNumber}...`));
         }
         } catch (error) {
@@ -936,6 +949,20 @@ fs.watchFile(file, () => {
 
 // Expose active WhatsApp connections to the Telegram control bridge.
 // Only the socket objects are returned; session credentials remain on disk.
+function getConnectionHealth() {
+    const now = Date.now();
+    const result = [];
+    for (const [number, tracker] of rentbotTracker.entries()) {
+        const wsState = tracker.connection?.ws?.readyState;
+        let state = tracker.state || (tracker.disconnected ? 'offline' : 'unknown');
+        if (!tracker.disconnected && wsState === 1) state = 'online';
+        else if (!tracker.disconnected && wsState === 0) state = 'connecting';
+        else if (tracker.disconnected && state === 'online') state = 'offline';
+        result.push({ number, state, retryCount: Number(tracker.retryCount || 0), lastConnectedAt: tracker.lastConnectedAt || null, lastDisconnectedAt: tracker.lastDisconnectedAt || null, lastActivity: tracker.lastActivity || null, idleForMs: tracker.lastActivity ? Math.max(0, now - tracker.lastActivity) : null, lastError: tracker.lastError || null, socketReadyState: wsState ?? null });
+    }
+    return result;
+}
+
 function getActiveConnections() {
     const result = [];
     for (const [number, tracker] of rentbotTracker.entries()) {
@@ -981,3 +1008,4 @@ module.exports = startpairing;
 module.exports.getActiveConnections = getActiveConnections;
 module.exports.getActiveConnection = getActiveConnection;
 module.exports.restartActiveConnection = restartActiveConnection;
+module.exports.getConnectionHealth = getConnectionHealth;
