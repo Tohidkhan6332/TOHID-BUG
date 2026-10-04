@@ -78,7 +78,7 @@ Before running the bot in production:
 
 1. Review `setting/config.js`.
 2. Review the pairing/session configuration.
-3. Move API keys, bot tokens and passwords to environment variables.
+3. Move API keys and bot tokens to environment variables.
 4. Do **not** commit WhatsApp authentication/session data.
 5. Do **not** publish Telegram bot tokens or other private credentials.
 
@@ -87,7 +87,6 @@ A recommended production setup is:
 ```text
 .env
 ├── TELEGRAM_BOT_TOKEN
-├── STARTUP_PASSWORD
 ├── API_KEY_*
 └── other private configuration
 ```
@@ -120,7 +119,7 @@ Click the button above to create a Heroku app directly from this repository.
 ### Heroku setup
 
 1. Click **Deploy to Heroku** above.
-2. Enter a secure `STARTUP_PASSWORD` when Heroku asks for configuration.
+2. Configure the required bot token and platform variables when Heroku asks for configuration.
 3. Add `TELEGRAM_BOT_TOKEN` only if you use the Telegram component.
 4. Create the app and let Heroku build the worker dyno.
 5. Check Heroku logs and complete the bot's pairing/configuration flow.
@@ -260,7 +259,6 @@ Set at least:
 
 ```env
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-STARTUP_PASSWORD=your_secure_startup_password
 ```
 
 Then start:
@@ -295,7 +293,6 @@ Never publish:
 - WhatsApp authentication/session credentials
 - Telegram bot tokens
 - API keys
-- Startup passwords
 - Private pairing information
 - Personal access tokens
 
