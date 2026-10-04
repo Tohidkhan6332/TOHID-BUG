@@ -712,6 +712,12 @@ creds: state.creds,
             const { connection, lastDisconnect } = update;
             const tracker = rentbotTracker.get(tohidDevNumber);
 
+            // Isolate a missing tracker before touching pairing state.
+            if (!tracker) {
+                console.log(chalk.yellow(`⚠️ Tracker missing for ${tohidDevNumber}; ignoring WhatsApp update.`));
+                return;
+            }
+
             // Request pairing code only after the WhatsApp socket is ready for
             // pairing. The QR event also fires in pairing-code mode.
             if ((connection === 'connecting' || update.qr) &&
@@ -758,13 +764,6 @@ creds: state.creds,
                         )
                     );
                 }
-            }
-
-            // A WhatsApp logout/disconnect must never be allowed to bubble out
-            // of this connection handler and affect the Telegram control bot.
-            if (!tracker) {
-                console.log(chalk.yellow(`⚠️ Tracker missing for ${tohidDevNumber}; ignoring WhatsApp update.`));
-                return;
             }
 
         if (connection === "close") {
