@@ -1811,7 +1811,7 @@ Use: /${commandName} https://chat.whatsapp.com/XXXXXXXXXXXX`,
 
 // ==================== COMMAND: PAIR ====================
 
-bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
+bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   let input = match ? match[1] : null;
