@@ -474,6 +474,80 @@ creds: state.creds,
     // Pairing code is requested from connection.update below, after WhatsApp
     // has entered the connecting/QR phase. This avoids a startup timing race.
     const pairingNumber = sessionKey.replace(/[^0-9]/g, '');
+    let pairingRetryTimer = null;
+    let pairingRequestInFlight = false;
+    let pairingRetryCount = 0;
+    const MAX_PAIRING_RETRIES = 10;
+
+    const savePairingCode = (code) => {
+        const userPairingDir = path.join('./tohidstore/pairing', pairingNumber);
+        ensureDirectoryExists(userPairingDir);
+        const userPairingFile = path.join(userPairingDir, 'pairing.json');
+
+        fs.writeFileSync(
+            userPairingFile,
+            JSON.stringify({
+                number: tohidDevNumber,
+                code,
+                timestamp: new Date().toISOString()
+            }, null, 2),
+            'utf8'
+        );
+
+        tracker.pairingCode = code;
+        tracker.lastError = null;
+        console.log(chalk.green(`✓ Pairing code saved for +${pairingNumber}`));
+    };
+
+    const requestPairingCodeWithRetry = async () => {
+        if (!pairingCode || state.creds.registered || tracker.disconnected) return;
+        if (tracker.pairingRequested || pairingRequestInFlight) return;
+        if (pairingRetryCount >= MAX_PAIRING_RETRIES) {
+            console.log(chalk.red(`❌ Pairing code retries exhausted for +${pairingNumber}`));
+            return;
+        }
+
+        pairingRequestInFlight = true;
+        pairingRetryCount++;
+
+        try {
+            const codeRaw = await tohid.requestPairingCode(
+                pairingNumber,
+                customPairingCode || undefined
+            );
+            const code = codeRaw?.match(/.{1,4}/g)?.join("-") || codeRaw;
+
+            tracker.pairingRequested = true;
+            tracker.pairingCode = code;
+
+            console.log(
+                chalk.bgGreen.black(
+                    `📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`
+                )
+            );
+
+            savePairingCode(code);
+        } catch (err) {
+            tracker.pairingRequested = false;
+            tracker.lastError = err?.message || String(err);
+            console.log(
+                chalk.red(
+                    `❌ Pairing code attempt ${pairingRetryCount}/${MAX_PAIRING_RETRIES} for +${pairingNumber}: ${tracker.lastError}`
+                )
+            );
+
+            if (!state.creds.registered && !tracker.disconnected && pairingRetryCount < MAX_PAIRING_RETRIES) {
+                clearTimeout(pairingRetryTimer);
+                pairingRetryTimer = setTimeout(() => {
+                    pairingRetryTimer = null;
+                    void requestPairingCodeWithRetry();
+                }, 1500);
+            }
+        } finally {
+            pairingRequestInFlight = false;
+        }
+    };
+
     if (pairingCode && !state.creds.registered && useMobile) {
         throw new Error('Cannot use pairing code with mobile API');
     }
@@ -724,48 +798,8 @@ creds: state.creds,
                 !state.creds.registered &&
                 !tracker.pairingRequested &&
                 tracker.pairingMode === 'code') {
-                tracker.pairingRequested = true;
-                try {
-                    const codeRaw = await tohid.requestPairingCode(
-                        pairingNumber,
-                        customPairingCode || undefined
-                    );
-                    const code = codeRaw?.match(/.{1,4}/g)?.join("-") || codeRaw;
-
-                    console.log(
-                        chalk.bgGreen.black(
-                            `📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`
-                        )
-                    );
-
-                    const userPairingDir = path.join('./tohidstore/pairing', pairingNumber);
-                    ensureDirectoryExists(userPairingDir);
-                    const userPairingFile = path.join(userPairingDir, 'pairing.json');
-
-                    fs.writeFileSync(
-                        userPairingFile,
-                        JSON.stringify({
-                            number: tohidDevNumber,
-                            code,
-                            timestamp: new Date().toISOString()
-                        }, null, 2),
-                        'utf8'
-                    );
-
-                    tracker.pairingCode = code;
-                    tracker.lastError = null;
-                    console.log(chalk.green(`✓ Pairing code saved for +${pairingNumber}`));
-                } catch (err) {
-                    tracker.pairingRequested = false;
-                    tracker.lastError = err?.message || String(err);
-                    console.log(
-                        chalk.red(
-                            `❌ Error requesting pairing code for +${tohidDevNumber}: ${tracker.lastError}`
-                        )
-                    );
-                }
+                void requestPairingCodeWithRetry();
             }
-
         if (connection === "close") {
             // A manual/health-monitor restart already owns the reconnect flow.
             // Do not enqueue a second socket from the close event.
@@ -918,6 +952,14 @@ creds: state.creds,
             console.log(chalk.red(`❌ WhatsApp connection handler error for ${tohidDevNumber}:`), error?.message || error);
         }
     });
+
+    // Fallback trigger in case the first connection.update event was missed
+    // or its pairing request hit a transient Connection Closed state.
+    if (pairingCode && !state.creds.registered) {
+        setTimeout(() => {
+            void requestPairingCodeWithRetry();
+        }, 1500);
+    }
 
     tohid.ev.on('creds.update', saveCreds);
     
