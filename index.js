@@ -111,7 +111,28 @@ function launchBot() {
         require('./Tohid.js');
         telegramLoaded = true;
         console.log(chalk.green('✅ Telegram bot module loaded successfully.'));
-        console.log(chalk.yellow('⏳ WhatsApp is waiting for Telegram /pair command.'));
+
+        // Restore all previously paired WhatsApp sessions after a process restart/update.
+        // Pairing credentials are stored on disk by pair.js, so users should not need
+        // to pair again just because /update or the hosting panel restarted the process.
+        try {
+            const { autoLoadPairs } = require('./autoload');
+            setTimeout(async () => {
+                try {
+                    console.log(chalk.cyan('🔄 Restoring saved WhatsApp sessions...'));
+                    const result = await autoLoadPairs({ batchSize: 5 });
+                    console.log(chalk.green(
+                        `✅ WhatsApp session restore complete: ${result.successful || 0}/${result.total || 0} connected.`
+                    ));
+                } catch (error) {
+                    console.log(chalk.red('❌ WhatsApp session restore failed:'), error.message);
+                }
+            }, 5000);
+        } catch (error) {
+            console.log(chalk.red('❌ Could not load WhatsApp auto-reconnect:'), error.message);
+        }
+
+        console.log(chalk.yellow('⏳ WhatsApp saved sessions are being restored...'));
     } catch (error) {
         console.log(chalk.red('❌ Telegram bot failed to load.'));
         console.log(chalk.red('   Error:'), error.message);
