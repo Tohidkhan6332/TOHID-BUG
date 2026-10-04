@@ -219,7 +219,10 @@ function deleteFolderRecursive(folderPath) {
 
 // Session validation function
 async function validateSession(tohidDevNumber) {
-    const sessionPath = `./tohidstore/pairing/${tohidDevNumber}`;
+    const sessionKey = pairingMode === 'qr'
+        ? `qr_${String(tohidDevNumber).replace(/[^0-9]/g, '')}`
+        : tohidDevNumber;
+    let sessionPath = `./tohidstore/pairing/${sessionKey}`;
     const credsPath = path.join(sessionPath, 'creds.json');
     
     if (!fs.existsSync(credsPath)) {
@@ -476,7 +479,9 @@ creds: state.creds,
 
     // Pairing code is requested from connection.update below, after WhatsApp
     // has entered the connecting/QR phase. This avoids a startup timing race.
-    const pairingNumber = tohidDevNumber.replace(/[^0-9]/g, '');
+    const pairingNumber = pairingMode === 'qr'
+        ? sessionKey
+        : tohidDevNumber.replace(/[^0-9]/g, '');
     if (pairingCode && !state.creds.registered && useMobile) {
         throw new Error('Cannot use pairing code with mobile API');
     }
@@ -825,7 +830,7 @@ creds: state.creds,
                 if (tracker.retryCount < MAX_RETRIES_440) {
                     console.warn(chalk.yellow(`⚠️ Error 440 for ${tohidDevNumber}. Retry ${tracker.retryCount}/${MAX_RETRIES_440}...`));
                     await sleep(3000);
-                    queuePairing(tohidDevNumber);
+                    queuePairing(tohidDevNumber, null, tracker.pairingMode);
                 } else {
                     console.error(chalk.red.bold(`❌ Failed after ${MAX_RETRIES_440} attempts for ${tohidDevNumber}`));
                     forceCleanupSession(tohidDevNumber);
@@ -846,7 +851,7 @@ creds: state.creds,
                 if (isValid) {
                     console.log(chalk.yellow(`🔄 Reconnecting ${tohidDevNumber}...`));
                     await sleep(3000);
-                    queuePairing(tohidDevNumber);
+                    queuePairing(tohidDevNumber, null, tracker.pairingMode);
                 } else {
                     console.log(chalk.red(`❌ Invalid session for ${tohidDevNumber}`));
                     tracker.disconnected = true;
@@ -859,14 +864,37 @@ creds: state.creds,
                 console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${tohidDevNumber}`));
                 if (tracker.retryCount < 2) {
                     await sleep(5000);
-                    queuePairing(tohidDevNumber);
+                    queuePairing(tohidDevNumber, null, tracker.pairingMode);
                 } else {
                     console.log(chalk.red(`❌ Max retries for ${tohidDevNumber}`));
                     tracker.disconnected = true;
                 }
             }
         } else if (connection === "open") {
-            console.log(chalk.bgGreen.black(`✅ Connected: ${tohidDevNumber}`));
+            // QR pairing has no phone number before the scan. Once WhatsApp
+            // authenticates, move the temporary QR session to the real number.
+            if (tracker.pairingMode === 'qr' && /^qr_\d+$/.test(sessionKey)) {
+                try {
+                    const realNumber = String(tohid.user?.id || '').split(':')[0].split('@')[0].replace(/[^0-9]/g, '');
+                    if (realNumber && /^\d{7,15}$/.test(realNumber)) {
+                        const realSessionPath = path.join('./tohidstore/pairing', realNumber);
+                        if (sessionPath !== realSessionPath && fs.existsSync(sessionPath)) {
+                            if (fs.existsSync(realSessionPath)) {
+                                deleteFolderRecursive(realSessionPath);
+                            }
+                            fs.renameSync(sessionPath, realSessionPath);
+                            sessionPath = realSessionPath;
+                            console.log(chalk.green(`✓ QR session moved to +${realNumber}`));
+                        }
+                        tracker.actualNumber = realNumber;
+                        tracker.qrConnected = true;
+                    }
+                } catch (renameError) {
+                    console.log(chalk.yellow(`⚠️ QR session rename failed: ${renameError.message}`));
+                }
+            }
+
+            console.log(chalk.bgGreen.black(`✅ Connected: ${tracker.actualNumber ? tracker.actualNumber : tohidDevNumber}`));
             tracker.retryCount = 0;
             tracker.disconnected = false;
             tracker.state = 'online';
@@ -985,7 +1013,7 @@ creds: state.creds,
         try {
             try { tohid.ws?.close(); } catch (e) {}
             await sleep(1500);
-            if (!tracker.disconnected) await queuePairing(tohidDevNumber);
+            if (!tracker.disconnected) await queuePairing(tohidDevNumber, null, tracker.pairingMode);
         } catch (error) {
             tracker.lastError = error?.message || String(error);
             console.log(chalk.red('❌ Health monitor reconnect failed for ' + tohidDevNumber + ': ' + tracker.lastError));
