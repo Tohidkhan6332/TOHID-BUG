@@ -963,16 +963,6 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /restart
 ├◆ /update
 
-┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗦𝗘𝗧𝗨𝗣⌟* ◆
-│
-├◆ ᴜsᴇ /settutorial ᴛᴏ sᴇᴛ ᴛʜᴇ ᴠɪᴅᴇᴏ
-├◆ ᴇxᴀᴍᴘʟᴇ:
-├◆ /settutorial https://t.me/TohidChannel/123
-├◆ ᴘʀɪᴠᴀᴛᴇ:
-├◆ /settutorial https://t.me/c/1234567890/123
-├◆ ⚠️ ʟɪɴᴋ ᴍᴜsᴛ ʙᴇ ᴀ sᴘᴇᴄɪғɪᴄ ᴛᴇʟᴇɢʀᴀᴍ ᴠɪᴅᴇᴏ/ᴘᴏsᴛ
-│
-└ ❏
 │
 └ ❏`;
     }
