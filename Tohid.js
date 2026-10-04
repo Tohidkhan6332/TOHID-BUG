@@ -3045,7 +3045,7 @@ bot.onText(/^\/settutorial(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
   );
 });
 
-bot.onText(/^\\/deltutorial(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/deltutorial(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
@@ -3054,7 +3054,7 @@ bot.onText(/^\\/deltutorial(?:@[\\w_]+)?$/i, async (msg) => {
   return bot.sendMessage(chatId, '🗑️ *Tutorial video link removed.*\\n\\nWATCH NOW will stay unavailable until you add a new link.', { parse_mode: 'Markdown' });
 });
 
-bot.onText(/^\\/tutorialstatus(?:@[\\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/tutorialstatus(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from?.id;
   if (!isOwner(userId)) return bot.sendMessage(chatId, '❌ *Access denied!*\\nOnly the owner can use this command.', { parse_mode: 'Markdown' });
