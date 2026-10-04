@@ -152,32 +152,54 @@ const CONNECTION_DELAY = 100;
 
 // Connection queue system
 const connectionQueue = [];
+const pendingConnections = new Map();
 let activeConnections = 0;
 
 function processQueue() {
-    if (activeConnections < MAX_CONCURRENT_CONNECTIONS && connectionQueue.length > 0) {
+    while (activeConnections < MAX_CONCURRENT_CONNECTIONS && connectionQueue.length > 0) {
         activeConnections++;
-        const { tohidDevNumber, customPairingCode, resolve, reject } = connectionQueue.shift();
-        
+        const item = connectionQueue.shift();
+        const { tohidDevNumber, customPairingCode, resolve, reject, promise } = item;
+
         startpairing(tohidDevNumber, customPairingCode)
             .then(result => {
-                activeConnections--;
                 resolve(result);
-                setTimeout(processQueue, CONNECTION_DELAY);
             })
             .catch(error => {
-                activeConnections--;
                 reject(error);
+            })
+            .finally(() => {
+                activeConnections--;
+                if (pendingConnections.get(tohidDevNumber) === promise) {
+                    pendingConnections.delete(tohidDevNumber);
+                }
                 setTimeout(processQueue, CONNECTION_DELAY);
             });
     }
 }
 
 function queuePairing(tohidDevNumber, customPairingCode = null) {
-    return new Promise((resolve, reject) => {
-        connectionQueue.push({ tohidDevNumber, customPairingCode, resolve, reject });
-        processQueue();
+    const key = String(tohidDevNumber || '').replace(/[^0-9@.]/g, '');
+    const pending = pendingConnections.get(key);
+    if (pending) return pending;
+
+    let resolvePromise;
+    let rejectPromise;
+    const promise = new Promise((resolve, reject) => {
+        resolvePromise = resolve;
+        rejectPromise = reject;
     });
+
+    pendingConnections.set(key, promise);
+    connectionQueue.push({
+        tohidDevNumber: key,
+        customPairingCode,
+        resolve: resolvePromise,
+        reject: rejectPromise,
+        promise
+    });
+    processQueue();
+    return promise;
 }
 
 function deleteFolderRecursive(folderPath) {
