@@ -41,7 +41,7 @@ const os = require('os');
 const { BOT_TOKEN } = require('./tohidstore/token');
 const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
-const { getActiveConnection, getActiveConnections, restartActiveConnection } = require('./pair');
+const { getActiveConnection, getActiveConnections, restartActiveConnection, getConnectionHealth } = require('./pair');
 const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
 
 function getTutorialVideoUrl() {
@@ -884,14 +884,21 @@ const getSessionDetails = async () => {
  * Delete session
  */
 const deleteSession = async (phone) => {
-  const sessionPath = path.join(PATHS.sessions, `${phone}@s.whatsapp.net`);
-  try {
-    if (await fileExists(sessionPath)) {
-      await fs.rm(sessionPath, { recursive: true, force: true });
-      return true;
+  const cleanPhone = String(phone).replace(/[^0-9]/g, '');
+  const sessionPaths = [
+    path.join(__dirname, 'tohidstore', 'pairing', cleanPhone),
+    path.join(PATHS.sessions, `${cleanPhone}@s.whatsapp.net`),
+    path.join(PATHS.sessions, cleanPhone)
+  ];
+  for (const sessionPath of sessionPaths) {
+    try {
+      if (await fileExists(sessionPath)) {
+        await fs.rm(sessionPath, { recursive: true, force: true });
+        return true;
+      }
+    } catch (err) {
+      console.error('sᴇssɪᴏɴ ᴅᴇʟᴇᴛɪᴏɴ ᴇʀʀᴏʀ:', err.message);
     }
-  } catch (err) {
-    console.error('sᴇssɪᴏɴ ᴅᴇʟᴇᴛɪᴏɴ ᴇʀʀᴏʀ:', err.message);
   }
   return false;
 };
@@ -1937,6 +1944,44 @@ bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
       { parse_mode: 'Markdown' }
     );
   }
+});
+
+// ==================== SESSION HEALTH ====================
+
+bot.onText(/^\/sessionstatus(?:@[\w_]+)?$/i, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  if (await checkBanned(userId, chatId)) return;
+  if (!isAdmin(userId.toString()) && !isOwner(userId) && !hasAccess(userId)) {
+    return sendAccessDenied(chatId);
+  }
+
+  const allHealth = getConnectionHealth();
+  const visible = isOwner(userId) || isAdmin(userId.toString())
+    ? allHealth
+    : allHealth.filter(item => getUserBots(userId).includes(String(item.number).replace(/[^0-9]/g, '')));
+
+  if (!visible.length) {
+    return bot.sendMessage(chatId,
+      '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗛𝗘𝗔𝗟𝗧𝗛⌟* ◆\n│\n├◆ 📱 ɴᴏ ᴀᴄᴛɪᴠᴇ sᴇssɪᴏɴs ғᴏᴜɴᴅ\n│\n└ ❏',
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  const icon = state => state === 'online' ? '🟢' : state === 'connecting' || state === 'reconnecting' ? '🟡' : state === 'logged_out' ? '🔴' : '⚪';
+  const lines = visible.map(item => {
+    const age = item.lastConnectedAt ? formatDuration(Math.max(0, Date.now() - item.lastConnectedAt)) : 'N/A';
+    const err = item.lastError ? String(item.lastError).slice(0, 80) : '';
+    return '├◆ ' + icon(item.state) + ' +'+item.number+' — *'+item.state.toUpperCase()+'*\\n' +
+      '│   ↳ ᴜᴘᴛɪᴍᴇ: '+age+' | ʀᴇᴛʀʏ: '+item.retryCount +
+      (err ? '\\n│   ↳ ⚠️ '+err : '');
+  }).join('\\n');
+
+  return bot.sendMessage(chatId,
+    '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗛𝗘𝗔𝗟𝗧𝗛⌟* ◆\n│\n' + lines + '\n│\n└ ❏',
+    { parse_mode: 'Markdown' }
+  );
 });
 
 // ==================== USER BOT RESTART ====================
