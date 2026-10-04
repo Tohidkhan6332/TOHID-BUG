@@ -3765,6 +3765,7 @@ ${approvalText}
 
     const adminKeyboard = {
       inline_keyboard: [
+        [{ text: '💳 𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗗𝗔𝗦𝗛𝗕𝗢𝗔𝗥𝗗', callback_data: 'payment_dashboard' }],
         [{ text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' }],
         [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
       ]
