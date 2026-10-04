@@ -121,6 +121,7 @@ function launchBot() {
         require('./Tohid.js');
         telegramLoaded = true;
         console.log(chalk.green('✅ Telegram bot module loaded successfully.'));
+        console.log(chalk.cyan('⏳ Telegram polling is starting asynchronously...'));
 
         // Restore all previously paired WhatsApp sessions after a process restart/update.
         // Pairing credentials are stored on disk by pair.js, so users should not need
