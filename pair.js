@@ -498,6 +498,18 @@ creds: state.creds,
         console.log(chalk.green(`✓ Pairing code saved for +${pairingNumber}`));
     };
 
+    const waitForPairingSocket = async () => {
+        const deadline = Date.now() + 15000;
+        while (Date.now() < deadline) {
+            if (tracker.connection !== tohid || tracker.disconnected || state.creds.registered) {
+                return false;
+            }
+            if (tohid.ws?.readyState === 1) return true;
+            await sleep(500);
+        }
+        return false;
+    };
+
     const requestPairingCodeWithRetry = async () => {
         if (!pairingCode || state.creds.registered || tracker.disconnected) return;
         if (tracker.connection !== tohid) return;
@@ -511,10 +523,19 @@ creds: state.creds,
         pairingRetryCount++;
 
         try {
-            const codeRaw = await tohid.requestPairingCode(
+            const socketReady = await waitForPairingSocket();
+            if (!socketReady) {
+                throw new Error('WhatsApp socket did not become ready for pairing');
+            }
+
+            const requestPromise = tohid.requestPairingCode(
                 pairingNumber,
                 customPairingCode || undefined
             );
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Pairing code request timed out')), 10000)
+            );
+            const codeRaw = await Promise.race([requestPromise, timeoutPromise]);
             const code = codeRaw?.match(/.{1,4}/g)?.join("-") || codeRaw;
 
             tracker.pairingRequested = true;
@@ -964,7 +985,7 @@ creds: state.creds,
     if (pairingCode && !state.creds.registered) {
         setTimeout(() => {
             void requestPairingCodeWithRetry();
-        }, 1500);
+        }, 1000);
     }
 
     tohid.ev.on('creds.update', saveCreds);
