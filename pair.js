@@ -461,7 +461,8 @@ creds: state.creds,
         
         setTimeout(async () => {
             try {
-                let code = await tohid.requestPairingCode(phoneNumber);
+                const requestedCustomCode = typeof arguments !== 'undefined' ? undefined : undefined;
+                let code = await tohid.requestPairingCode(phoneNumber, global.__TOHID_PAIRING_CUSTOM_CODE || undefined);
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
                 
                 console.log(chalk.bgGreen.black(`📱 Pairing code for ${tohidDevNumber}: ${chalk.white.bold(code)}`));
