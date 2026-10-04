@@ -191,6 +191,7 @@ const { initDebug } = require('./debug.js');
 initDebug(bot);
 
 let telegramPollingStarted = false;
+let telegramBotUsername = '';
 
 async function startTelegramPolling() {
   if (telegramPollingStarted) return;
@@ -199,6 +200,7 @@ async function startTelegramPolling() {
   try {
     await bot.deleteWebHook({ drop_pending_updates: false });
     const me = await bot.getMe();
+    telegramBotUsername = me.username || '';
     console.log(`[TELEGRAM] Connected as @${me.username || me.first_name} (${me.id})`);
 
     await bot.startPolling({
@@ -3795,7 +3797,7 @@ bot.onText(/\/reply (\d+) (.+)/, async (msg, match) => {
 bot.on('message', async (msg) => {
   if (msg.chat.type === 'private') return;
   
-  if (msg.text && msg.text.includes(`@${(await bot.getMe()).username}`)) {
+  if (telegramBotUsername && msg.text && msg.text.includes(`@${telegramBotUsername}`)) {
     await handleGroupMessage(msg);
   }
 });
