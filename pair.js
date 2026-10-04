@@ -98,6 +98,7 @@ const {
   BufferJSON,
   waChatKey,
   fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   emitGroupParticipantsUpdate,
   emitGroupUpdate,
   proto, 
@@ -427,7 +428,26 @@ const store = makeInMemoryStore
     tracker.pairingMode = 'code';
     tracker.lastActivity = Date.now();
 
-    const { version, isLatest } = await fetchLatestBaileysVersion();
+    // Resolve the live WhatsApp Web client revision. The Baileys repository
+    // revision can lag behind Meta's current server requirement and cause
+    // immediate connection/login failures.
+    let version;
+    let isLatest = false;
+    try {
+        const liveVersion = await fetchLatestWaWebVersion();
+        version = liveVersion?.version;
+        isLatest = !!liveVersion?.isLatest;
+        if (!Array.isArray(version) || version.length !== 3) {
+            throw new Error('Invalid live WhatsApp Web version');
+        }
+        console.log(chalk.cyan(`🌐 WhatsApp Web version: ${version.join('.')} (live: ${isLatest})`));
+    } catch (liveVersionError) {
+        console.log(chalk.yellow(`⚠️ Live WhatsApp version lookup failed: ${liveVersionError?.message || liveVersionError}`));
+        const fallbackVersion = await fetchLatestBaileysVersion();
+        version = fallbackVersion.version;
+        isLatest = !!fallbackVersion.isLatest;
+        console.log(chalk.yellow(`↩️ Using Baileys fallback version: ${version.join('.')}`));
+    }
     
     // Ensure session directory exists
     const sessionPath = `./tohidstore/pairing/${sessionKey}`;
