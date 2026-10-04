@@ -1117,6 +1117,8 @@ const getSessionRecords = async () => {
       for (const entry of entries) {
         if (!entry.isDirectory()) continue;
         const raw = String(entry.name);
+        // Temporary QR sessions are not authenticated WhatsApp sessions.
+        if (/^qr_/i.test(raw)) continue;
         const number = raw.replace(/@s\.whatsapp\.net$/i, '').replace(/[^0-9]/g, '');
         if (!/^\d{7,15}$/.test(number) || seen.has(number)) continue;
 
