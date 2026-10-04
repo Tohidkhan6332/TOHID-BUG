@@ -948,6 +948,24 @@ function getActiveConnection(number = null) {
     return active[0] || null;
 }
 
+async function restartActiveConnection(number) {
+    const normalized = String(number || '').replace(/[^0-9]/g, '');
+    const entry = [...rentbotTracker.entries()].find(([key]) => key.replace(/[^0-9]/g, '') === normalized);
+    if (!entry) return false;
+
+    const [key, tracker] = entry;
+    try {
+        tracker.disconnected = false;
+        if (tracker.connection?.ws) tracker.connection.ws.close();
+        else if (tracker.connection?.end) tracker.connection.end();
+    } catch (e) {}
+
+    await sleep(1500);
+    await queuePairing(key);
+    return true;
+}
+
 module.exports = startpairing;
 module.exports.getActiveConnections = getActiveConnections;
 module.exports.getActiveConnection = getActiveConnection;
+module.exports.restartActiveConnection = restartActiveConnection;
