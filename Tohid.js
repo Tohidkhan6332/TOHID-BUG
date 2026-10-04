@@ -140,7 +140,8 @@ const PATHS = {
   backups: path.join(__dirname, 'axis_storage', 'backups'),
   // NEW: Premium system paths
   premium: path.join(__dirname, 'axis_storage', 'premium.json'),
-  trials: path.join(__dirname, 'axis_storage', 'trials.json')
+  referrals: path.join(__dirname, 'axis_storage', 'referrals.json'),
+  coupons: path.join(__dirname, 'axis_storage', 'coupons.json')
 };
 
 // Media Assets
@@ -243,7 +244,9 @@ let database = {
   activeSessions: new Map(),
   maintenance: false,
   // NEW: Premium system stores
-  premium: {}, // Format: { "user_id": { expiry: timestamp, addedBy: admin_id, addedAt: timestamp } }
+  premium: {}, // Format: { "user_id": { expiry, addedBy, addedAt, slots } }
+  referrals: {}, // { userId: { code, referredBy, successful, bonusDays } }
+  coupons: {} // { CODE: { days, maxUses, uses, createdBy, createdAt } }
 };
 
 // Rate Limit Store
@@ -505,7 +508,8 @@ const grantPremium = async (userId, durationMs, adminId) => {
   database.premium[id] = {
     expiry: base + durationMs,
     addedBy: adminId.toString(),
-    addedAt: Date.now()
+    addedAt: Date.now(),
+    slots: Number(database.premium[id]?.slots || 3)
   };
 
   await saveData();
@@ -670,6 +674,14 @@ const loadDatabase = async () => {
 
   // Premium-only service; no free/trial mode.
 
+  // Load referral data
+  if (await fileExists(PATHS.referrals)) {
+    try { database.referrals = JSON.parse(await fs.readFile(PATHS.referrals, 'utf8')); } catch { database.referrals = {}; }
+  }
+  if (await fileExists(PATHS.coupons)) {
+    try { database.coupons = JSON.parse(await fs.readFile(PATHS.coupons, 'utf8')); } catch { database.coupons = {}; }
+  }
+
 
 
 };
@@ -688,8 +700,10 @@ const saveData = async () => {
       fs.writeFile(PATHS.maintenance, JSON.stringify({ enabled: database.maintenance }, null, 2)),
       fs.writeFile(PATHS.reports, JSON.stringify(database.reports, null, 2)),
       fs.writeFile(PATHS.audit, JSON.stringify(database.audit.slice(-SYSTEM.maxLogs), null, 2)),
-      // Save premium data
-      fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2))
+      // Save premium, referral and coupon data
+      fs.writeFile(PATHS.premium, JSON.stringify(database.premium, null, 2)),
+      fs.writeFile(PATHS.referrals, JSON.stringify(database.referrals, null, 2)),
+      fs.writeFile(PATHS.coupons, JSON.stringify(database.coupons, null, 2))
     ]);
   } catch (err) {
     console.error('sᴀᴠᴇ ᴇʀʀᴏʀ:', err.message);
@@ -717,7 +731,8 @@ const trackUser = async (userId, userName = 'ᴜsᴇʀ', isGroup = false) => {
       groupMessages: isGroup ? 1 : 0,
       privateMessages: isGroup ? 0 : 1,
       // NEW: Track premium status in user details
-      premium: isPremium(userIdStr)
+      premium: isPremium(userIdStr),
+      bots: []
     };
     
     console.log(chalk.green(`➕ ɴᴇᴡ ᴜsᴇʀ: ${userName} (${userIdStr})`));
@@ -985,6 +1000,9 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 ├◆ /plans   - ᴘʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇ ᴘʟᴀɴ
 ├◆ /myplan  - ʏᴏᴜʀ ᴘʟᴀɴ
 ├◆ /tutorial - ᴠɪᴅᴇᴏ ɢᴜɪᴅᴇ
+├◆ /dashboard - ᴜsᴇʀ ᴅᴀsʜʙᴏᴀʀᴅ
+├◆ /referral - ʀᴇғᴇʀʀᴀʟ ᴄᴏᴅᴇ
+├◆ /coupon CODE - ʀᴇᴅᴇᴇᴍ ᴄᴏᴜᴘᴏɴ
 ├◆ /help    - ᴄᴏᴍᴍᴀɴᴅ ʟɪsᴛ
 │
 └ ❏`;
@@ -1052,7 +1070,8 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
       [
         { text: '👑 ᴘʟᴀɴs', callback_data: 'premium_plans' },
         { text: '🐞 ʙᴜɢ ᴍᴇɴᴜ', callback_data: 'show_bug_menu' },
-        { text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' }
+        { text: '⚙️ ᴍɪsᴄ ᴍᴇɴᴜ', callback_data: 'misc_menu' },
+        { text: '📊 ᴅᴀsʜʙᴏᴀʀᴅ', callback_data: 'user_dashboard' }
       ],
       [
         ...(safeUrl(SOCIAL?.telegram?.primary) ? [{
@@ -1142,7 +1161,145 @@ ${missingList}
   }
 };
 
-// ==================== SERVICE PLAN COMMANDS ====================
+// ==================== PREMIUM SERVICE DASHBOARD ====================
+
+const getUserBots = (userId) => {
+  const details = database.userDetails[userId.toString()] || {};
+  return Array.isArray(details.bots) ? details.bots : [];
+};
+
+const getSlotLimit = (userId) => {
+  const id = userId.toString();
+  if (isOwner(userId) || isAdmin(id)) return 100;
+  return Number(database.premium[id]?.slots || 3);
+};
+
+const sendDashboard = async (chatId, userId) => {
+  const id = userId.toString();
+  const status = getPlanStatus(userId);
+  const bots = getUserBots(userId);
+  const active = bots.filter(number => Boolean(getActiveConnection(number))).length;
+  const slotLimit = getSlotLimit(userId);
+
+  let text = `┌ ❏ ◆ *⌜𝗨𝗦𝗘𝗥 𝗗𝗔𝗦𝗛𝗕𝗢𝗔𝗥𝗗⌟* ◆
+│
+├◆ 👤 ᴜsᴇʀ: ${id}
+├◆ 👑 ᴘʟᴀɴ: ${status.plan.toUpperCase()}
+├◆ 🤖 ʙᴏᴛs: ${active}/${slotLimit}
+`;
+
+  if (status.expiry) {
+    text += `├◆ ⏳ ᴇxᴘɪʀʏ: ${formatPlanExpiry(status.expiry)}
+├◆ 🕐 ʀᴇᴍᴀɪɴɪɴɢ: ${formatDuration(status.remaining)}
+`;
+  } else {
+    text += `├◆ 🔐 ᴀᴄᴄᴇss: ${status.plan === 'premium_required' ? 'PREMIUM REQUIRED' : 'FULL ACCESS'}
+`;
+  }
+
+  text += '│\\n└ ❏';
+
+  return bot.sendMessage(chatId, text, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '📱 ᴍʏ ʙᴏᴛs', callback_data: 'my_bots' }],
+        [{ text: '👑 ᴍʏ ᴘʟᴀɴ', callback_data: 'premium_plans' }, { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
+      ]
+    }
+  });
+};
+
+const sendMyBots = async (chatId, userId) => {
+  const bots = getUserBots(userId);
+  if (!bots.length) {
+    return bot.sendMessage(chatId,
+      '┌ ❏ ◆ *⌜𝗠𝗬 𝗕𝗢𝗧𝗦⌟* ◆\\n│\\n├◆ ɴᴏ ʙᴏᴛs ᴀssɪɢɴᴇᴅ ʏᴇᴛ\\n├◆ ᴜsᴇ /pair NUMBER ᴛᴏ ᴀᴅᴅ ᴀ ʙᴏᴛ\\n│\\n└ ❏',
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  const lines = bots.map((number, index) => {
+    const connected = Boolean(getActiveConnection(number));
+    return `├◆ ${index + 1}. +${number} — ${connected ? '🟢 ᴏɴʟɪɴᴇ' : '🔴 ᴏғғʟɪɴᴇ'}`;
+  }).join('\\n');
+
+  return bot.sendMessage(chatId,
+    `┌ ❏ ◆ *⌜𝗠𝗬 𝗕𝗢𝗧𝗦⌟* ◆
+│
+${lines}
+│
+└ ❏`,
+    { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '📊 ᴅᴀsʜʙᴏᴀʀᴅ', callback_data: 'user_dashboard' }]] } }
+  );
+};
+
+bot.onText(/^\\/dashboard(?:@[\\w_]+)?$/i, async (msg) => {
+  if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /dashboard in private chat.');
+  if (await checkBanned(msg.from.id, msg.chat.id)) return;
+  return sendDashboard(msg.chat.id, msg.from.id);
+});
+
+bot.onText(/^\\/referral(?:@[\\w_]+)?$/i, async (msg) => {
+  const id = msg.from.id.toString();
+  if (!database.referrals[id]) {
+    database.referrals[id] = { code: 'TOHID-' + id, referredBy: null, successful: 0, bonusDays: 0 };
+    await saveData();
+  }
+  const data = database.referrals[id];
+  return bot.sendMessage(msg.chat.id,
+    `🎁 *REFERRAL*
+\\n\\nYour code: \`ref_${data.code}`
+\\nShare it with new users. Successful paid activations can be credited by the owner.`,
+    { parse_mode: 'Markdown' }
+  );
+});
+
+bot.onText(/^\\/coupon(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+  const id = msg.from.id.toString();
+  const code = String(match?.[1] || '').trim().toUpperCase();
+  if (!code) return bot.sendMessage(msg.chat.id, 'Usage: /coupon CODE');
+  const coupon = database.coupons[code];
+  if (!coupon || Number(coupon.uses || 0) >= Number(coupon.maxUses || 1)) {
+    return bot.sendMessage(msg.chat.id, '❌ Invalid or already used coupon.');
+  }
+  if (isOwner(msg.from.id) || isAdmin(id)) return bot.sendMessage(msg.chat.id, 'ℹ️ Admin accounts do not need coupons.');
+  const current = Number(database.premium[id]?.expiry || 0);
+  const base = current > Date.now() ? current : Date.now();
+  database.premium[id] = {
+    ...(database.premium[id] || {}),
+    expiry: base + Number(coupon.days) * 86400000,
+    slots: Number(database.premium[id]?.slots || 3),
+    addedBy: database.premium[id]?.addedBy || 'coupon',
+    addedAt: database.premium[id]?.addedAt || Date.now()
+  };
+  coupon.uses = Number(coupon.uses || 0) + 1;
+  await saveData();
+  return bot.sendMessage(msg.chat.id, `✅ Coupon applied.\\n👑 Premium bonus: ${coupon.days} day(s)\\n📅 Expiry: ${formatPlanExpiry(database.premium[id].expiry)}`);
+});
+
+bot.onText(/^\\/createcoupon(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
+  if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, '❌ Admin only.');
+  const args = String(match?.[1] || '').trim().split(/\\s+/);
+  const code = String(args.shift() || '').toUpperCase();
+  const days = Number(args.shift());
+  const maxUses = Number(args.shift() || 1);
+  if (!/^[A-Z0-9_-]{3,32}$/.test(code) || !Number.isFinite(days) || days <= 0 || !Number.isFinite(maxUses) || maxUses <= 0) {
+    return bot.sendMessage(msg.chat.id, 'Usage: /createcoupon CODE DAYS MAX_USES');
+  }
+  database.coupons[code] = { days, maxUses, uses: 0, createdBy: msg.from.id.toString(), createdAt: Date.now() };
+  await saveData();
+  return bot.sendMessage(msg.chat.id, `✅ Coupon created: ${code}\\n🎁 ${days} day(s)\\n🔢 Uses: ${maxUses}`);
+});
+
+bot.onText(/^\\/coupons(?:@[\\w_]+)?$/i, async (msg) => {
+  if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return bot.sendMessage(msg.chat.id, '❌ Admin only.');
+  const entries = Object.entries(database.coupons);
+  if (!entries.length) return bot.sendMessage(msg.chat.id, '🎟️ No coupons.');
+  return bot.sendMessage(msg.chat.id, '🎟️ *COUPONS*\\n\\n' + entries.map(([code, d]) => `${code} — ${d.days}d — ${d.uses}/${d.maxUses}`).join('\\n'), { parse_mode: 'Markdown' });
+});
+
+// // ==================== SERVICE PLAN COMMANDS ====================
 bot.onText(/\/plans/, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
@@ -1261,7 +1418,7 @@ const TELEGRAM_NATIVE_COMMANDS = new Set([
   'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
   'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu',
   'plans', 'myplan', 'addpremium', 'delpremium', 'premiumusers',
-  'misc'
+  'misc', 'dashboard', 'referral', 'coupon', 'createcoupon', 'coupons'
 ]);
 
 bot.onText(/^\/([a-zA-Z0-9_-]+)(?:@[^\s]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
@@ -1604,6 +1761,10 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
     
     if (database.userDetails[userId]) {
       database.userDetails[userId].pairs++;
+      database.userDetails[userId].bots = Array.isArray(database.userDetails[userId].bots) ? database.userDetails[userId].bots : [];
+      if (!database.userDetails[userId].bots.includes(cleanNumber)) {
+        database.userDetails[userId].bots.push(cleanNumber);
+      }
     }
     
     await saveData();
@@ -1731,6 +1892,10 @@ bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
 
   if (await deleteSession(cleanNumber)) {
     database.activeSessions.delete(cleanNumber);
+    if (database.userDetails[userId]) {
+      database.userDetails[userId].bots = (database.userDetails[userId].bots || []).filter(n => n !== cleanNumber);
+    }
+    await saveData();
     addAuditLog('ᴜɴᴘᴀɪʀ', userId, cleanNumber);
     
     bot.sendMessage(chatId,
@@ -3176,6 +3341,16 @@ bot.on('callback_query', async (query) => {
     return sendBugMenu(chatId);
   }
 
+  else if (data === 'user_dashboard') {
+    await bot.answerCallbackQuery(query.id, { text: 'ᴅᴀsʜʙᴏᴀʀᴅ' });
+    return sendDashboard(chatId, userId);
+  }
+
+  else if (data === 'my_bots') {
+    await bot.answerCallbackQuery(query.id, { text: 'ᴍʏ ʙᴏᴛs' });
+    return sendMyBots(chatId, userId);
+  }
+
   else if (data === 'misc_menu') {
     await bot.answerCallbackQuery(query.id, { text: 'ᴍɪsᴄ ᴍᴇɴᴜ' });
 
@@ -3214,7 +3389,9 @@ bot.on('callback_query', async (query) => {
 ├◆ /premiumusers
 ├◆ /maintenance
 ├◆ /logs
-├◆ /announce`;
+├◆ /announce
+├◆ /createcoupon CODE DAYS MAX_USES
+├◆ /coupons`;
     }
 
     if (isOwnerUser) {
@@ -3479,6 +3656,19 @@ setInterval(async () => {
   const now = Date.now();
   
   for (const [userId, data] of Object.entries(database.premium)) {
+    const remaining = Number(data.expiry) - now;
+    const warningDays = [7, 3, 1];
+    if (remaining > 0 && warningDays.includes(Math.ceil(remaining / 86400000)) && data.lastWarningDay !== Math.ceil(remaining / 86400000)) {
+      const warningDay = Math.ceil(remaining / 86400000);
+      data.lastWarningDay = warningDay;
+      try {
+        await bot.sendMessage(userId,
+          `⚠️ *PREMIUM EXPIRY WARNING*\\n\\nYour TOHID-BUG Premium expires in *${warningDay} day(s)*.\\n📅 ${formatPlanExpiry(data.expiry)}\\n\\nContact @Tohidkhan6332 for renewal.`,
+          { parse_mode: 'Markdown' }
+        );
+      } catch (e) {}
+    }
+
     if (data.expiry < now) {
       delete database.premium[userId];
       expired++;
