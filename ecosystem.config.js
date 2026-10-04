@@ -23,7 +23,7 @@ module.exports = {
     restart_delay: 5000,
     max_restarts: 10,
     min_uptime: "10s",
-    wait_ready: true,
+    wait_ready: false,
     listen_timeout: 30000
   }]
 };
