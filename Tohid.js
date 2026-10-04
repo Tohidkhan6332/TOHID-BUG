@@ -497,7 +497,10 @@ const isPremium = (userId) => {
 
   if (!premiumData) return false;
 
-  if (premiumData.expiry < Date.now()) {
+  if (premiumData.lifetime === true) return true;
+
+  const expiry = Number(premiumData.expiry || 0);
+  if (!expiry || expiry < Date.now()) {
     delete database.premium[userIdStr];
     saveData();
     return false;
