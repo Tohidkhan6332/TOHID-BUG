@@ -604,15 +604,18 @@ const sendPlans = async (chatId, userId) => {
   const status = getPlanStatus(userId);
   const current = status.plan === 'premium'
     ? (database.premium[userId.toString()]?.lifetime === true ? '👑 PREMIUM • LIFETIME' : '👑 PREMIUM • EXPIRES: ' + formatPlanExpiry(status.expiry))
-    : status.plan === 'owner'
-      ? '👑 OWNER'
-      : status.plan === 'admin'
-        ? '🛡️ ADMIN'
-        : '🔒 PREMIUM REQUIRED';
+    : status.plan === 'owner' ? '👑 OWNER'
+      : status.plan === 'admin' ? '🛡️ ADMIN' : '🔒 PREMIUM REQUIRED';
 
   const text = `┌ ❏ ◆ *⌜𝗧𝗢𝗛𝗜𝗗-𝗕𝗨𝗚 𝗣𝗥𝗘𝗠𝗜𝗨𝗠⌟* ◆
 │
 ├◆ ʏᴏᴜʀ ᴘʟᴀɴ: ${current}
+│
+├◆ *⌜𝗪𝗛𝗬 𝗣𝗥𝗘𝗠𝗜𝗨𝗠⌟*
+├◆ ⚡ Premium pairing access
+├◆ 🔗 Premium bot services
+├◆ 🔄 Renew or extend an active plan
+├◆ 🧾 Payment status & history
 │
 ├◆ *⌜𝗣𝗥𝗜𝗖𝗘 𝗟𝗜𝗦𝗧⌟*
 ├◆ 7 Days — *$2*
@@ -624,21 +627,79 @@ const sendPlans = async (chatId, userId) => {
 ├◆ 💳 Manual payment verification
 ├◆ 🇮🇳 UPI: ${PAYMENT_UPI_ID}
 ├◆ 🟡 Binance ID: ${PAYMENT_BINANCE_ID}
+├◆ ✅ Access activates after approval
 │
 └ ❏`;
 
   return bot.sendMessage(chatId, text, {
     parse_mode: 'Markdown',
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: '7 DAYS • $2', callback_data: 'buy_plan:7d' }, { text: '30 DAYS • $5', callback_data: 'buy_plan:30d' }],
-        [{ text: '90 DAYS • $10', callback_data: 'buy_plan:90d' }],
-        [{ text: 'LIFETIME • $50', callback_data: 'buy_plan:lifetime' }],
-        [{ text: 'BOT SCRIPT • $100', callback_data: 'buy_plan:script' }],
-        [{ text: '📜 MY PAYMENTS', callback_data: 'my_payments' }],
-        [{ text: '🏠 MENU', callback_data: 'show_main' }]
-      ]
-    }
+    reply_markup: { inline_keyboard: [
+      [{ text: '7 DAYS • $2', callback_data: 'buy_plan:7d' }, { text: '30 DAYS • $5', callback_data: 'buy_plan:30d' }],
+      [{ text: '90 DAYS • $10', callback_data: 'buy_plan:90d' }],
+      [{ text: 'LIFETIME • $50', callback_data: 'buy_plan:lifetime' }],
+      [{ text: 'BOT SCRIPT • $100', callback_data: 'buy_plan:script' }],
+      [{ text: '👤 MY ACCOUNT', callback_data: 'my_account' }],
+      [{ text: '📜 MY PAYMENTS', callback_data: 'my_payments' }],
+      [{ text: '🏠 MENU', callback_data: 'show_main' }]
+    ]}
+  });
+};
+
+const sendMyAccount = async (chatId, userId) => {
+  const id = userId.toString();
+  const status = getPlanStatus(userId);
+  const premium = database.premium[id] || {};
+  const payments = getPaymentRecords().filter(p => p.userId === id);
+  const approved = payments.filter(p => p.status === 'approved');
+  const pending = payments.filter(p => ['pending_payment','pending_review'].includes(p.status));
+  const totalPaid = approved.reduce((sum, p) => sum + Number(p.priceUsd || 0), 0);
+  const pairsUsed = Number(database.userDetails[id]?.pairs || 0);
+
+  let planLine = '🔒 PREMIUM REQUIRED';
+  if (status.plan === 'owner') planLine = '👑 OWNER';
+  else if (status.plan === 'admin') planLine = '🛡️ ADMIN';
+  else if (premium.lifetime === true) planLine = '👑 PREMIUM • LIFETIME';
+  else if (status.plan === 'premium') planLine = '👑 PREMIUM • ACTIVE';
+
+  const expiryLine = premium.lifetime === true
+    ? '♾️ Expiry: Lifetime'
+    : status.expiry
+      ? '📅 Expiry: ' + formatPlanExpiry(status.expiry) + '\\n├◆ ⏳ Remaining: ' + formatDuration(status.remaining)
+      : '📅 Expiry: Not active';
+
+  const lastPayment = payments[0];
+  const lastLine = lastPayment
+    ? '├◆ 🧾 Last payment: *' + lastPayment.id + '*\\n├◆ 📌 Status: *' + formatPaymentStatus(lastPayment.status) + '*'
+    : '';
+
+  const text = `┌ ❏ ◆ *⌜𝗠𝗬 𝗔𝗖𝗖𝗢𝗨𝗡𝗧⌟* ◆
+│
+├◆ 👤 User ID: *${id}*
+├◆ 📦 Plan: *${planLine}*
+├◆ ${expiryLine}
+├◆ 🔗 Pairings used: *${pairsUsed}*
+│
+├◆ 💳 Payments: *${payments.length}*
+├◆ ✅ Approved: *${approved.length}*
+├◆ ⏳ Active requests: *${pending.length}*
+├◆ 💰 Total paid: *${totalPaid.toFixed(2)}*
+${lastLine}
+│
+└ ❏`;
+
+  const renewal = status.plan === 'premium' && premium.lifetime !== true
+    ? [[{ text: '🔄 RENEW 7 DAYS • $2', callback_data: 'buy_plan:7d' }, { text: '🔄 RENEW 30 DAYS • $5', callback_data: 'buy_plan:30d' }],
+       [{ text: '🔄 RENEW 90 DAYS • $10', callback_data: 'buy_plan:90d' }]]
+    : [[{ text: '👑 BUY PREMIUM', callback_data: 'premium_plans' }]];
+
+  return bot.sendMessage(chatId, text, {
+    parse_mode: 'Markdown',
+    reply_markup: { inline_keyboard: [
+      ...renewal,
+      [{ text: '📜 MY PAYMENTS', callback_data: 'my_payments' }],
+      [{ text: '👑 ALL PLANS', callback_data: 'premium_plans' }],
+      [{ text: '🏠 MENU', callback_data: 'show_main' }]
+    ]}
   });
 };
 
@@ -1560,23 +1621,14 @@ bot.onText(/^\/plans(?:@[\w_]+)?$/i, async (msg) => {
   return sendPlans(msg.chat.id, userId);
 });
 
-bot.onText(/^\/myplan(?:@[\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/(?:myplan|account|myaccount)(?:@[\\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
-  if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /myplan in private chat.');
+  if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use this command in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
-  const status = getPlanStatus(userId);
-  const pairsUsed = Number(database.userDetails[userId.toString()]?.pairs || 0);
-  let text = `┌ ❏ ◆ *⌜𝗠𝗬 𝗣𝗟𝗔𝗡⌟* ◆
-│
-├◆ ᴘʟᴀɴ: ${status.plan.toUpperCase()}
-├◆ ᴘᴀɪʀɪɴɢs ᴜsᴇᴅ: ${pairsUsed}`;
-  if (status.expiry) text += `├◆ ᴇxᴘɪʀʏ: ${formatPlanExpiry(status.expiry)}
-├◆ ʀᴇᴍᴀɪɴɪɴɢ: ${formatDuration(status.remaining)}`;
-  else if (status.plan === 'premium_required') text += '├◆ ᴘʀᴇᴍɪᴜᴍ: ʀᴇǫᴜɪʀᴇᴅ\\n';
-  text += '│\\n└ ❏';
-  return bot.sendMessage(msg.chat.id, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '👑 ᴜᴘɢʀᴀᴅᴇ', callback_data: 'premium_plans' }]] } });
+  return sendMyAccount(msg.chat.id, userId);
 });
-// ==================== COMMAND: START ====================
+// ==================== COMMAND: START
+ ====================
 
 bot.onText(/^\/start(?:@[\w_]+)?(?:\s+.*)?$/i, async (msg) => {
   const chatId = msg.chat.id;
@@ -3642,6 +3694,11 @@ ${approvalText}
     await bot.answerCallbackQuery(query.id, { text: 'ʜɪsᴛᴏʀʏ' }).catch(() => {});
     return sendPaymentReviewList(chatId,'all');
   }
+  else if (data === 'my_account') {
+    await bot.answerCallbackQuery(query.id, { text: 'ᴍʏ ᴀᴄᴄᴏᴜɴᴛ' }).catch(() => {});
+    return sendMyAccount(chatId, userId);
+  }
+
   else if (data === 'show_main') {
     await bot.answerCallbackQuery(query.id);
     await sendMainMenu(chatId, userId, userName, isAdmin(userId.toString()), isOwner(userId));
@@ -3681,6 +3738,7 @@ ${approvalText}
 ├◆ /stats
 ├◆ /report
 ├◆ /plans
+├◆ /account
 ├◆ /myplan
 ├◆ /tutorial
 ├◆ /dashboard
