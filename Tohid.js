@@ -1438,14 +1438,14 @@ bot.onText(/^\/coupons(?:@[\w_]+)?$/i, async (msg) => {
 });
 
 // // ==================== SERVICE PLAN COMMANDS ====================
-bot.onText(/\/plans/, async (msg) => {
+bot.onText(/^\/plans(?:@[\\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /plans in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
   return sendPlans(msg.chat.id, userId);
 });
 
-bot.onText(/\/myplan/, async (msg) => {
+bot.onText(/^\/myplan(?:@[\\w_]+)?$/i, async (msg) => {
   const userId = msg.from.id;
   if (msg.chat.type !== 'private') return bot.sendMessage(msg.chat.id, '💬 Please use /myplan in private chat.');
   if (await checkBanned(userId, msg.chat.id)) return;
@@ -1463,7 +1463,7 @@ bot.onText(/\/myplan/, async (msg) => {
 });
 // ==================== COMMAND: START ====================
 
-bot.onText(/\/start/, async (msg) => {
+bot.onText(/^\/start(?:@[\\w_]+)?(?:\\s+.*)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const userName = msg.from.first_name || 'ᴜsᴇʀ';
@@ -1536,7 +1536,7 @@ const TELEGRAM_BUG_COMMANDS = new Set([
 const TELEGRAM_NATIVE_COMMANDS = new Set([
   'start', 'pair', 'unpair', 'listpair', 'addadmin', 'deladmin',
   'admins', 'users', 'broadcast', 'help', 'menu', 'allmenu',
-  'plans', 'myplan', 'addpremium', 'delpremium', 'premiumusers',
+  'plans', 'myplan', 'addpremium', 'addprem', 'delpremium', 'delprem', 'premiumusers', 'premlist',
   'misc', 'dashboard', 'referral', 'coupon', 'createcoupon', 'coupons', 'restartbot'
 ]);
 
@@ -2016,7 +2016,7 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
 
 // ==================== COMMAND: UNPAIR ====================
 
-bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/^\/unpair(?:@[\\w_]+)?(?:\\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const input = match ? match[1] : null;
@@ -2406,7 +2406,7 @@ bot.onText(/\/premlist/, async (msg) => {
 
 // ==================== COMMAND: PING ====================
 
-bot.onText(/\/ping/, async (msg) => {
+bot.onText(/^\/ping(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const start = Date.now();
@@ -2455,7 +2455,7 @@ bot.onText(/\/ping/, async (msg) => {
 
 // ==================== COMMAND: RUNTIME ====================
 
-bot.onText(/\/runtime/, async (msg) => {
+bot.onText(/^\/runtime(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2496,7 +2496,7 @@ bot.onText(/\/runtime/, async (msg) => {
 
 // ==================== COMMAND: STATS ====================
 
-bot.onText(/\/stats/, async (msg) => {
+bot.onText(/^\/stats(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2633,7 +2633,7 @@ bot.onText(/\/report(?:\s+(.+))?/, async (msg, match) => {
 
 // ==================== COMMAND: TUTORIAL ====================
 
-bot.onText(/\/tutorial/, async (msg) => {
+bot.onText(/^\/tutorial(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2689,7 +2689,7 @@ bot.onText(/\/tutorial/, async (msg) => {
 
 // ==================== COMMAND: HELP ====================
 
-bot.onText(/\/help/, async (msg) => {
+bot.onText(/^\/help(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2771,7 +2771,7 @@ bot.onText(/\/help/, async (msg) => {
 // ==================== ADMIN COMMANDS ====================
 
 // /users - FIXED with proper formatting
-bot.onText(/\/users/, async (msg) => {
+bot.onText(/^\/users(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2798,7 +2798,7 @@ ${userText}${database.stats.totalUsers > 10 ? `├◆ ... ᴀɴᴅ ${database.st
 });
 
 // /listpair - COMPLETELY FIXED with detailed session information
-bot.onText(/\/listpair/, async (msg) => {
+bot.onText(/^\/listpair(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -2950,7 +2950,7 @@ bot.onText(/\/broadcast(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /clean
-bot.onText(/\/clean/, async (msg) => {
+bot.onText(/^\/clean(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -3181,7 +3181,7 @@ bot.onText(/\/maintenance(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // /logs
-bot.onText(/\/logs/, async (msg) => {
+bot.onText(/^\/logs(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -3385,7 +3385,7 @@ bot.onText(/\/removeadmin(?:\s+(.+))?/, async (msg, match) => {
   addAuditLog('ʀᴇᴍᴏᴠᴇᴀᴅᴍɪɴ', userId, targetId);
 });
 
-bot.onText(/\/status/, (msg) => {
+bot.onText(/^\/status(?:@[\\w_]+)?$/i, (msg) => {
     const chatId = msg.chat.id;
     const uptime = process.uptime();
     const hours = Math.floor(uptime / 3600);
@@ -3425,7 +3425,7 @@ bot.onText(/\/delpremium(?:\s+(.+))?/, async (msg, match) => {
   return bot.sendMessage(chatId, '✅ Premium removed from ' + targetId + '.');
 });
 
-bot.onText(/\/premiumusers/, async (msg) => {
+bot.onText(/^\/(?:premiumusers|premlist)(?:@[\\w_]+)?$/i, async (msg) => {
   const chatId = msg.chat.id, adminId = msg.from.id;
   if (!isAdmin(adminId.toString()) && !isOwner(adminId)) return bot.sendMessage(chatId, '❌ Admin only.');
   const entries = Object.entries(database.premium).filter(([, d]) => Number(d?.expiry) > Date.now());
@@ -3433,6 +3433,10 @@ bot.onText(/\/premiumusers/, async (msg) => {
   const lines = entries.slice(0, 50).map(([id, d], i) => (i + 1) + '. ' + id + ' — ' + formatPlanExpiry(d.expiry));
   return bot.sendMessage(chatId, '👑 *PREMIUM USERS*\\n\\n' + lines.join('\\n'), { parse_mode: 'Markdown' });
 });
+
+// Backward-compatible command aliases.
+// Keep the documented /addpremium and /delpremium names working while
+// preserving the older /addprem and /delprem commands.
 // ==================== TELEGRAM TUTORIAL CONTROLS ====================
 bot.onText(/^\/settutorial(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
