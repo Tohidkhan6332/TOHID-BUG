@@ -1815,10 +1815,6 @@ bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   let input = match ? match[1] : null;
-  let qrMode = /^\/qr(?:@|\s|$)/i.test(msg.text || '');
-  if (qrMode && input && /^qr\s+/i.test(input)) {
-    input = input.replace(/^qr\s+/i, '').trim();
-  }
   const isGroup = msg.chat.type !== 'private';
 
   // Maintenance check
@@ -1863,17 +1859,10 @@ bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 │
 ├◆ ᴜsᴀɢᴇ: /pair 9178499xxxxx
 ├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
-├◆ QR: /qr 9178499xxxxx
-├◆ ᴏʀ: /pair qr 9178499xxxxx
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
     );
-  }
-
-  if (/^qr\s+/i.test(input)) {
-    qrMode = true;
-    input = input.replace(/^qr\s+/i, '').trim();
   }
 
   const validation = validatePhone(input);
@@ -1995,8 +1984,7 @@ bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     const jid = cleanNumber + '@s.whatsapp.net';
     await pairModule(
       jid,
-      customCode ? customCode.toUpperCase() : null,
-      qrMode ? 'qr' : 'code'
+      customCode ? customCode.toUpperCase() : null
     );
     await sleep(4000);
     
@@ -2009,7 +1997,7 @@ bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       'tohidstore',
       'pairing',
       cleanNumber,
-      qrMode ? 'qr.json' : 'pairing.json'
+      'pairing.json'
     );
 
     // The pairing code is generated asynchronously. Wait briefly for the
@@ -2023,7 +2011,7 @@ bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
           const rawPairing = await fs.readFile(pairingFile, 'utf-8');
           const parsedPairing = JSON.parse(rawPairing);
 
-          if (qrMode ? parsedPairing?.qr : parsedPairing?.code) {
+          if (parsedPairing?.code) {
             cuObj = parsedPairing;
             break;
           }
@@ -2035,12 +2023,11 @@ bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       await sleep(500);
     }
 
-    if (qrMode ? !cuObj?.qr : !cuObj?.code) {
-      throw new Error(qrMode ? 'ǫʀ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ' : 'ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
+    if (!cuObj?.code) {
+      throw new Error('ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
     }
 
-    const code = cuObj?.code || null;
-    const qrPayload = cuObj?.qr || null;
+    const code = cuObj.code;
 
     // Keep the shared pair module loaded so its connection tracker and health monitor
     // continue to see every active WhatsApp session.
@@ -2090,39 +2077,7 @@ bot.onText(/^\/(?:pair|qr)(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     
     await saveData();
 
-    if (qrMode) {
-      const qrBuffer = await QRCode.toBuffer(qrPayload, {
-        type: 'png',
-        width: 900,
-        margin: 2,
-        errorCorrectionLevel: 'M'
-      });
 
-      await bot.deleteMessage(chatId, processingMsg.message_id).catch(() => {});
-      await bot.sendPhoto(chatId, qrBuffer, {
-        caption:
-          `┌ ❏ ◆ *⌜𝗤𝗥 𝗣𝗔𝗜𝗥𝗜𝗡𝗚⌟* ◆
-│
-├◆ ✅ ǫʀ ᴄᴏᴅᴇ ɢᴇɴᴇʀᴀᴛᴇᴅ
-├◆ 📱 ɴᴜᴍʙᴇʀ: +${cleanNumber}
-│
-├◆ 1. ᴏᴘᴇɴ ᴡʜᴀᴛsᴀᴘᴘ → sᴇᴛᴛɪɴɢs
-├◆ 2. ᴛᴀᴘ "ʟɪɴᴋᴇᴅ ᴅᴇᴠɪᴄᴇs"
-├◆ 3. ᴛᴀᴘ "ʟɪɴᴋ ᴀ ᴅᴇᴠɪᴄᴇ"
-├◆ 4. sᴄᴀɴ ᴛʜᴇ ǫʀ ᴄᴏᴅᴇ ᴀʙᴏᴠᴇ
-│
-└ ❏`,
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '📖 ᴛᴜᴛᴏʀɪᴀʟ', callback_data: 'show_tutorial' },
-              { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }
-            ]
-          ]
-        }
-      });
-    } else {
       await bot.editMessageText(
         `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗦𝗨𝗖𝗖𝗘𝗦𝗦𝗙𝗨𝗟⌟* ◆
 │
@@ -4030,22 +3985,19 @@ ${approvalText}
 
   else if (data === 'pair_guide') {
     await bot.answerCallbackQuery(query.id).catch(() => {});
-
     return bot.sendMessage(chatId,
       `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗦𝗬𝗦𝗧𝗘𝗠⌟* ◆
 │
 ├◆ 🔢 ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ: ɴᴜᴍʙᴇʀ ʀᴇǫᴜɪʀᴇᴅ
-├◆ 📱 ǫʀ ᴄᴏᴅᴇ: ɴᴏ ɴᴜᴍʙᴇʀ ʀᴇǫᴜɪʀᴇᴅ
+├◆ ᴜsᴇ: /pair 9178499xxxxx
+├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       {
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
-            [
-              { text: '🔢 ᴘᴀɪʀ', callback_data: 'pair_text_guide' },
-              { text: '📱 ǫʀ', callback_data: 'qr_pair' }
-            ],
+            [{ text: '🔢 ᴘᴀɪʀ', callback_data: 'pair_text_guide' }],
             [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
           ]
         }
@@ -4064,106 +4016,6 @@ ${approvalText}
 └ ❏`,
       { parse_mode: 'Markdown' }
     );
-  }
-
-  else if (data === 'qr_pair') {
-    await bot.answerCallbackQuery(query.id, { text: 'ǫʀ ɢᴇɴᴇʀᴀᴛɪɴɢ...' }).catch(() => {});
-
-    if (database.maintenance && !isAdmin(userId.toString()) && !isOwner(userId)) {
-      return bot.sendMessage(chatId, '🔧 Bot is under maintenance. Please try again later.');
-    }
-
-    if (await checkBanned(userId, chatId)) return;
-    if (!isAdmin(userId.toString()) && !isOwner(userId)) {
-      const verification = await verifyMembership(userId);
-      if (!verification.verified) {
-        return sendMembershipRequired(chatId, verification, msg?.from?.first_name || 'User');
-      }
-    }
-
-    if (!canStartPairing(userId)) {
-      return sendAccessDenied(chatId);
-    }
-
-    const qrSessionId = `qr_${String(chatId).replace(/[^0-9]/g, '')}`;
-    const qrDir = path.join(__dirname, 'tohidstore', 'pairing', qrSessionId);
-    const qrFile = path.join(qrDir, 'qr.json');
-
-    try {
-      if (await fileExists(qrFile)) {
-        await fs.rm(qrDir, { recursive: true, force: true });
-      }
-
-      const processing = await bot.sendMessage(chatId,
-        `┌ ❏ ◆ *⌜𝗤𝗥 𝗣𝗔𝗜𝗥𝗜𝗡𝗚⌟* ◆
-│
-├◆ ⠋ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴡʜᴀᴛsᴀᴘᴘ
-├◆ 📱 ɴᴜᴍʙᴇʀ ᴋɪ ᴢᴀʀᴜʀᴀᴛ ɴᴀʜɪ
-│
-└ ❏`,
-        { parse_mode: 'Markdown' }
-      );
-
-      const pairModule = require('./pair');
-      await pairModule(qrSessionId, null, 'qr');
-
-      let qrObj = null;
-      const deadline = Date.now() + 15000;
-      while (Date.now() < deadline) {
-        if (await fileExists(qrFile)) {
-          try {
-            const parsed = JSON.parse(await fs.readFile(qrFile, 'utf8'));
-            if (parsed?.qr) {
-              qrObj = parsed;
-              break;
-            }
-          } catch (e) {}
-        }
-        await sleep(500);
-      }
-
-      if (!qrObj?.qr) {
-        throw new Error('ǫʀ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
-      }
-
-      const qrBuffer = await QRCode.toBuffer(qrObj.qr, {
-        type: 'png',
-        width: 900,
-        margin: 2,
-        errorCorrectionLevel: 'M'
-      });
-
-      await bot.deleteMessage(chatId, processing.message_id).catch(() => {});
-      return bot.sendPhoto(chatId, qrBuffer, {
-        caption:
-          `┌ ❏ ◆ *⌜𝗤𝗥 𝗣𝗔𝗜𝗥𝗜𝗡𝗚⌟* ◆
-│
-├◆ ✅ ǫʀ ᴄᴏᴅᴇ ʀᴇᴀᴅʏ
-├◆ 📱 ɴᴜᴍʙᴇʀ ᴋɪ ᴢᴀʀᴜʀᴀᴛ ɴᴀʜɪ
-│
-├◆ 1. ᴡʜᴀᴛsᴀᴘᴘ ᴏᴘᴇɴ ᴋᴀʀᴏ
-├◆ 2. sᴇᴛᴛɪɴɢs → ʟɪɴᴋᴇᴅ ᴅᴇᴠɪᴄᴇs
-├◆ 3. "ʟɪɴᴋ ᴀ ᴅᴇᴠɪᴄᴇ" ᴘʀᴇss ᴋᴀʀᴏ
-├◆ 4. ᴜᴘᴀʀ ᴅɪʏᴀ ǫʀ sᴄᴀɴ ᴋᴀʀᴏ
-│
-├◆ ⚡ sᴄᴀɴ ᴋᴇ ʙᴀᴀᴅ ʙᴏᴛ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴄᴏɴɴᴇᴄᴛ ʜᴏɢᴀ
-│
-└ ❏`,
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🔄 ɴᴇᴡ ǫʀ', callback_data: 'qr_pair' }],
-            [{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]
-          ]
-        }
-      });
-    } catch (error) {
-      console.error('[QR PAIR] Failed:', error?.stack || error);
-      return bot.sendMessage(chatId,
-        `❌ QR pairing failed: ${error.message || 'unknown error'}`,
-        { parse_mode: 'Markdown' }
-      );
-    }
   }
 
   else if (data === 'bot_stats') {
