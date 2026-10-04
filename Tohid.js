@@ -1434,14 +1434,43 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
     
     clearInterval(loadingInterval);
 
-    const pairingFile = path.join(__dirname, 'tohidstore', 'pairing', 'pairing.json');
-    
-    if (!await fileExists(pairingFile)) {
-      throw new Error('ᴘᴀɪʀɪɴɢ.json ɴᴏᴛ ғᴏᴜɴᴅ');
+    // pair.js stores each user's pairing code inside their own session directory.
+    // Read that exact file instead of the old shared root pairing.json.
+    const pairingFile = path.join(
+      __dirname,
+      'tohidstore',
+      'pairing',
+      cleanNumber,
+      'pairing.json'
+    );
+
+    // The pairing code is generated asynchronously. Wait briefly for the
+    // session-specific file instead of reading a stale/missing shared file.
+    let cuObj = null;
+    const pairingDeadline = Date.now() + 10000;
+
+    while (Date.now() < pairingDeadline) {
+      if (await fileExists(pairingFile)) {
+        try {
+          const rawPairing = await fs.readFile(pairingFile, 'utf-8');
+          const parsedPairing = JSON.parse(rawPairing);
+
+          if (parsedPairing?.code) {
+            cuObj = parsedPairing;
+            break;
+          }
+        } catch (readError) {
+          console.log('⚠️ Pairing file is not ready yet:', readError.message);
+        }
+      }
+
+      await sleep(500);
     }
-    
-    const cu = await fs.readFile(pairingFile, 'utf-8');
-    const cuObj = JSON.parse(cu);
+
+    if (!cuObj?.code) {
+      throw new Error('ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ ɴᴏᴛ ɢᴇɴᴇʀᴀᴛᴇᴅ');
+    }
+
     const code = customCode || cuObj.code;
 
     delete require.cache[require.resolve('./pair')];
