@@ -18,7 +18,15 @@ function startAutoRestart() {
 // ───────────────────────────────────────────────────────────────────────
 
 function isAuthenticated() {
-    return fs.existsSync(AUTH_FILE) && JSON.parse(fs.readFileSync(AUTH_FILE)).authenticated;
+    if (!fs.existsSync(AUTH_FILE)) return false;
+    try {
+        const data = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf8'));
+        return data?.authenticated === true;
+    } catch (error) {
+        console.log(chalk.yellow('⚠️ Invalid auth.json detected; startup authentication will be reset.'));
+        try { fs.unlinkSync(AUTH_FILE); } catch (_) {}
+        return false;
+    }
 }
 
 function setAuthenticated(value) {
