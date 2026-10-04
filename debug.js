@@ -77,8 +77,10 @@ function getSessionInfo() {
     try {
       const entries = fs.readdirSync(nexPath, { withFileTypes: true });
       result.tohidstore = entries
-        .filter(d => d.isDirectory() && d.name.endsWith('@s.whatsapp.net'))
-        .map(d => d.name);
+        .filter(d => d.isDirectory())
+        .map(d => d.name)
+        .filter(name => /^\d{7,15}$/.test(name) || name.endsWith('@s.whatsapp.net'))
+        .map(name => name.replace(/@s\.whatsapp\.net$/i, ''));
     } catch (e) {
       result.tohidstoreError = e.message;
     }
