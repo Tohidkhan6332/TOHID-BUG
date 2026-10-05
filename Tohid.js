@@ -289,6 +289,42 @@ initDebug(bot);
 
 let telegramPollingStarted = false;
 let telegramBotUsername = '';
+let telegramPollRecoveryTimer = null;
+let telegramPollRecoveryInFlight = false;
+
+bot.on('polling_error', (error) => {
+  const code = Number(error?.code || error?.response?.body?.error_code || 0);
+  console.error('[TELEGRAM] polling_error:', error?.message || error);
+
+  // Telegram 409 means another getUpdates consumer briefly owns the token.
+  // node-telegram-bot-api can stop polling after this conflict, so recover
+  // the polling loop instead of leaving a silent Telegram bot.
+  if (code === 409 && !telegramPollRecoveryTimer && !telegramPollRecoveryInFlight) {
+    telegramPollRecoveryTimer = setTimeout(async () => {
+      telegramPollRecoveryTimer = null;
+      if (telegramPollRecoveryInFlight) return;
+      telegramPollRecoveryInFlight = true;
+      try {
+        await bot.stopPolling().catch(() => {});
+        await sleep(5000);
+        await bot.deleteWebHook({ drop_pending_updates: false }).catch(() => {});
+        await bot.startPolling({
+          restart: true,
+          params: {
+            timeout: 30,
+            limit: 100,
+            allowed_updates: ['message', 'callback_query']
+          }
+        });
+        console.log('[TELEGRAM] Polling recovered after 409 conflict.');
+      } catch (recoveryError) {
+        console.error('[TELEGRAM] Polling recovery failed:', recoveryError?.message || recoveryError);
+      } finally {
+        telegramPollRecoveryInFlight = false;
+      }
+    }, 5000);
+  }
+});
 
 async function startTelegramPolling() {
   if (telegramPollingStarted) return;
@@ -3546,6 +3582,7 @@ bot.onText(/^\/update(?:@[\w_]+)?$/i, async (msg) => {
             { parse_mode: 'Markdown' }
         );
 
+        console.log('[UPDATE] Restart requested after successful update.');
         if (!result.restartHandled) {
             setTimeout(() => {
                 restartProcess().catch(error => console.error('[UPDATE] Restart after update failed:', error));
