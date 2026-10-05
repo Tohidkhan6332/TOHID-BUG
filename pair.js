@@ -826,7 +826,7 @@ creds: state.creds,
 
             // Request pairing code only after the WhatsApp socket is ready for
             // pairing. The QR event also fires in pairing-code mode.
-            if ((connection === 'connecting' || update.qr) &&
+            if (update.qr &&
                 enablePairingCode &&
                 !state.creds.registered &&
                 !tracker.pairingRequested &&
