@@ -425,7 +425,18 @@ const store = makeInMemoryStore
     tracker.pairingRequested = false;
     tracker.pairingCode = null;
     tracker.pairingMode = enablePairingCode ? 'code' : 'session';
+    tracker.customPairingCode = customPairingCode || null;
+    tracker.enablePairingCode = Boolean(enablePairingCode);
     tracker.lastActivity = Date.now();
+
+    // Reconnects that happen while a pairing-code flow is still unregistered
+    // must keep the same pairing mode and custom code. A plain queuePairing()
+    // call defaults to session mode and can leave Telegram waiting forever.
+    const requeueCurrentSession = () => queuePairing(
+        tohidDevNumber,
+        tracker.enablePairingCode && !state.creds.registered ? tracker.customPairingCode : null,
+        tracker.enablePairingCode && !state.creds.registered
+    );
 
     // Resolve the live WhatsApp Web client revision. The Baileys repository
     // revision can lag behind Meta's current server requirement and cause
@@ -865,7 +876,7 @@ creds: state.creds,
                 if (tracker.retryCount < MAX_RETRIES_440) {
                     console.warn(chalk.yellow(`⚠️ Error 440 for ${tohidDevNumber}. Retry ${tracker.retryCount}/${MAX_RETRIES_440}...`));
                     await sleep(3000);
-                    queuePairing(tohidDevNumber, null);
+                    await requeueCurrentSession();
                 } else {
                     console.error(chalk.red.bold(`❌ Failed after ${MAX_RETRIES_440} attempts for ${tohidDevNumber}`));
                     forceCleanupSession(tohidDevNumber);
@@ -886,7 +897,7 @@ creds: state.creds,
                 if (isValid) {
                     console.log(chalk.yellow(`🔄 Reconnecting ${tohidDevNumber}...`));
                     await sleep(3000);
-                    queuePairing(tohidDevNumber, null);
+                    await requeueCurrentSession();
                 } else {
                     console.log(chalk.red(`❌ Invalid session for ${tohidDevNumber}`));
                     tracker.disconnected = true;
@@ -899,7 +910,7 @@ creds: state.creds,
                 console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${tohidDevNumber}`));
                 if (tracker.retryCount < 2) {
                     await sleep(5000);
-                    queuePairing(tohidDevNumber, null);
+                    await requeueCurrentSession();
                 } else {
                     console.log(chalk.red(`❌ Max retries for ${tohidDevNumber}`));
                     tracker.disconnected = true;
