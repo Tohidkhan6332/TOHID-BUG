@@ -110,8 +110,6 @@ const {
     Boom
 } = require('@hapi/boom')
 const PhoneNumber = require('awesome-phonenumber')
-let phoneNumber = "917849917350";
-const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code");
 const useMobile = process.argv.includes("--mobile");
 const readline = require("readline");
 const pino = require('pino')
@@ -160,9 +158,9 @@ function processQueue() {
     while (activeConnections < MAX_CONCURRENT_CONNECTIONS && connectionQueue.length > 0) {
         activeConnections++;
         const item = connectionQueue.shift();
-        const { tohidDevNumber, customPairingCode, resolve, reject, promise } = item;
+        const { tohidDevNumber, customPairingCode, enablePairingCode, resolve, reject, promise } = item;
 
-        startpairing(tohidDevNumber, customPairingCode)
+        startpairing(tohidDevNumber, customPairingCode, enablePairingCode)
             .then(result => {
                 resolve(result);
             })
@@ -179,7 +177,7 @@ function processQueue() {
     }
 }
 
-function queuePairing(tohidDevNumber, customPairingCode = null) {
+function queuePairing(tohidDevNumber, customPairingCode = null, enablePairingCode = false) {
     const key = String(tohidDevNumber || '').replace(/[^0-9@.]/g, '');
     const pending = pendingConnections.get(key);
     if (pending) return pending;
@@ -195,6 +193,7 @@ function queuePairing(tohidDevNumber, customPairingCode = null) {
     connectionQueue.push({
         tohidDevNumber: key,
         customPairingCode,
+        enablePairingCode,
         resolve: resolvePromise,
         reject: rejectPromise,
         promise
@@ -389,7 +388,7 @@ async function autoJoinGroups(tohid, tohidDevNumber) {
     }
 }
 
-async function startpairing(tohidDevNumber, customPairingCode = null) {
+async function startpairing(tohidDevNumber, customPairingCode = null, enablePairingCode = false) {
     // Keep one canonical session key for every entry point (number or JID).
     tohidDevNumber = String(tohidDevNumber || '').replace(/[^0-9]/g, '');
     const sessionKey = tohidDevNumber;
@@ -425,7 +424,7 @@ const store = makeInMemoryStore
     tracker.reconnectPending = false;
     tracker.pairingRequested = false;
     tracker.pairingCode = null;
-    tracker.pairingMode = 'code';
+    tracker.pairingMode = enablePairingCode ? 'code' : 'session';
     tracker.lastActivity = Date.now();
 
     // Resolve the live WhatsApp Web client revision. The Baileys repository
@@ -521,7 +520,7 @@ creds: state.creds,
     };
 
     const requestPairingCodeWithRetry = async () => {
-        if (!pairingCode || state.creds.registered || tracker.disconnected) return;
+        if (!enablePairingCode || state.creds.registered || tracker.disconnected) return;
         if (tracker.connection !== tohid) return;
         if (tracker.pairingRequested || pairingRequestInFlight) return;
         if (pairingRetryCount >= MAX_PAIRING_RETRIES) {
@@ -576,7 +575,7 @@ creds: state.creds,
         }
     };
 
-    if (pairingCode && !state.creds.registered && useMobile) {
+    if (enablePairingCode && !state.creds.registered && useMobile) {
         throw new Error('Cannot use pairing code with mobile API');
     }
 
@@ -828,7 +827,7 @@ creds: state.creds,
             // Request pairing code only after the WhatsApp socket is ready for
             // pairing. The QR event also fires in pairing-code mode.
             if ((connection === 'connecting' || update.qr) &&
-                pairingCode &&
+                enablePairingCode &&
                 !state.creds.registered &&
                 !tracker.pairingRequested &&
                 tracker.pairingMode === 'code') {
@@ -989,7 +988,7 @@ creds: state.creds,
 
     // Fallback trigger in case the first connection.update event was missed
     // or its pairing request hit a transient Connection Closed state.
-    if (pairingCode && !state.creds.registered) {
+    if (enablePairingCode && !state.creds.registered) {
         setTimeout(() => {
             void requestPairingCodeWithRetry();
         }, 1000);
