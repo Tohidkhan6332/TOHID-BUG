@@ -1646,6 +1646,20 @@ global.author = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈";
 global.antispam = {};      // For anti-spam feature
 global.warns = {};         // For warning system
 global.banned = global.banned || {};  // For banned users
+function renderTicTacToeBoard(board) {
+    const cells = board.map((v, i) => v || String(i + 1));
+    return `${cells[0]} | ${cells[1]} | ${cells[2]}\n---------\n${cells[3]} | ${cells[4]} | ${cells[5]}\n---------\n${cells[6]} | ${cells[7]} | ${cells[8]}`;
+}
+
+function getTicTacToeWinner(board) {
+    const lines = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+    return lines.some(([a,b,c]) => board[a] && board[a] === board[b] && board[a] === board[c]);
+}
+
 const tictactoeGames = {};
 const hangmanGames = {};
 const hangmanVisual = [
@@ -12017,6 +12031,67 @@ case 'apkdl': {
                 break;
 
             // ============ HANGMAN GAME ============
+            case 'tictactoe': {
+                if (!m.isGroup) return reply("👥 *Tic-Tac-Toe is available in groups only*");
+                const key = m.chat;
+                const opponent = m.mentionedJid?.[0];
+
+                if (!tictactoeGames[key]) {
+                    if (!opponent) return reply(`❌ Mention an opponent.\nExample: ${prefix}tictactoe @user`);
+                    if (opponent === m.sender) return reply("❌ You cannot play against yourself.");
+
+                    tictactoeGames[key] = {
+                        board: Array(9).fill(""),
+                        players: [m.sender, opponent],
+                        turn: 0
+                    };
+
+                    return reply(
+                        `🎮 *Tic-Tac-Toe Started!*\n\n❌ @${m.sender.split("@")[0]}\n⭕ @${opponent.split("@")[0]}\n\nTurn: @${m.sender.split("@")[0]}\n\n${renderTicTacToeBoard(tictactoeGames[key].board)}\n\nUse: ${prefix}tictactoe <1-9>`,
+                        tictactoeGames[key].players
+                    );
+                }
+
+                const game = tictactoeGames[key];
+                const move = Number(args[0]);
+                if (!Number.isInteger(move) || move < 1 || move > 9) {
+                    return reply(`❌ Choose a position 1-9.\n\n${renderTicTacToeBoard(game.board)}`);
+                }
+
+                const playerIndex = game.players.indexOf(m.sender);
+                if (playerIndex < 0) return reply("❌ You are not one of the players.");
+                if (playerIndex !== game.turn) {
+                    return reply(`⏳ Wait for @${game.players[game.turn].split("@")[0]}`, [game.players[game.turn]]);
+                }
+
+                const index = move - 1;
+                if (game.board[index]) return reply("❌ That position is already occupied.");
+
+                game.board[index] = playerIndex === 0 ? "❌" : "⭕";
+
+                if (getTicTacToeWinner(game.board)) {
+                    const winner = game.players[playerIndex];
+                    delete tictactoeGames[key];
+                    return reply(
+                        `🏆 *Tic-Tac-Toe Winner!*\n\n@${winner.split("@")[0]} wins! 🎉\n\n${renderTicTacToeBoard(game.board)}`,
+                        [winner]
+                    );
+                }
+
+                if (game.board.every(Boolean)) {
+                    delete tictactoeGames[key];
+                    return reply(`🤝 *Tic-Tac-Toe Draw!*\n\n${renderTicTacToeBoard(game.board)}`);
+                }
+
+                game.turn = game.turn === 0 ? 1 : 0;
+                const next = game.players[game.turn];
+                return reply(
+                    `🎮 *Tic-Tac-Toe*\n\n${renderTicTacToeBoard(game.board)}\n\nTurn: @${next.split("@")[0]}`,
+                    [next]
+                );
+            }
+                break;
+
             case "hangman": {
                 const chatId = m.chat;
                 const args = text?.split(" ") || [];
