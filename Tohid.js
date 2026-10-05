@@ -4180,7 +4180,7 @@ ${approvalText}
       : allHealth.filter(item => getUserBots(userId).includes(String(item.number).replace(/[^0-9]/g, '')));
     if (!visible.length) {
       return bot.sendMessage(chatId,
-        '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗛𝗘𝗔𝗟𝗧𝗛⌟* ◆\\n│\\n├◆ 📱 ɴᴏ ᴀᴄᴛɪᴠᴇ sᴇssɪᴏɴs ғᴏᴜɴᴅ\\n│\\n└ ❏',
+        '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗦𝗧𝗔𝗧𝗨𝗦⌟* ◆\n│\n├◆ 📱 ɴᴏ ᴀᴄᴛɪᴠᴇ sᴇssɪᴏɴs ғᴏᴜɴᴅ\n│\n└ ❏',
         { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } }
       );
     }
