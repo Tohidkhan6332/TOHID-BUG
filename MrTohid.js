@@ -15045,6 +15045,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
             }
                 break;
 
+            case "gpt":
             case "gpt4": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
@@ -16382,6 +16383,7 @@ case 'xnxx': {
             }
                 break;
 
+            case "gemini":
             case "gemivbnni": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
@@ -16577,6 +16579,7 @@ case 'xnxx': {
                 break;
             // =========================================
 
+            case 'deepseek':
             case 'deepsjfkeek': {
                 if (!text) return reply("🤖 *Usage:* deepseek your question");
 
@@ -16597,6 +16600,7 @@ case 'xnxx': {
                 break;
             }
 
+            case "grok":
             case "grovnnk-ai": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
@@ -16714,6 +16718,7 @@ case 'xnxx': {
             }
                 break;
 
+            case "qwen":
             case "qwenxj": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
