@@ -7,7 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "bot": "node Tohid.js",
-    "test": "node --check index.js"
+    "test": "node --check index.js && node --check MrTohid.js && node --check pair.js && node --check Tohid.js"
   },
   "keywords": [
     "whiskeysockets",
@@ -100,7 +100,8 @@
     "snapsave-media-downloader": "^2.5.1",
     "nodemailer": "^10.0.13",
     "js-confuser": "^2.1.3",
-    "@whiskeysockets/baileys": "github:pou-code/Baileys"
+    "@whiskeysockets/baileys": "github:pou-code/Baileys",
+    "webcrack": "^2.15.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
