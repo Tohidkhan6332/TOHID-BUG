@@ -1,5 +1,6 @@
 const view = document.getElementById("view");
 const toast = document.getElementById("toast");
+const sidebar = document.querySelector(".sidebar");
 
 const pages = {
   overview: ["Overview", "Manage your bot workspace from one place.", `
@@ -9,7 +10,7 @@ const pages = {
     <div class="action-grid"><button class="action-card" data-page="pair"><b>Connect WhatsApp</b><span>Connect an account you own or are authorized to manage.</span></button><button class="action-card" data-page="plans"><b>Plans & Billing</b><span>Review available workspace plans.</span></button><button class="action-card" data-page="bots"><b>My Bots</b><span>See connected sessions and status.</span></button></div>`],
   pair: ["Connect WhatsApp", "Connect an account you own or are authorized to manage.", `
     <div class="panel-card"><div class="panel-icon">⌁</div><div><h2>WhatsApp connection</h2><p>Use the connection flow for your own account. A separate website login is not required.</p></div></div>
-    <div class="form-card"><label>WhatsApp number</label><input id="number" inputmode="numeric" placeholder="Country code + number"><button class="primary" id="pairBtn">Continue</button><div class="notice">Only connect accounts you own or have explicit permission to manage.</div></div>`],
+    <div class="form-card"><label>WhatsApp number</label><input id="number" inputmode="numeric" autocomplete="tel" placeholder="Country code + number"><button class="primary" id="pairBtn">Continue</button><div class="notice">Only connect accounts you own or have explicit permission to manage.</div></div>`],
   plans: ["Plans & Billing", "Choose the workspace plan that fits your usage.", `
     <div class="plans-grid"><div class="plan-card"><span>Starter</span><strong>Free</strong><p>Basic dashboard access and workspace status.</p><button class="secondary" data-plan="Starter">Current plan</button></div><div class="plan-card featured"><span>Premium</span><strong>$5</strong><small>/ 30 days</small><p>Expanded legitimate automation workspace features.</p><button class="primary" data-plan="Premium">Select plan</button></div><div class="plan-card"><span>Long Term</span><strong>$10</strong><small>/ 90 days</small><p>Longer workspace access for regular usage.</p><button class="secondary" data-plan="Long Term">Select plan</button></div></div>
     <div class="notice">Billing can be connected later to a compliant payment provider.</div>`],
@@ -26,19 +27,37 @@ function notify(message) {
   setTimeout(() => toast.classList.remove("show"), 2400);
 }
 
+function closeMobileMenu() {
+  sidebar?.classList.remove("open");
+}
+
 function render(page = "overview") {
   const data = pages[page] || pages.overview;
   document.querySelectorAll(".nav").forEach(el => el.classList.toggle("active", el.dataset.page === page));
   document.getElementById("title")?.replaceChildren(document.createTextNode(data[0]));
   view.innerHTML = `<div class="page-heading"><div><h1>${data[0]}</h1><p>${data[1]}</p></div></div>${data[2]}`;
   history.replaceState(null, "", "#" + page);
+  closeMobileMenu();
 }
 
 document.addEventListener("click", event => {
+  if (event.target.closest("#menuBtn")) {
+    sidebar?.classList.toggle("open");
+    return;
+  }
+
   const nav = event.target.closest("[data-page]");
-  if (nav) return render(nav.dataset.page);
+  if (nav) {
+    render(nav.dataset.page);
+    return;
+  }
+
   const plan = event.target.closest("[data-plan]");
-  if (plan) notify(plan.dataset.plan + " selected — billing integration can be added later.");
+  if (plan) {
+    notify(plan.dataset.plan + " selected — billing integration can be added later.");
+    return;
+  }
+
   if (event.target.id === "pairBtn") {
     const number = document.getElementById("number")?.value.trim();
     notify(number ? "Connection flow is ready for a compliant backend." : "Enter a WhatsApp number first.");
