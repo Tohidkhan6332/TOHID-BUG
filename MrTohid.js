@@ -11844,6 +11844,26 @@ case 'apkdl': {
             }
                 break;
 
+            case 'translate': {
+                if (!text) return reply(`🌐 *Usage:* ${command} <text> | <language code>\nExample: ${command} hello | hi`);
+                try {
+                    const parts = text.split("|");
+                    const sourceText = parts[0].trim();
+                    const target = (parts[1] || "en").trim().toLowerCase();
+                    if (!sourceText) return reply("❌ *Text is required*");
+                    if (!/^[a-z]{2,10}(?:-[a-z]{2,10})?$/i.test(target)) {
+                        return reply("❌ *Invalid language code*");
+                    }
+                    const { translate } = require("@vitalets/google-translate-api");
+                    const result = await translate(sourceText, { to: target });
+                    reply(`🌐 *TOHID-AI Translation*\n\n📝 *Original:* ${sourceText}\n\n🔤 *Translated (${target}):* ${result.text}`);
+                } catch (error) {
+                    console.error("TRANSLATE ERROR:", error);
+                    reply("❌ *Translation failed* • Try again");
+                }
+            }
+                break;
+
             case 'weather':
             case 'weather2':
             case 'weatherinfo': {
