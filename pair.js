@@ -466,7 +466,7 @@ creds: state.creds,
     },
     msgRetryCounterCache, 
     version,
-    browser: Browsers.ubuntu('Chrome'),
+    browser: Browsers.windows('Chrome'),
     getMessage: async key => {
     if (!store) return undefined;
     const jid = key.remoteJid;
