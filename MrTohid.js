@@ -18598,7 +18598,7 @@ case 'update': {
         await devtrust.sendMessage(
             m.chat,
             addNewsletterContext({
-                text: '🔄 *TOHID-AI UPDATE*\\n\\n🔍 Checking GitHub for the latest version...'
+                text: '🔄 *TOHID-AI UPDATE*\n\n🔍 Checking GitHub for the latest version...'
             }),
             { quoted: m }
         );
@@ -18609,7 +18609,7 @@ case 'update': {
             await devtrust.sendMessage(
                 m.chat,
                 addNewsletterContext({
-                    text: '✅ *TOHID-AI is already up to date.*\\n\\n📦 Branch: main'
+                    text: '✅ *TOHID-AI is already up to date.*\n\n📦 Branch: main'
                 }),
                 { quoted: m }
             );
@@ -18628,7 +18628,7 @@ case 'update': {
                     '📦 Repository: TOHID-BUG\\n' +
                     '🌿 Branch: main' +
                     dependencyText +
-                    '\\n\\n🔄 Restarting TOHID-AI now...'
+                    '\n\n🔄 Restarting TOHID-AI now...'
             }),
             { quoted: m }
         );
@@ -18648,7 +18648,7 @@ case 'update': {
             m.chat,
             addNewsletterContext({
                 text:
-                    '❌ *Update failed*\\n\\n' +
+                    '❌ *Update failed*\n\n' +
                     '⚠️ ' + (error?.message || 'Unknown update error')
             }),
             { quoted: m }
