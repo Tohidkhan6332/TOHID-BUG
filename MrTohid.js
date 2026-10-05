@@ -18617,15 +18617,15 @@ case 'update': {
         }
 
         const dependencyText = result.dependenciesChanged
-            ? '\\n📦 Dependencies: updated'
+            ? '\n📦 Dependencies: updated'
             : '';
 
         await devtrust.sendMessage(
             m.chat,
             addNewsletterContext({
                 text:
-                    '✅ *Update downloaded successfully!*\\n\\n' +
-                    '📦 Repository: TOHID-BUG\\n' +
+                    '✅ *Update downloaded successfully!*\n\n' +
+                    '📦 Repository: TOHID-BUG\n' +
                     '🌿 Branch: main' +
                     dependencyText +
                     '\n\n🔄 Restarting TOHID-AI now...'
