@@ -1913,7 +1913,6 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
       `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥 𝗚𝗨𝗜𝗗𝗘⌟* ◆
 │
 ├◆ ᴜsᴀɢᴇ: /pair 9178499xxxxx
-├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
@@ -1932,20 +1931,8 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     );
   }
 
-  const [number, customCode] = input.split('|');
-  const cleanNumber = number.replace(/[^0-9]/g, '');
-
-  if (customCode && !/^[A-Za-z0-9]{8}$/.test(customCode)) {
-    return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗖𝗨𝗦𝗧𝗢𝗠 𝗖𝗢𝗗𝗘⌟* ◆
-│
-├◆ ᴄᴜsᴛᴏᴍ ᴄᴏᴅᴇ ᴍᴜsᴛ ʙᴇ 𝟴 ᴀʟᴘʜᴀɴᴜᴍᴇʀɪᴄ ᴄʜᴀʀᴀᴄᴛᴇʀs
-├◆ ᴇxᴀᴍᴘʟᴇ: AB12CD34
-│
-└ ❏`,
-      { parse_mode: 'Markdown' }
-    );
-  }
+  // WhatsApp pairing is number-only. QR/custom-code flows are not exposed.
+  const cleanNumber = input.replace(/[^0-9]/g, '');
 
   const sessions = await getSessions();
   if (sessions.length >= SYSTEM.sessionLimit) {
@@ -2043,7 +2030,6 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 
   try {
     const pairModule = require('./pair');
-    const jid = cleanNumber + '@s.whatsapp.net';
     // Pass digits only so the auth folder and pairing tracker use the same key.
     // The JID is still used elsewhere for WhatsApp addressing.
     // Start the WhatsApp socket without blocking the Telegram pairing flow.
@@ -2052,7 +2038,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     let pairStartError = null;
     const pairStartPromise = pairModule(
       cleanNumber,
-      customCode ? customCode.toUpperCase() : null,
+      null,
       true
     ).catch((err) => {
       pairStartError = err;
