@@ -9060,6 +9060,7 @@ if (!isCreator) return reply('🔒 *Owner only*');
 }
 break;
 
+case 'goodbye':
 case 'tohid-off': {
 if (!isCreator) return reply('🔒 *Owner only*');
     const uid = m.sender;
@@ -11614,6 +11615,7 @@ case 'apkdl': {
                 break;
             }
 
+            case "imbd":
             case "movie": {
                 if (!text) return reply("🎬 *Example:* movie Inception");
 
@@ -12514,6 +12516,7 @@ case 'apkdl': {
             }
                 break;
 
+case 'testfunction':
 case 'tesfunc':
 case 'tf': {
   if (!isCreator) return reply('❌ Owner only.');
@@ -14451,6 +14454,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
             }
                 break;
 
+            case 'listadmins':
             case 'listadmin':
             case 'tagadmin':
             case 'admin': {
@@ -14488,6 +14492,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
             }
                 break;
 
+            case 'linkgc':
             case 'grouplink': {
                 if (!m.isGroup) return reply("👥 *Groups only*");
                 if (!isCreator && !isSudo) return reply('🔒 *Owner/Sudo only*');
@@ -16646,7 +16651,9 @@ case 'xnxx': {
             }
                 break;
 
-case 'fb': {
+case 'facebook':
+            case 'fbdl':
+            case 'fb': {
     const fbUrl = args[0];
 
     if (!fbUrl || !/facebook\.com|fb\.watch/.test(fbUrl)) {
