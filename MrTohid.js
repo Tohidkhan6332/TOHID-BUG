@@ -11615,6 +11615,49 @@ case 'apkdl': {
                 break;
             }
 
+            case 'mediafire': {
+                if (!text) return reply(`📥 *Usage:* ${command} <MediaFire URL>`);
+                if (!/^https?:\\/\\/(?:www\\.)?mediafire\\.com\\//i.test(text.trim())) {
+                    return reply("❌ *Invalid MediaFire URL*");
+                }
+                try {
+                    const response = await axios.get(text.trim(), {
+                        timeout: 30000,
+                        headers: { "User-Agent": "Mozilla/5.0 Chrome/131 Mobile Safari/537.36" }
+                    });
+                    const $ = cheerio.load(String(response.data || ""));
+                    let directUrl = $("#downloadButton").attr("href") ||
+                        $(".download_link a.input").attr("href") ||
+                        $("a.popsok").attr("href") || "";
+                    if (!directUrl) {
+                        const scrambled = $("#downloadButton").attr("data-scrambled-url");
+                        if (scrambled) {
+                            try { directUrl = Buffer.from(scrambled, "base64").toString("utf8"); } catch {}
+                        }
+                    }
+                    if (!/^https?:\\/\\//i.test(directUrl)) {
+                        return reply("❌ *Could not find a direct MediaFire link*");
+                    }
+                    const fileName = decodeURIComponent(
+                        directUrl.split("?")[0].split("/").pop() || "mediafire-file"
+                    ).slice(0, 120);
+                    await devtrust.sendMessage(
+                        m.chat,
+                        addNewsletterContext({
+                            document: { url: directUrl },
+                            mimetype: "application/octet-stream",
+                            fileName,
+                            caption: `📥 *MediaFire Download*\n\n${fileName}`
+                        }),
+                        { quoted: m }
+                    );
+                } catch (error) {
+                    console.error("MEDIAFIRE ERROR:", error);
+                    reply("❌ *MediaFire download failed* • Link may be expired or protected");
+                }
+            }
+                break;
+
             case "imbd":
             case "movie": {
                 if (!text) return reply("🎬 *Example:* movie Inception");
