@@ -2427,7 +2427,6 @@ ${lines}
     { parse_mode: 'Markdown' }
   );
 });
-});
 
 // ==================== USER BOT RESTART ====================
 
