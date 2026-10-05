@@ -26,7 +26,6 @@
     "@adiwajshing/keyed-db": "^0.2.4",
     "@colors/colors": "^1.5.0",
     "@hapi/boom": "^10.0.0",
-    "@whiskeysockets/baileys": "github:pou-code/Baileys",
     "@vitalets/google-translate-api": "^9.2.0",
     "@vreden/youtube_scraper": "^1.2.0",
     "@distube/ytdl-core": "^4.14.4",
@@ -100,7 +99,8 @@
     "qs": "^6.16.0",
     "snapsave-media-downloader": "^2.5.1",
     "nodemailer": "^10.0.13",
-    "js-confuser": "^2.1.3"
+    "js-confuser": "^2.1.3",
+    "@xbibzlibrary/whatsbibz": "^1.4.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
