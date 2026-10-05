@@ -113,6 +113,29 @@ const util = require('util')
 const chalk = require('chalk')
 const os = require('os')
 const axios = require('axios');
+/**
+ * Stable AI helper for TOHID AI commands.
+ * Uses the same Prexzyvilla AI service already used by the newer AI commands.
+ * Normalizes common response shapes so commands never print [object Object].
+ */
+async function tohidGpt4(prompt) {
+    const response = await axios.get(
+        `https://apis.prexzyvilla.site/ai/gpt4?text=${encodeURIComponent(String(prompt || ''))}`,
+        { timeout: 30000 }
+    );
+    if (!response || !response.data) throw new Error('Empty AI response');
+    const data = response.data;
+    const answer =
+        (typeof data === 'string' && data) ||
+        data?.data ||
+        data?.result ||
+        data?.response ||
+        data?.answer ||
+        data?.message;
+    if (!answer) throw new Error('AI returned no usable response');
+    return typeof answer === 'string' ? answer : JSON.stringify(answer);
+}
+
 const fsx = require('fs-extra')
 const crypto = require('crypto')
 const { updateFromGitHub, restartProcess } = require('./utils/self-update');
@@ -9639,13 +9662,8 @@ ${meals}
 
                 try {
                     async function openaiRoast(victim) {
-                        let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                            "model": { "id": "gpt-4", "name": "GPT-4", "maxLength": 32000 },
-                            "messages": [{
-                                "pluginId": null,
-                                "content": `Roast this person in a funny but savage way (1-2 lines): ${victim}`,
-                                "role": "user"
-                            }],
+                        return await tohidGpt4(`Roast this person in a funny but savage way (1-2 lines): ${victim}`);
+                    }],
                             "temperature": 0.8
                         });
                         return response.data;
@@ -9665,13 +9683,8 @@ ${meals}
 
                 try {
                     async function openaiCompliment(victim) {
-                        let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                            "model": { "id": "gpt-4", "name": "GPT-4", "maxLength": 32000 },
-                            "messages": [{
-                                "pluginId": null,
-                                "content": `Give a sweet, kind compliment to this person (1-2 lines max): ${victim}`,
-                                "role": "user"
-                            }],
+                        return await tohidGpt4(`Give a sweet, kind compliment to this person (1-2 lines max): ${victim}`);
+                    }],
                             "temperature": 0.7
                         });
                         return response.data;
@@ -9737,12 +9750,8 @@ ${meals}
 
                 try {
                     async function openaiRewrite(input) {
-                        let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                            "model": { "id": "gpt-4", "name": "GPT-4" },
-                            "messages": [{
-                                "content": `Rewrite this to be clear and grammatically correct:\n"${input}"`,
-                                "role": "user"
-                            }],
+                        return await tohidGpt4(`Rewrite this to be clear and grammatically correct:\n"${input}"`);
+                    }],
                             "temperature": 0.5
                         });
                         return response.data;
@@ -9781,12 +9790,8 @@ ${meals}
 
                 try {
                     async function openaiStory(topic) {
-                        let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                            "model": { "id": "gpt-4", "name": "GPT-4" },
-                            "messages": [{
-                                "content": `Write a short creative story about: ${topic}`,
-                                "role": "user"
-                            }],
+                        return await tohidGpt4(`Write a short creative story about: ${topic}`);
+                    }],
                             "temperature": 0.8
                         });
                         return response.data;
@@ -9860,12 +9865,8 @@ ${meals}
 
                 try {
                     async function openaiTruthDare(type) {
-                        let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                            "model": { "id": "gpt-4", "name": "GPT-4" },
-                            "messages": [{
-                                "content": `Generate a fun, creative ${type} question for Truth or Dare. Keep it short and engaging.`,
-                                "role": "user"
-                            }],
+                        return await tohidGpt4(`Generate a fun, creative ${type} question for Truth or Dare. Keep it short and engaging.`);
+                    }],
                             "temperature": 0.8
                         });
                         return response.data;
@@ -9947,12 +9948,8 @@ ${meals}
 
                 try {
                     async function openaiPoem(topic) {
-                        let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                            "model": { "id": "gpt-4", "name": "GPT-4" },
-                            "messages": [{
-                                "content": `Write a beautiful, original poem about: ${topic}`,
-                                "role": "user"
-                            }],
+                        return await tohidGpt4(`Write a beautiful, original poem about: ${topic}`);
+                    }],
                             "temperature": 0.7
                         });
                         return response.data;
@@ -9969,18 +9966,8 @@ ${meals}
 
             case 'metaai': {
                 if (!text) return reply(`🤖 *Usage:* ${command} your question`);
-
                 try {
-                    let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                        "model": { "id": "gpt-4", "name": "GPT-4" },
-                        "messages": [{
-                            "content": text,
-                            "role": "user"
-                        }],
-                        "temperature": 0.5
-                    });
-
-                    let result = response.data;
+                    const result = await tohidGpt4(text);
                     reply(`🤖 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 AI*\n\n${result}`);
                 } catch (e) {
                     console.error(e);
@@ -9991,18 +9978,8 @@ ${meals}
 
             case 'codeai': {
                 if (!text) return reply(`👨‍💻 *Usage:* ${command} write a Python function`);
-
                 try {
-                    let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                        "model": { "id": "gpt-4", "name": "GPT-4" },
-                        "messages": [{
-                            "content": `You are a coding assistant. Provide clean, working code:\n\n${text}`,
-                            "role": "user"
-                        }],
-                        "temperature": 0.4
-                    });
-
-                    let result = response.data;
+                    const result = await tohidGpt4(`You are a coding assistant. Provide clean, working code:\n\n${text}`);
                     reply(`👨‍💻 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Code*\n\n${result}`);
                 } catch (e) {
                     console.error(e);
@@ -10013,16 +9990,7 @@ ${meals}
 
             case 'triviaai': {
                 try {
-                    let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                        "model": { "id": "gpt-4", "name": "GPT-4" },
-                        "messages": [{
-                            "content": "Give me a random trivia question with 4 options A-D. Format: Question\n\nA) \nB) \nC) \nD)\n\n✅ Answer:",
-                            "role": "user"
-                        }],
-                        "temperature": 0.7
-                    });
-
-                    let result = response.data;
+                    const result = await tohidGpt4("Give me a random trivia question with 4 options A-D. Format: Question\n\nA) \nB) \nC) \nD)\n\n✅ Answer:");
                     reply(`🎲 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Trivia*\n\n${result}`);
                 } catch (e) {
                     console.error(e);
@@ -10033,19 +10001,11 @@ ${meals}
 
             case 'storyai': {
                 if (!text) return reply(`📖 *Usage:* ${command} a brave dog in space`);
-
                 try {
-                    let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                        "model": { "id": "gpt-4", "name": "GPT-4" },
-                        "messages": [{
-                            "content": `Write a short story about: ${text}`,
-                            "role": "user"
-                        }],
-                        "temperature": 0.7
-                    });
-
-                    reply(`📖 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Story*\n\n${response.data}`);
+                    const result = await tohidGpt4(`Write a short story about: ${text}`);
+                    reply(`📖 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Story*\n\n${result}`);
                 } catch (e) {
+                    console.error(e);
                     reply("❌ *Story generator failed* • Try again later");
                 }
             }
@@ -13511,18 +13471,10 @@ break;
 
             case 'ai': {
                 if (!text) return reply('🤖 *Example:* ai Who is Mark Zuckerberg?');
-
                 await devtrust.sendPresenceUpdate('composing', m.chat);
-
                 try {
-                    const { data } = await axios.post("https://chateverywhere.app/api/chat/", {
-                        model: { id: "gpt-4", name: "GPT-4", maxLength: 32000 },
-                        messages: [{ pluginId: null, content: text, role: "user" }],
-                        temperature: 0.5
-                    });
-
-                    reply(`🤖 *AI*\n\n${data}`);
-
+                    const result = await tohidGpt4(text);
+                    reply(`🤖 *AI*\n\n${result}`);
                 } catch (e) {
                     reply(`❌ *AI error* • ${e.message}`);
                 }
@@ -13709,11 +13661,8 @@ break;
                 if (!text) return reply(`🤖 *Example:* ${command} how are you?`);
 
                 async function openai(text) {
-                    let response = await axios.post("https://chateverywhere.app/api/chat/", {
-                        model: { id: "gpt-3", name: "GPT-3" },
-                        messages: [{ content: text, role: "user" }],
-                        temperature: 0.5
-                    });
+                    return await tohidGpt4(text);
+                });
                     return response.data;
                 }
 
