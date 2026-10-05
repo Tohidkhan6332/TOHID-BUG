@@ -1716,11 +1716,23 @@ const BUG_MENU_TEXT = `┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐁𝐔𝐆◆�
 ┗━━━━━━━━━━━━━━┛`;
 
 async function sendBugMenu(chatId) {
+  // BUG MENU stays focused on the BUG command list, with quick navigation
+  // buttons for the management and plans sections.
+  const bugMenuKeyboard = {
+    inline_keyboard: [
+      [{ text: '🔐 𝗔𝗗𝗠𝗜𝗡 𝗠𝗘𝗡𝗨', callback_data: 'admin_menu' }],
+      [{ text: '👑 𝗢𝗪𝗡𝗘𝗥 𝗠𝗘𝗡𝗨', callback_data: 'owner_menu' }],
+      [{ text: '💎 𝗣𝗟𝗔𝗡𝗦 𝗠𝗘𝗡𝗨', callback_data: 'premium_plans' }],
+      [{ text: '🏠 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨', callback_data: 'show_main' }]
+    ]
+  };
+
   // BUG MENU is only the command list. It should always open,
   // regardless of whether a WhatsApp session is currently connected.
   return bot.sendPhoto(chatId, BUG_MENU_IMAGE, {
     caption: BUG_MENU_TEXT,
-    parse_mode: 'Markdown'
+    parse_mode: 'Markdown',
+    reply_markup: bugMenuKeyboard
   });
 }
 
