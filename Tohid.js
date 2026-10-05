@@ -1812,6 +1812,22 @@ Use: /${commandName} https://chat.whatsapp.com/XXXXXXXXXXXX`,
   }
 });
 
+async function editPairStatusMessage(text, options) {
+  try {
+    return await editPairStatusMessage(text, options);
+  } catch (error) {
+    const description = String(
+      error?.response?.body?.description ||
+      error?.message ||
+      ''
+    );
+    if (!/there is no text in the message to edit/i.test(description)) {
+      throw error;
+    }
+    return bot.editMessageCaption(text, options);
+  }
+}
+
 // ==================== COMMAND: PAIR ====================
 
 bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
@@ -1972,7 +1988,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   let i = 0;
   const loadingInterval = setInterval(async () => {
     try {
-      await bot.editMessageText(
+      await editPairStatusMessage(
         `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗜𝗡 𝗣𝗥𝗢𝗚𝗥𝗘𝗦𝗦⌟* ◆
 │
 ├◆ ${dots[i]} ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴡʜᴀᴛsᴀᴘᴘ
@@ -2000,7 +2016,8 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     let pairStartError = null;
     const pairStartPromise = pairModule(
       cleanNumber,
-      customCode ? customCode.toUpperCase() : null
+      customCode ? customCode.toUpperCase() : null,
+      true
     ).catch((err) => {
       pairStartError = err;
       console.log('[PAIR] Socket start error:', err?.message || err);
@@ -2099,7 +2116,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     await saveData();
 
 
-      await bot.editMessageText(
+      await editPairStatusMessage(
         `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗦𝗨𝗖𝗖𝗘𝗦𝗦𝗙𝗨𝗟⌟* ◆
 │
 ├◆ ✅ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!
@@ -2191,7 +2208,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     database.stats.failures++;
     await saveData();
 
-    await bot.editMessageText(
+    await editPairStatusMessage(
       `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗙𝗔𝗜𝗟𝗘𝗗⌟* ◆
 │
 ├◆ ${error.message}
