@@ -1,21 +1,48 @@
-const API=(localStorage.getItem("TOHID_WEB_API")||"").replace(/\/$/,"");
-const app=document.getElementById("app"),toast=document.getElementById("toast");
-const plans=[["7d","7 Days","$2"],["30d","30 Days","$5"],["90d","90 Days","$10"],["lifetime","Lifetime","$50"],["script","Bot Script","$100"]];
-function notify(t){toast.textContent=t;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),2600)}
-async function api(path,options={}){if(!API)throw new Error("API URL is not configured yet.");const r=await fetch(API+path,{headers:{"Content-Type":"application/json",...(options.headers||{})},...options});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"Request failed");return d}
-function home(){location.hash="";location.reload()}
-function render(view){if(view==="home"||!view)return location.hash="",location.reload();if(view==="pair")return app.innerHTML=pair();if(view==="plans")return app.innerHTML=plansView();if(view==="dashboard")return dashboard();if(view==="payments")return payments();if(view==="stats")return stats();if(view==="tutorial")return app.innerHTML=tutorial()}
-function shell(title,body){return '<section class="panel"><button class="ghost" onclick="home()">← Home</button><h2>'+title+'</h2>'+body+'</section>'}
-function pair(){return shell("🔗 Pair WhatsApp",'<p class="muted">Enter the WhatsApp number exactly as you would for pairing. Premium access is checked by the backend.</p><div class="field"><label>WhatsApp number</label><input id="number" inputmode="numeric" placeholder="9178499xxxxxx"></div><div class="field"><label>Custom code (optional, 8 letters/numbers)</label><input id="custom" maxlength="8" placeholder="AB12CD34"></div><button class="primary" onclick="startPair()">Generate Pairing Code</button><div id="pairResult"></div>')}
-async function startPair(){const number=document.getElementById("number").value.trim(),custom=document.getElementById("custom").value.trim(),box=document.getElementById("pairResult");box.innerHTML='<div class="status">⏳ Starting pairing…</div>';try{const d=await api("/api/pair",{method:"POST",body:JSON.stringify({number,customCode:custom||undefined})});box.innerHTML='<div class="status">🔐 Pairing code: <b style="font-size:24px">'+(d.code||"—")+'</b><br><span class="muted">Open WhatsApp → Linked Devices → Link a device → enter this code.</span></div>'}catch(e){box.innerHTML='<div class="status">❌ '+e.message+'</div>'}}
-function plansView(){return shell("👑 Premium Plans",'<div class="plan-grid">'+plans.map(p=>'<div class="plan"><div class="muted">'+p[1]+'</div><div class="price">'+p[2]+'</div><button class="primary" style="margin-top:14px" onclick="buy(\''+p[0]+'\')">Buy</button></div>').join("")+'</div><div id="buyBox"></div>')}
-async function buy(key){const b=document.getElementById("buyBox");b.innerHTML='<div class="status">⏳ Loading payment methods…</div>';try{const d=await api("/api/plans/"+key);b.innerHTML='<div class="status"><b>'+d.name+'</b> — '+d.price+'<div class="row" style="margin-top:12px"><button class="secondary" onclick="pay(\''+key+'\',\'upi\')">🇮🇳 UPI / QR</button><button class="secondary" onclick="pay(\''+key+'\',\'binance\')">🟡 Binance</button></div></div>'}catch(e){b.innerHTML='<div class="status">❌ '+e.message+'</div>'}}
-async function pay(key,method){try{const d=await api("/api/payment",{method:"POST",body:JSON.stringify({planKey:key,method})});document.getElementById("buyBox").innerHTML='<div class="status">💳 Payment request <b>'+d.paymentId+'</b><br><span class="muted">'+(d.instructions||"Follow the payment instructions returned by the backend.")+'</span><div class="field"><label>Transaction ID / UTR</label><input id="tx" placeholder="Enter transaction ID"></div><button class="primary" onclick="submitProof(\''+d.paymentId+'\')">Submit Payment Proof</button></div>'}catch(e){notify(e.message)}}
-async function submitProof(id){try{const tx=document.getElementById("tx").value.trim();await api("/api/payment/"+id+"/proof",{method:"POST",body:JSON.stringify({transactionId:tx})});notify("Payment proof submitted")}catch(e){notify(e.message)}}
-async function dashboard(){app.innerHTML=shell("📊 Dashboard",'<div class="status">⏳ Loading…</div>');try{const d=await api("/api/account");app.innerHTML=shell("📊 Dashboard",'<div class="status"><b>Plan:</b> '+(d.plan||"—")+'<br><b>Expiry:</b> '+(d.expiry||"—")+'<br><b>Bots:</b> '+(d.activeBots||0)+'/'+(d.slotLimit||0)+'</div><div class="row" style="margin-top:14px"><button class="secondary" data-view="plans">👑 My Plan</button><button class="secondary" data-view="payments">📜 My Payments</button></div>')}catch(e){app.innerHTML=shell("📊 Dashboard",'<div class="status">ℹ️ '+e.message+'<br><span class="muted">Connect/authenticate the web panel before loading account data.</span></div>')}}
-async function payments(){app.innerHTML=shell("💳 My Payments",'<div class="status">⏳ Loading…</div>');try{const d=await api("/api/payments");app.innerHTML=shell("💳 My Payments",'<div class="status">'+(d.payments?.length?d.payments.map(p=>'<div style="padding:10px 0;border-bottom:1px solid #242735"><b>'+p.id+'</b> · '+p.planName+' · $'+p.priceUsd+'<br><span class="muted">'+p.status+'</span></div>').join(""):"No payment history.")+'</div>')}catch(e){app.innerHTML=shell("💳 My Payments",'<div class="status">ℹ️ '+e.message+'</div>')}}
-async function stats(){app.innerHTML=shell("📊 Bot Statistics",'<div class="status">⏳ Loading…</div>');try{const d=await api("/api/stats");app.innerHTML=shell("📊 Bot Statistics",'<div class="status">👥 Users: '+d.users+'<br>🔗 Sessions: '+d.sessions+'<br>📊 Connections: '+d.connections+'<br>📅 Today: '+d.dailyConnections+'<br>👑 Premium: '+d.premium+'</div>')}catch(e){app.innerHTML=shell("📊 Bot Statistics",'<div class="status">ℹ️ '+e.message+'</div>')}}
-function tutorial(){return shell("📖 Tutorial",'<p class="muted">1. Enter your WhatsApp number in Pair.<br>2. Generate the pairing code.<br>3. WhatsApp → Settings → Linked Devices → Link a device.<br>4. Enter the code shown by the web panel.<br><br>The pairing code expires according to the bot configuration.</p><button class="primary" data-view="pair">🔗 Pair Now</button>')}
-document.addEventListener("click",e=>{const v=e.target.closest("[data-view]")?.dataset.view;if(v)render(v)});
-window.addEventListener("hashchange",()=>render(location.hash.slice(1)));
-render(location.hash.slice(1));
+const view = document.getElementById("view");
+const toast = document.getElementById("toast");
+
+const pages = {
+  overview: ["Overview", "Manage your bot workspace from one place.", `
+    <div class="hero"><div><span class="eyebrow">TOHID PREMIUM</span><h1>Your bot workspace, simplified.</h1><p>Monitor your automation workspace, plans and connection status from one clean dashboard.</p><div class="hero-actions"><button class="primary" data-page="pair">Connect WhatsApp</button><button class="secondary" data-page="plans">View Plans</button></div></div><div class="hero-status"><span class="dot"></span><b>Web panel ready</b><small>Public access • No login</small></div></div>
+    <div class="stats-grid"><div class="stat-card"><span>Plan</span><strong>Free</strong><small>Upgrade when needed</small></div><div class="stat-card"><span>Connections</span><strong>0</strong><small>No active workspace</small></div><div class="stat-card"><span>Payments</span><strong>0</strong><small>No transactions</small></div><div class="stat-card"><span>Status</span><strong>Ready</strong><small>Panel is online</small></div></div>
+    <div class="section-head"><div><h2>Quick actions</h2><p>Start with the task you need.</p></div></div>
+    <div class="action-grid"><button class="action-card" data-page="pair"><b>Connect WhatsApp</b><span>Connect an account you own or are authorized to manage.</span></button><button class="action-card" data-page="plans"><b>Plans & Billing</b><span>Review available workspace plans.</span></button><button class="action-card" data-page="bots"><b>My Bots</b><span>See connected sessions and status.</span></button></div>`],
+  pair: ["Connect WhatsApp", "Connect an account you own or are authorized to manage.", `
+    <div class="panel-card"><div class="panel-icon">⌁</div><div><h2>WhatsApp connection</h2><p>Use the connection flow for your own account. A separate website login is not required.</p></div></div>
+    <div class="form-card"><label>WhatsApp number</label><input id="number" inputmode="numeric" placeholder="Country code + number"><button class="primary" id="pairBtn">Continue</button><div class="notice">Only connect accounts you own or have explicit permission to manage.</div></div>`],
+  plans: ["Plans & Billing", "Choose the workspace plan that fits your usage.", `
+    <div class="plans-grid"><div class="plan-card"><span>Starter</span><strong>Free</strong><p>Basic dashboard access and workspace status.</p><button class="secondary" data-plan="Starter">Current plan</button></div><div class="plan-card featured"><span>Premium</span><strong>$5</strong><small>/ 30 days</small><p>Expanded legitimate automation workspace features.</p><button class="primary" data-plan="Premium">Select plan</button></div><div class="plan-card"><span>Long Term</span><strong>$10</strong><small>/ 90 days</small><p>Longer workspace access for regular usage.</p><button class="secondary" data-plan="Long Term">Select plan</button></div></div>
+    <div class="notice">Billing can be connected later to a compliant payment provider.</div>`],
+  bots: ["My Bots", "Your connected automation sessions.", `<div class="empty-state"><div class="empty-icon">◌</div><h2>No connected bots</h2><p>Connect your own WhatsApp account to create a legitimate automation session.</p><button class="primary" data-page="pair">Connect WhatsApp</button></div>`],
+  payments: ["Payments", "Subscription and transaction history.", `<div class="empty-state"><div class="empty-icon">₹</div><h2>No payments yet</h2><p>Your payment history will appear here after compliant billing is connected.</p><button class="secondary" data-page="plans">View Plans</button></div>`],
+  stats: ["Statistics", "Workspace health and usage overview.", `
+    <div class="stats-grid"><div class="stat-card"><span>Active sessions</span><strong>0</strong><small>Currently connected</small></div><div class="stat-card"><span>Messages</span><strong>0</strong><small>Workspace activity</small></div><div class="stat-card"><span>Uptime</span><strong>—</strong><small>Awaiting connection</small></div><div class="stat-card"><span>Errors</span><strong>0</strong><small>Recorded by panel</small></div></div>`]
+};
+
+function notify(message) {
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2400);
+}
+
+function render(page = "overview") {
+  const data = pages[page] || pages.overview;
+  document.querySelectorAll(".nav-item").forEach(el => el.classList.toggle("active", el.dataset.page === page));
+  view.innerHTML = `<div class="page-heading"><div><h1>${data[0]}</h1><p>${data[1]}</p></div></div>${data[2]}`;
+  history.replaceState(null, "", "#" + page);
+}
+
+document.addEventListener("click", event => {
+  const nav = event.target.closest("[data-page]");
+  if (nav) return render(nav.dataset.page);
+  const plan = event.target.closest("[data-plan]");
+  if (plan) notify(plan.dataset.plan + " selected — billing integration can be added later.");
+  if (event.target.id === "pairBtn") {
+    const number = document.getElementById("number")?.value.trim();
+    notify(number ? "Connection flow is ready for a compliant backend." : "Enter a WhatsApp number first.");
+  }
+});
+
+window.addEventListener("hashchange", () => render(location.hash.slice(1) || "overview"));
+render(location.hash.slice(1) || "overview");
