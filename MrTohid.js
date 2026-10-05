@@ -9658,18 +9658,11 @@ ${meals}
                 break;
 
             case 'roast': {
-                let target = m.mentionedJid?.[0] ? '@' + m.mentionedJid[0].split('@')[0] : text || '@' + m?.sender?.split('@')?.[0] || 'User';
-
+                const target = m.mentionedJid?.[0]
+                    ? '@' + m.mentionedJid[0].split('@')[0]
+                    : text || '@' + m?.sender?.split('@')?.[0] || 'User';
                 try {
-                    async function openaiRoast(victim) {
-                        return await tohidGpt4(`Roast this person in a funny but savage way (1-2 lines): ${victim}`);
-                    }],
-                            "temperature": 0.8
-                        });
-                        return response.data;
-                    }
-
-                    let roast = await openaiRoast(target);
+                    const roast = await tohidGpt4(`Roast this person in a funny but savage way (1-2 lines): ${target}`);
                     reply(`🔥 *Roast for ${target}:*\n\n${roast}`);
                 } catch (e) {
                     console.error(e);
@@ -9679,26 +9672,19 @@ ${meals}
                 break;
 
             case 'compliment': {
-                let target = m.mentionedJid?.[0] ? '@' + m.mentionedJid[0].split('@')[0] : text || '@' + m?.sender?.split('@')?.[0] || 'User';
-
+                const target = m.mentionedJid?.[0]
+                    ? '@' + m.mentionedJid[0].split('@')[0]
+                    : text || '@' + m?.sender?.split('@')?.[0] || 'User';
                 try {
-                    async function openaiCompliment(victim) {
-                        return await tohidGpt4(`Give a sweet, kind compliment to this person (1-2 lines max): ${victim}`);
-                    }],
-                            "temperature": 0.7
-                        });
-                        return response.data;
-                    }
-
-                    let compliment = await openaiCompliment(target);
+                    const compliment = await tohidGpt4(`Give a sweet, kind compliment to this person (1-2 lines max): ${target}`);
                     reply(`💫 *Compliment for ${target}:*\n\n${compliment}`);
                 } catch (e) {
                     console.error(e);
                     reply("⚠️ *Compliment failed* • The kindness machine is broken");
                 }
             }
-
                 break;
+
             case "advice": {
                 try {
                     const res = await axios.get("https://api.adviceslip.com/advice");
@@ -9747,17 +9733,8 @@ ${meals}
 
             case 'rewrite': {
                 if (!text) return reply(`✍️ *Usage:* ${command} your text here`);
-
                 try {
-                    async function openaiRewrite(input) {
-                        return await tohidGpt4(`Rewrite this to be clear and grammatically correct:\n"${input}"`);
-                    }],
-                            "temperature": 0.5
-                        });
-                        return response.data;
-                    }
-
-                    let result = await openaiRewrite(text);
+                    const result = await tohidGpt4(`Rewrite this to be clear and grammatically correct:\n"${text}"`);
                     reply(`✍️ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Rewrite*\n\n${result}`);
                 } catch (e) {
                     console.error(e);
@@ -9787,17 +9764,8 @@ ${meals}
 
             case 'story': {
                 if (!text) return reply(`📖 *Usage:* ${command} a brave warrior`);
-
                 try {
-                    async function openaiStory(topic) {
-                        return await tohidGpt4(`Write a short creative story about: ${topic}`);
-                    }],
-                            "temperature": 0.8
-                        });
-                        return response.data;
-                    }
-
-                    let result = await openaiStory(text);
+                    const result = await tohidGpt4(`Write a short creative story about: ${text}`);
                     reply(`📖 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Story*\n\n${result}`);
                 } catch (e) {
                     console.error(e);
@@ -9862,24 +9830,15 @@ ${meals}
             case 'truthdare':
             case 'tod': {
                 if (!text) return reply(`🎲 *Usage:* ${command} truth | dare`);
-
                 try {
-                    async function openaiTruthDare(type) {
-                        return await tohidGpt4(`Generate a fun, creative ${type} question for Truth or Dare. Keep it short and engaging.`);
-                    }],
-                            "temperature": 0.8
-                        });
-                        return response.data;
-                    }
-
-                    let type = text.toLowerCase().includes("truth") ? "truth" :
-                        text.toLowerCase().includes("dare") ? "dare" : null;
-
+                    const type = text.toLowerCase().includes("truth")
+                        ? "truth"
+                        : text.toLowerCase().includes("dare")
+                            ? "dare"
+                            : null;
                     if (!type) return reply("⚠️ Choose *truth* or *dare*");
-
-                    let result = await openaiTruthDare(type);
+                    const result = await tohidGpt4(`Generate a fun, creative ${type} question for Truth or Dare. Keep it short and engaging.`);
                     reply(`🎲 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 ${type.toUpperCase()}*\n\n${result}`);
-
                 } catch (e) {
                     console.error(e);
                     reply("❌ *Truth/Dare failed* • Game master is sleeping");
@@ -9945,17 +9904,8 @@ ${meals}
 
             case 'poem': {
                 if (!text) return reply(`📝 *Usage:* ${command} love under stars`);
-
                 try {
-                    async function openaiPoem(topic) {
-                        return await tohidGpt4(`Write a beautiful, original poem about: ${topic}`);
-                    }],
-                            "temperature": 0.7
-                        });
-                        return response.data;
-                    }
-
-                    let result = await openaiPoem(text);
+                    const result = await tohidGpt4(`Write a beautiful, original poem about: ${text}`);
                     reply(`📝 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Poem*\n\n${result}`);
                 } catch (e) {
                     console.error(e);
@@ -13659,17 +13609,11 @@ break;
             case 'open-%+%ai':
             case 'vxnxji': {
                 if (!text) return reply(`🤖 *Example:* ${command} how are you?`);
-
-                async function openai(text) {
-                    return await tohidGpt4(text);
-                });
-                    return response.data;
-                }
-
                 try {
-                    let pei = await openai(text);
+                    const pei = await tohidGpt4(text);
                     reply(`🤖 *GPT-3*\n\n${pei}`);
                 } catch (e) {
+                    console.error(e);
                     reply("❌ *GPT-3 error* • Try later");
                 }
             }
