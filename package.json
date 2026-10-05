@@ -7,8 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "bot": "node Tohid.js",
-    "test": "node --check index.js",
-    "postinstall": "node scripts/patch-baileys.js"
+    "test": "node --check index.js"
   },
   "keywords": [
     "whiskeysockets",
