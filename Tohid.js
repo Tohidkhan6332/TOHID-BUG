@@ -1910,16 +1910,18 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 
   if (!input) {
     return bot.sendMessage(chatId,
-      `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥 𝗚𝗨𝗜𝗗𝗘⌟* ◆
+      `┌ ❏ ◆ *⌜𝗣𝗔ɪʀ 𝗚𝗨ɪᴅᴇ⌟* ◆
 │
 ├◆ ᴜsᴀɢᴇ: /pair 9178499xxxxx
+├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
     );
   }
 
-  const validation = validatePhone(input);
+  const [number, customCode] = input.split('|').map(v => (v || '').trim());
+  const validation = validatePhone(number);
   if (!validation.valid) {
     return bot.sendMessage(chatId,
       `┌ ❏ ◆ *⌜𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗜𝗡𝗣𝗨𝗧⌟* ◆
@@ -1931,8 +1933,19 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     );
   }
 
-  // WhatsApp pairing is number-only. QR/custom-code flows are not exposed.
-  const cleanNumber = input.replace(/[^0-9]/g, '');
+  const cleanNumber = number.replace(/[^0-9]/g, '');
+
+  if (customCode && !/^[A-Za-z0-9]{8}$/.test(customCode)) {
+    return bot.sendMessage(chatId,
+      `┌ ❏ ◆ *⌜𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗖𝗨𝗦𝗧𝗢𝗠 𝗖𝗢𝗗𝗘⌟* ◆
+│
+├◆ ᴄᴜsᴛᴏᴍ ᴄᴏᴅᴇ ᴍᴜsᴛ ʙᴇ 𝟴 ᴀʟᴘʜᴀɴᴜᴍᴇʀɪᴄ ᴄʜᴀʀᴀᴄᴛᴇʀs
+├◆ ᴇxᴀᴍᴘʟᴇ: AB12CD34
+│
+└ ❏`,
+      { parse_mode: 'Markdown' }
+    );
+  }
 
   const sessions = await getSessions();
   if (sessions.length >= SYSTEM.sessionLimit) {
@@ -2038,7 +2051,7 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
     let pairStartError = null;
     const pairStartPromise = pairModule(
       cleanNumber,
-      null,
+      customCode ? customCode.toUpperCase() : null,
       true
     ).catch((err) => {
       pairStartError = err;
@@ -4056,6 +4069,7 @@ ${approvalText}
 │
 ├◆ 🔢 ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ: ɴᴜᴍʙᴇʀ ʀᴇǫᴜɪʀᴇᴅ
 ├◆ ᴜsᴇ: /pair 9178499xxxxx
+├◆ 🔐 ᴄᴜsᴛᴏᴍ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       {
@@ -4076,6 +4090,7 @@ ${approvalText}
       `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗖𝗢𝗗𝗘⌟* ◆
 │
 ├◆ ᴜsᴇ: /pair 9178499xxxxx
+├◆ 🔐 ᴄᴜsᴛᴏᴍ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
