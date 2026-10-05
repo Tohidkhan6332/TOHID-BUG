@@ -14294,6 +14294,57 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
             }
                 break;
 
+            case 'ytmp4': {
+                if (!text) return reply(`🎬 *Usage:* ${command} <YouTube URL>`);
+                let youtubeUrl = text.trim();
+                try {
+                    const u = new URL(youtubeUrl);
+                    if (!/(^|\\.)youtube\\.com$|(^|\\.)youtu\\.be$/i.test(u.hostname)) {
+                        return reply("❌ *Please provide a valid YouTube URL*");
+                    }
+
+                    await devtrust.sendMessage(m.chat, { react: { text: "⏳", key: m.key } });
+
+                    const ytdl = require("@distube/ytdl-core");
+                    const info = await ytdl.getBasicInfo(youtubeUrl);
+                    const title = info.videoDetails?.title || "YouTube Video";
+                    const stream = ytdl(youtubeUrl, { quality: "18" });
+
+                    const chunks = [];
+                    let size = 0;
+                    await new Promise((resolve, reject) => {
+                        stream.on("data", chunk => {
+                            size += chunk.length;
+                            if (size > 45 * 1024 * 1024) {
+                                stream.destroy(new Error("Video too large"));
+                                return;
+                            }
+                            chunks.push(chunk);
+                        });
+                        stream.once("end", resolve);
+                        stream.once("error", reject);
+                    });
+
+                    await devtrust.sendMessage(
+                        m.chat,
+                        addNewsletterContext({
+                            video: Buffer.concat(chunks),
+                            mimetype: "video/mp4",
+                            fileName: `${title.replace(/[\\/:*?"<>|]/g, "_").slice(0, 100)}.mp4`,
+                            caption: `🎬 *${title}*`
+                        }),
+                        { quoted: m }
+                    );
+
+                    await devtrust.sendMessage(m.chat, { react: { text: "✅", key: m.key } });
+                } catch (error) {
+                    console.error("YTMP4 ERROR:", error);
+                    await devtrust.sendMessage(m.chat, { react: { text: "❌", key: m.key } }).catch(() => {});
+                    reply("❌ *YouTube video download failed* • Video may be restricted or too large");
+                }
+            }
+                break;
+
             case 'play':
             case 'ytmp3': {
                 if (!text) {
