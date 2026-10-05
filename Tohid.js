@@ -4056,7 +4056,6 @@ ${approvalText}
 │
 ├◆ 🔢 ᴘᴀɪʀɪɴɢ ᴄᴏᴅᴇ: ɴᴜᴍʙᴇʀ ʀᴇǫᴜɪʀᴇᴅ
 ├◆ ᴜsᴇ: /pair 9178499xxxxx
-├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       {
@@ -4077,7 +4076,6 @@ ${approvalText}
       `┌ ❏ ◆ *⌜𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗖𝗢𝗗𝗘⌟* ◆
 │
 ├◆ ᴜsᴇ: /pair 9178499xxxxx
-├◆ ᴏʀ: /pair 9178499xxxxx|AB12CD34
 │
 └ ❏`,
       { parse_mode: 'Markdown' }
