@@ -11801,6 +11801,31 @@ case 'apkdl': {
             }
                 break;
 
+            case "qrcode": {
+                if (!text) return reply(`📱 *Usage:* ${command} your text or link`);
+                try {
+                    const QRCode = require("qrcode");
+                    const buffer = await QRCode.toBuffer(text, {
+                        errorCorrectionLevel: "M",
+                        type: "png",
+                        margin: 2,
+                        width: 800
+                    });
+                    await devtrust.sendMessage(
+                        m.chat,
+                        addNewsletterContext({
+                            image: buffer,
+                            caption: `📱 *TOHID-AI QR Code*\\n\\n${text}`
+                        }),
+                        { quoted: m }
+                    );
+                } catch (error) {
+                    console.error("QR CODE ERROR:", error);
+                    reply("❌ *QR code generation failed* • Try again");
+                }
+            }
+                break;
+
             case "readqr": {
                 if (!m.quoted || !m.quoted.image)
                     return reply("📱 *Reply to a QR code image*");
