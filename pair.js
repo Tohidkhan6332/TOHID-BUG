@@ -905,7 +905,7 @@ creds: state.creds,
             } else if (reason === DisconnectReason.restartRequired) {
                 console.log(chalk.blue(`🔄 Restart required for ${tohidDevNumber}`));
                 await sleep(2000);
-                queuePairing(tohidDevNumber);
+                await requeueCurrentSession();
             } else {
                 console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${tohidDevNumber}`));
                 if (tracker.retryCount < 2) {
@@ -924,6 +924,10 @@ creds: state.creds,
             tracker.lastActivity = Date.now();
             tracker.lastConnectedAt = Date.now();
             tracker.lastError = null;
+            // Pairing mode is no longer needed once WhatsApp is registered.
+            // This also makes later manual/health restarts use normal session auth.
+            tracker.enablePairingCode = false;
+            tracker.customPairingCode = null;
             
             // Add small delay to ensure everything is initialized
             await sleep(5000);
@@ -1044,7 +1048,7 @@ creds: state.creds,
         try {
             try { tohid.ws?.close(); } catch (e) {}
             await sleep(1500);
-            if (!tracker.disconnected) await queuePairing(tohidDevNumber, null);
+            if (!tracker.disconnected) await requeueCurrentSession();
         } catch (error) {
             tracker.lastError = error?.message || String(error);
             console.log(chalk.red('❌ Health monitor reconnect failed for ' + tohidDevNumber + ': ' + tracker.lastError));
@@ -1186,7 +1190,13 @@ async function restartActiveConnection(number) {
 
     try {
         await sleep(1500);
-        if (!tracker.disconnected) await queuePairing(key);
+        if (!tracker.disconnected) {
+            await queuePairing(
+                key,
+                tracker.enablePairingCode ? tracker.customPairingCode : null,
+                Boolean(tracker.enablePairingCode)
+            );
+        }
         return true;
     } finally {
         tracker.reconnectPending = false;
