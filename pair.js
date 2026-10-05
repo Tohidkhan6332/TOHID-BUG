@@ -1035,9 +1035,13 @@ creds: state.creds,
             return;
         }
 
-        if (tracker.state === 'connecting' || tracker.reconnectPending) return;
-
         const lastSeen = Number(tracker.lastActivity || tracker.lastConnectedAt || now);
+
+        // A socket can remain in "connecting" while the underlying WebSocket is
+        // already dead. Do not let that state block recovery forever: allow the
+        // monitor to reconnect once the socket has been stale for 90 seconds.
+        if (tracker.reconnectPending) return;
+        if (tracker.state === 'connecting' && now - lastSeen < 90000) return;
         if (now - lastSeen < 90000) return;
 
         tracker.state = 'reconnecting';
