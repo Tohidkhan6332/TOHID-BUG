@@ -18,11 +18,21 @@ const UPDATE_REPO = 'https://github.com/Tohidkhan6332/TOHID-BUG.git';
 const UPDATE_BRANCH = 'main';
 
 function run(command, args, options = {}) {
+    const env = {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: '0',
+        GIT_ASKPASS: 'echo',
+        ...options.env
+    };
+
     return execFileSync(command, args, {
         cwd: process.cwd(),
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
-        ...options
+        timeout: options.timeout || 90000,
+        killSignal: 'SIGKILL',
+        ...options,
+        env
     }).trim();
 }
 
@@ -170,12 +180,15 @@ async function updateFromGitHub() {
     let currentSha;
     let latestSha;
     try {
-        git(['fetch', 'origin', UPDATE_BRANCH, '--prune']);
+        git(['config', '--local', 'http.version', 'HTTP/1.1']);
+        git(['config', '--local', 'credential.interactive', 'false']);
+        git(['fetch', '--prune', '--no-tags', 'origin', UPDATE_BRANCH], { timeout: 90000 });
         currentSha = git(['rev-parse', 'HEAD']);
         latestSha = git(['rev-parse', `origin/${UPDATE_BRANCH}`]);
     } catch (error) {
         restoreStash();
-        throw error;
+        const detail = error?.stderr || error?.stdout || error?.message || 'unknown Git error';
+        throw new Error('GitHub check failed: ' + String(detail).trim().slice(-1800));
     }
 
     if (currentSha === latestSha) {
@@ -208,17 +221,20 @@ async function updateFromGitHub() {
     }
 
     try {
-        git(['pull', '--ff-only', 'origin', UPDATE_BRANCH]);
+        // Apply exactly the GitHub main branch that was just fetched.
+        // This avoids pull/merge prompts and makes .update deterministic.
+        git(['reset', '--hard', `origin/${UPDATE_BRANCH}`], { timeout: 90000 });
     } catch (error) {
         restoreStash();
-        throw error;
+        const detail = error?.stderr || error?.stdout || error?.message || 'unknown Git reset error';
+        throw new Error('Applying GitHub update failed: ' + String(detail).trim().slice(-1800));
     }
 
 
 
     if (dependenciesChanged) {
         try {
-            run('npm', ['install', '--no-audit', '--no-fund'], { timeout: 15 * 60 * 1000 });
+            run('npm', ['install', '--no-audit', '--no-fund', '--prefer-online'], { timeout: 15 * 60 * 1000 });
         } catch (error) {
             // Roll the source tree back first, then restore the runtime stash.
             try {
