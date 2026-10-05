@@ -91,9 +91,10 @@ function launchBot() {
 
     startAutoRestart();
     runStartupDebug();
-    startSessionMonitor();
-    processGuard.install();
 
+    // Global handlers, process guard, and session monitor are installed once
+    // during module initialization above. Re-installing the session monitor
+    // here would create duplicate timers and duplicate diagnostics.
     const ignoredErrors = [
         'Socket connection timeout',
         'EKEYTYPE',
