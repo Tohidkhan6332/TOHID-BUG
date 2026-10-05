@@ -28,7 +28,8 @@ function notify(message) {
 
 function render(page = "overview") {
   const data = pages[page] || pages.overview;
-  document.querySelectorAll(".nav-item").forEach(el => el.classList.toggle("active", el.dataset.page === page));
+  document.querySelectorAll(".nav").forEach(el => el.classList.toggle("active", el.dataset.page === page));
+  document.getElementById("title")?.replaceChildren(document.createTextNode(data[0]));
   view.innerHTML = `<div class="page-heading"><div><h1>${data[0]}</h1><p>${data[1]}</p></div></div>${data[2]}`;
   history.replaceState(null, "", "#" + page);
 }
