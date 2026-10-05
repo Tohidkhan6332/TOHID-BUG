@@ -1489,7 +1489,7 @@ const sendDashboard = async (chatId, userId) => {
 `;
   }
 
-  text += '│\\n└ ❏';
+  text += '│\n└ ❏';
 
   return bot.sendMessage(chatId, text, {
     parse_mode: 'Markdown',
@@ -1514,7 +1514,7 @@ const sendMyBots = async (chatId, userId) => {
   const lines = bots.map((number, index) => {
     const connected = Boolean(getActiveConnection(number));
     return `├◆ ${index + 1}. +${number} — ${connected ? '🟢 ᴏɴʟɪɴᴇ' : '🔴 ᴏғғʟɪɴᴇ'}`;
-  }).join('\\n');
+  }).join('\n');
 
   return bot.sendMessage(chatId,
     `┌ ❏ ◆ *⌜𝗠𝗬 𝗕𝗢𝗧𝗦⌟* ◆
