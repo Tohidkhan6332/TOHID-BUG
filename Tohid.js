@@ -2389,19 +2389,44 @@ bot.onText(/^\/sessionstatus(?:@[\w_]+)?$/i, async (msg) => {
     );
   }
 
-  const icon = state => state === 'online' ? '🟢' : state === 'connecting' || state === 'reconnecting' ? '🟡' : state === 'logged_out' ? '🔴' : '⚪';
-  const lines = visible.map(item => {
-    const age = item.lastConnectedAt ? formatDuration(Math.max(0, Date.now() - item.lastConnectedAt)) : 'N/A';
-    const err = item.lastError ? String(item.lastError).slice(0, 80) : '';
-    return '├◆ ' + icon(item.state) + ' +'+item.number+' — *'+item.state.toUpperCase()+'*\\n' +
-      '│   ↳ ᴜᴘᴛɪᴍᴇ: '+age+' | ʀᴇᴛʀʏ: '+item.retryCount +
-      (err ? '\\n│   ↳ ⚠️ '+err : '');
-  }).join('\\n');
+  const icon = state => (
+    state === 'online' ? '🟢' :
+    state === 'connecting' || state === 'reconnecting' ? '🟡' :
+    state === 'logged_out' || state === 'invalid_session' ? '🔴' : '⚪'
+  );
+  const statusLabel = state => ({
+    online: 'ᴏɴʟɪɴᴇ',
+    connecting: 'ᴄᴏɴɴᴇᴄᴛɪɴɢ',
+    reconnecting: 'ʀᴇᴄᴏɴɴᴇᴄᴛɪɴɢ',
+    logged_out: 'ʟᴏɢɢᴇᴅ ᴏᴜᴛ',
+    invalid_session: 'ɪɴᴠᴀʟɪᴅ sᴇssɪᴏɴ'
+  }[state] || String(state || 'UNKNOWN').toUpperCase());
+
+  const lines = visible.slice(0, 20).map(item => {
+    const age = item.lastConnectedAt
+      ? formatDuration(Math.max(0, Date.now() - item.lastConnectedAt))
+      : 'N/A';
+    const retry = Number(item.retryCount || 0);
+    const err = item.lastError ? String(item.lastError).replace(/[\n\r]+/g, ' ').slice(0, 120) : '';
+
+    return [
+      `├◆ ${icon(item.state)} +${item.number}`,
+      `│   ├─ sᴛᴀᴛᴜs: *${statusLabel(item.state)}*`,
+      `│   ├─ ᴜᴘᴛɪᴍᴇ: ${age}`,
+      `│   └─ ʀᴇᴛʀʏ: ${retry}`,
+      ...(err ? [`│   ⚠️ ᴇʀʀᴏʀ: ${err}`] : [])
+    ].join('\n');
+  }).join('\n│\n');
 
   return bot.sendMessage(chatId,
-    '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗛𝗘𝗔𝗟𝗧𝗛⌟* ◆\n│\n' + lines + '\n│\n└ ❏',
+    `┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗦𝗧𝗔𝗧𝗨𝗦⌟* ◆
+│
+${lines}
+│
+└ ❏`,
     { parse_mode: 'Markdown' }
   );
+});
 });
 
 // ==================== USER BOT RESTART ====================
@@ -2457,9 +2482,11 @@ bot.onText(/^\/ping(?:@[\w_]+)?$/i, async (msg) => {
     return sendAccessDenied(chatId);
   }
 
+  // Keep this as a plain text message so editMessageText() can replace
+  // the placeholder with the measured Telegram round-trip latency.
   const sentMsg = await bot.sendMessage(chatId,
     `┌ ❏ ◆ *⌜𝗣𝗜𝗡𝗚 𝗧𝗘𝗦𝗧⌟* ◆\n│\n├◆ ᴍᴇᴀsᴜʀɪɴɢ ʟᴀᴛᴇɴᴄʏ...\n│\n└ ❏`,
-    { parse_mode: 'Markdown' }
+    { parse_mode: 'Markdown', __noCommandImage: true }
   );
 
   const latency = Date.now() - start;
@@ -4158,15 +4185,50 @@ ${approvalText}
         { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } }
       );
     }
-    const icon = state => state === 'online' ? '🟢' : state === 'connecting' || state === 'reconnecting' ? '🟡' : state === 'logged_out' ? '🔴' : '⚪';
-    const lines = visible.slice(0, 20).map(item =>
-      '├◆ ' + icon(item.state) + ' +' + item.number + ' — *' + item.state.toUpperCase() + '*\\n' +
-      '│   ↳ ᴜᴘᴛɪᴍᴇ: ' + (item.lastConnectedAt ? formatDuration(Math.max(0, Date.now() - item.lastConnectedAt)) : 'N/A') +
-      ' | ʀᴇᴛʀʏ: ' + item.retryCount
-    ).join('\\n');
+    const icon = state => (
+      state === 'online' ? '🟢' :
+      state === 'connecting' || state === 'reconnecting' ? '🟡' :
+      state === 'logged_out' || state === 'invalid_session' ? '🔴' : '⚪'
+    );
+    const statusLabel = state => ({
+      online: 'ᴏɴʟɪɴᴇ',
+      connecting: 'ᴄᴏɴɴᴇᴄᴛɪɴɢ',
+      reconnecting: 'ʀᴇᴄᴏɴɴᴇᴄᴛɪɴɢ',
+      logged_out: 'ʟᴏɢɢᴇᴅ ᴏᴜᴛ',
+      invalid_session: 'ɪɴᴠᴀʟɪᴅ sᴇssɪᴏɴ'
+    }[state] || String(state || 'UNKNOWN').toUpperCase());
+
+    const lines = visible.slice(0, 20).map(item => {
+      const age = item.lastConnectedAt
+        ? formatDuration(Math.max(0, Date.now() - item.lastConnectedAt))
+        : 'N/A';
+      const retry = Number(item.retryCount || 0);
+      const err = item.lastError ? String(item.lastError).replace(/[\n\r]+/g, ' ').slice(0, 120) : '';
+
+      return [
+        `├◆ ${icon(item.state)} +${item.number}`,
+        `│   ├─ sᴛᴀᴛᴜs: *${statusLabel(item.state)}*`,
+        `│   ├─ ᴜᴘᴛɪᴍᴇ: ${age}`,
+        `│   └─ ʀᴇᴛʀʏ: ${retry}`,
+        ...(err ? [`│   ⚠️ ᴇʀʀᴏʀ: ${err}`] : [])
+      ].join('\n');
+    }).join('\n│\n');
+
     return bot.sendMessage(chatId,
-      '┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗛𝗘𝗔𝗟𝗧𝗛⌟* ◆\\n│\\n' + lines + '\\n│\\n└ ❏',
-      { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'session_status' }, { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } }
+      `┌ ❏ ◆ *⌜𝗦𝗘𝗦𝗦𝗜𝗢𝗡 𝗦𝗧𝗔𝗧𝗨𝗦⌟* ◆
+│
+${lines}
+│
+└ ❏`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '🔄 ʀᴇғʀᴇsʜ', callback_data: 'session_status' },
+            { text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }
+          ]]
+        }
+      }
     );
   }
 
