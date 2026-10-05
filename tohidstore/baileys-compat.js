@@ -7,7 +7,7 @@
 const { createJiti } = require('jiti');
 
 const jiti = createJiti(__filename);
-const baileys = jiti('@whiskeysockets/baileys');
+const baileys = jiti('@xbibzlibrary/whatsbibz');
 
 if (!baileys.makeCacheableSignalKeyStore) {
     baileys.makeCacheableSignalKeyStore = (keys) => keys;
