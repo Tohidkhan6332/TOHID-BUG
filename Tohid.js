@@ -1814,7 +1814,7 @@ Use: /${commandName} https://chat.whatsapp.com/XXXXXXXXXXXX`,
 
 async function editPairStatusMessage(text, options) {
   try {
-    return await editPairStatusMessage(text, options);
+    return await bot.editMessageText(text, options);
   } catch (error) {
     const description = String(
       error?.response?.body?.description ||
