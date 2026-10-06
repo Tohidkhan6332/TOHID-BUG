@@ -32,6 +32,11 @@ module.exports = {
       '┃ 🎁 .gamedaily\n' +
       '┃ 💰 .gamescore <game> <score>\n' +
       '╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n' +
+      '👥 MULTIPLAYER\n' +
+      '┃ .challenge ttt @user\n' +
+      '┃ .challenge rps @user\n' +
+      '┃ .challenge dicebattle @user\n' +
+      '┃ .challenge quiz @user\n\n' +
       '💡 Buttons se popular games direct open karo.';
     const preferred = ['snake', '2048', 'ttt']
       .map(name => games.find(g => g.name === name))
