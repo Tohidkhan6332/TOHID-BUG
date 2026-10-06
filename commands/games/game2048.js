@@ -1,0 +1,3 @@
+'use strict';
+const { recordScore } = require('../../utils/TohidGameStats');
+module.exports = { name:'2048', aliases:['twenty48'], description:'2048 — number merge challenge', category:'games', async execute({reply,pushName,from}) { const tiles=[128,256,512,1024,2048], tile=tiles[Math.floor(Math.random()*tiles.length)], score=tile+Math.floor(Math.random()*500); recordScore(from,pushName,'2048',score); await reply('🧩 TOHID 2048\n\n🔢 Highest tile: '+tile+'\n🏆 Score: '+score+'\n\nTry .2048 again for a higher score.'); } };
