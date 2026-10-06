@@ -60,5 +60,6 @@ function claimDaily(jid, name, challenge) {
 function leaderboard(limit) {
   return Object.values(load()).sort((a, b) => Number(b.bestScore || 0) - Number(a.bestScore || 0) || Number(b.xp || 0) - Number(a.xp || 0)).slice(0, limit || 10);
 }
+function rewardMultiplayer(jid, name, won) { const x=getPlayer(jid,name); x.player.xp += won ? 75 : 25; x.player.coins += won ? 50 : 10; if (won) x.player.wins++; save(x.db); return x.player; }
 function profile(jid, name) { return getPlayer(jid, name).player; }
-module.exports = { userId, levelForXp, xpForNextLevel, recordPlay, recordScore, claimDaily, leaderboard, profile };
+module.exports = { userId, levelForXp, xpForNextLevel, recordPlay, recordScore, claimDaily, leaderboard, profile, rewardMultiplayer };
