@@ -2,9 +2,10 @@
 
 const path = require('path');
 const fs = require('fs');
+const { recordPlay } = require('../../utils/TohidGameStats');
 
 const GAME_DIR = __dirname;
-const SKIP = new Set(['join.js']);
+const SKIP = new Set(['join.js', 'games.js', 'gameprofile.js', 'gameleaderboard.js', 'gamedaily.js', 'gamescore.js']);
 
 let registry = null;
 
@@ -34,6 +35,11 @@ function getRegistry() {
 async function executeGame(command, context) {
   const mod = getRegistry().get(String(command || '').toLowerCase());
   if (!mod) return false;
+  try {
+    recordPlay(context?.from, context?.pushName || context?.msg?.pushName || 'Player', mod.name);
+  } catch (error) {
+    console.error('[GAME STATS] Failed to record play:', error.message);
+  }
   await mod.execute(context);
   return true;
 }
