@@ -23,61 +23,6 @@ function gameHtml(state = {}) {
 </style></head><body><div class="card"><div class="glow"></div><div class="title">CURSED DASH</div><div class="sub">SURVIVE THE CURSE · COLLECT THE ORBS</div><div class="stats"><div class="stat">SCORE<b>${score}</b></div><div class="stat">BEST<b>${best}</b></div><div class="stat">STREAK<b>${streak}</b></div></div><div class="arena"><div class="lanes"><div class="lane"></div><div class="lane"></div><div class="lane"></div></div><div class="grid"></div><div class="hud"><span>LEVEL ${level}</span><span>SPEED ${(1+(level-1)*.15).toFixed(1)}x</span></div>${entityHtml}<div class="entity" id="player">🐺</div></div><div class="message">${message}</div><div class="status">${running ? 'RUNNING · use the buttons below' : 'Use START / LEFT / DASH / RIGHT buttons'}</div></div></body></html>`;
 }
 
-async function sendRichGame({ sock, jid, quoted }) {
-    const data = Buffer.from(JSON.stringify({
-        __typename: 'GenAIUnifiedResponse',
-        response_id: crypto.randomUUID(),
-        sections: [{
-            __typename: 'GenAIUnifiedResponseSection',
-            view_model: {
-                __typename: 'GenAISingleLayoutViewModel',
-                primitive: {
-                    __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
-                    trusted_sources: [],
-                    payload: gameHtml(),
-                },
-            },
-        }],
-    })).toString('base64');
-    const quotedContext = quoted?.key ? {
-        stanzaId: quoted.key.id,
-        participant: quoted.key.participant || quoted.participant || quoted.key.remoteJid,
-        quotedMessage: quoted.message,
-    } : {};
-    const content = proto.Message.fromObject({
-        messageContextInfo: {
-            threadId: [],
-            deviceListMetadata: {
-                senderKeyIndexes: [],
-                recipientKeyIndexes: [],
-                recipientKeyHash: '',
-                recipientTimestamp: Math.floor(Date.now() / 1000),
-            },
-            deviceListMetadataVersion: 2,
-            messageSecret: crypto.randomBytes(32),
-        },
-        botForwardedMessage: {
-            message: {
-                richResponseMessage: {
-                    messageType: 1,
-                    submessages: [],
-                    unifiedResponse: { data },
-                    contextInfo: {
-                        forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedAiBotMessageInfo: { botJid: '867051314767696@bot' },
-                        forwardOrigin: 4,
-                        ...quotedContext,
-                    },
-                },
-            },
-        },
-    });
-    const wrapped = generateWAMessageFromContent(jid, content, { userJid: sock.user?.id, quoted });
-    await sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
-    return wrapped;
-}
-
 async function sendRichGame({ sock, jid, quoted, state }) {
     const data = Buffer.from(JSON.stringify({
         __typename: 'GenAIUnifiedResponse',
