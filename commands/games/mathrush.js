@@ -1,0 +1,3 @@
+'use strict';
+const {recordScore}=require('../../utils/TohidGameStats');
+module.exports={name:'mathrush',aliases:['mathgame'],description:'Math Rush — solve fast',category:'games',async execute({from,reply,pushName,args}){const a=2+Math.floor(Math.random()*18),b=2+Math.floor(Math.random()*18),op=Math.random()<.5?'+':'×',answer=op==='+'?a+b:a*b;if(!args?.length)return reply('🧮 TOHID MATH RUSH\n\nSolve: '+a+' '+op+' '+b+' = ?\n\nReply with .mathrush <answer>');const ok=Number(args[0])===answer,score=ok?120:5;recordScore(from,pushName,'mathrush',score);await reply(ok?'⚡ CORRECT! +'+score:'❌ Wrong! Correct answer: '+answer);}};
