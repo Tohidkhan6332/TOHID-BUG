@@ -5502,6 +5502,20 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}sudoku
 │❖ ${prefix}vampire
 │❖ ${prefix}wordscramble
+│❖ ${prefix}cursearena
+│❖ ${prefix}cursedash
+│❖ ${prefix}cyber
+│❖ ${prefix}dangerdash
+│❖ ${prefix}doom
+│❖ ${prefix}eye
+│❖ ${prefix}matrix
+│❖ ${prefix}naijawhot
+│❖ ${prefix}piano
+│❖ ${prefix}scrabble
+│❖ ${prefix}snake
+│❖ ${prefix}sudoku
+│❖ ${prefix}vampire
+│❖ ${prefix}wordscramble
 ┗━━━━━━━━━━━━━━┛
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏◆━┓
