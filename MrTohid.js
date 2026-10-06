@@ -11674,7 +11674,13 @@ case 'apkdl': {
 
             case 'mediafire': {
                 if (!text) return reply(`📥 *Usage:* ${command} <MediaFire URL>`);
-                let mediafireUrl;\n                try {\n                    mediafireUrl = new URL(text.trim());\n                } catch {\n                    mediafireUrl = null;\n                }\n                if (!mediafireUrl || !['http:', 'https:'].includes(mediafireUrl.protocol) || !(mediafireUrl.hostname === 'mediafire.com' || mediafireUrl.hostname.endsWith('.mediafire.com'))) {
+                let mediafireUrl;
+                try {
+                    mediafireUrl = new URL(text.trim());
+                } catch {
+                    mediafireUrl = null;
+                }
+                if (!mediafireUrl || !['http:', 'https:'].includes(mediafireUrl.protocol) || !(mediafireUrl.hostname === 'mediafire.com' || mediafireUrl.hostname.endsWith('.mediafire.com'))) {
                     return reply("❌ *Invalid MediaFire URL*");
                 }
                 try {
