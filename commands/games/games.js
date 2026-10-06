@@ -4,7 +4,7 @@ const { profile, levelForXp, xpForNextLevel } = require('../../utils/TohidGameSt
 
 module.exports = {
   name: 'games',
-  aliases: ['game', 'gamecenter', 'arcade'],
+  aliases: ['game', 'games', 'gamemenu', 'gamecenter', 'arcade'],
   description: 'Open the TOHID Game Center',
   category: 'games',
   async execute({ sock, from, reply, pushName, msg }) {
