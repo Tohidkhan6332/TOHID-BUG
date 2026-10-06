@@ -1,0 +1,3 @@
+'use strict';
+const {recordScore}=require('../../utils/TohidGameStats');
+module.exports={name:'dicebattle',aliases:['dice','roll'],description:'Roll two dice and beat the bot',category:'games',async execute({from,reply,pushName}){const you=1+Math.floor(Math.random()*6)+1+Math.floor(Math.random()*6),bot=1+Math.floor(Math.random()*6)+1+Math.floor(Math.random()*6),score=you>bot?100:you===bot?25:5;recordScore(from,pushName,'dicebattle',score);await reply('🎲 TOHID DICE BATTLE\n\n👤 You: '+you+'\n🤖 TOHID: '+bot+'\n\n'+(you>bot?'🏆 YOU WIN!':you===bot?'🤝 DRAW!':'💥 YOU LOSE!')+'\n⭐ Score: '+score);}};
