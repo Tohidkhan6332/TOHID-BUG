@@ -1,13 +1,8 @@
 'use strict';
 
-/**
- * CommonJS compatibility bridge for the ESM-only PouCode Baileys fork.
- * The application remains CommonJS while Baileys is loaded through Jiti.
- */
-const { createJiti } = require('jiti');
-
-const jiti = createJiti(__filename);
-const baileys = jiti('@whiskeysockets/baileys');
+// Compatibility bridge: the HTML rich-game transport uses the same
+// Baileys fork/version as SUKUNA_MD (2.8.8).
+const baileys = require('@pasqua-baileys/baileys');
 
 if (!baileys.makeCacheableSignalKeyStore) {
     baileys.makeCacheableSignalKeyStore = (keys) => keys;
