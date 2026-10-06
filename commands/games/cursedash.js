@@ -20,7 +20,7 @@ async function sendRichGame({ sock, jid, quoted }) {
             view_model: {
                 __typename: 'GenAISingleLayoutViewModel',
                 primitive: {
-                    __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
+                    __typename: 'GenAIaeacdsnwHtmlPrimitive',
                     trusted_sources: [],
                     payload: gameHtml(),
                 },
