@@ -1384,7 +1384,7 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
       // to Telegram. Telegram should not have to fetch GitHub Raw itself.
       let photoSource = randomImage;
 
-      if (typeof photoSource === 'string' && /^https?:\\/\\//i.test(photoSource)) {
+            if (typeof photoSource === 'string' && /^https?:\/\//i.test(photoSource)) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
 
