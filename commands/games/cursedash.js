@@ -1,7 +1,6 @@
 'use strict';
 
-const crypto = require('crypto');
-const { generateWAMessageFromContent, proto } = require('../../tohidstore/baileys-compat');
+const { sendRichHtml } = require('../../utils/TohidGenai');
 
 function gameHtml() {
     return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
@@ -12,58 +11,7 @@ function place(){player.style.left=(lane*50/1.5+16.666)+'%'}function say(t){msg.
 }
 
 async function sendRichGame({ sock, jid, quoted }) {
-    const data = Buffer.from(JSON.stringify({
-        __typename: 'GenAIUnifiedResponse',
-        response_id: crypto.randomUUID(),
-        sections: [{
-            __typename: 'GenAIUnifiedResponseSection',
-            view_model: {
-                __typename: 'GenAISingleLayoutViewModel',
-                primitive: {
-                    __typename: 'GenAIaeacdsnwHtmlPrimitive',
-                    trusted_sources: [],
-                    payload: gameHtml(),
-                },
-            },
-        }],
-    })).toString('base64');
-    const quotedContext = quoted?.key ? {
-        stanzaId: quoted.key.id,
-        participant: quoted.key.participant || quoted.participant || quoted.key.remoteJid,
-        quotedMessage: quoted.message,
-    } : {};
-    const content = proto.Message.fromObject({
-        messageContextInfo: {
-            threadId: [],
-            deviceListMetadata: {
-                senderKeyIndexes: [],
-                recipientKeyIndexes: [],
-                recipientKeyHash: '',
-                recipientTimestamp: Math.floor(Date.now() / 1000),
-            },
-            deviceListMetadataVersion: 2,
-            messageSecret: crypto.randomBytes(32),
-        },
-        botForwardedMessage: {
-            message: {
-                richResponseMessage: {
-                    messageType: 1,
-                    submessages: [],
-                    unifiedResponse: { data },
-                    contextInfo: {
-                        forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedAiBotMessageInfo: { botJid: '867051314767696@bot' },
-                        forwardOrigin: 4,
-                        ...quotedContext,
-                    },
-                },
-            },
-        },
-    });
-    const wrapped = generateWAMessageFromContent(jid, content, { userJid: sock.user?.id, quoted });
-    await sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
-    return wrapped;
+    return sendRichHtml({ sock, jid, quoted, html: gameHtml(), title: 'Cursed Dash', interactive: true });
 }
 
 module.exports = {
