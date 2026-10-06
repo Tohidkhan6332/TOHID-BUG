@@ -1,6 +1,6 @@
 'use strict';
 
-const { sendRichHtml } = require('../../utils/genaiRich');
+const { sendRichHtml } = require('../../utils/TohidGenai');
 const games = new Map();
 
 function shuffle(values) {
