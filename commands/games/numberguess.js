@@ -1,3 +1,4 @@
 'use strict';
-const games=new Map();
-module.exports={name:'numberguess',aliases:['guessnumber','guess'],description:'Guess the hidden number',category:'games',async execute({from,reply,args}){let g=games.get(from);if(!g||g.done||!args?.length){g={n:1+Math.floor(Math.random()*20),tries:0,done:false};games.set(from,g);return reply('🔢 TOHID NUMBER GUESS\n\nI picked a number from 1-20.\nGuess with .numberguess <number>');}const n=Number(args[0]);if(!Number.isInteger(n)||n<1||n>20)return reply('❌ Choose a whole number from 1-20.');g.tries++;if(n===g.n){g.done=true;return reply('🎯 CORRECT!\n\nNumber: '+g.n+'\nAttempts: '+g.tries+'\n\nNew game: .numberguess');}await reply((n<g.n?'⬆️ Go higher!':'⬇️ Go lower!')+'\nAttempts: '+g.tries);}};
+const { sendRichHtml } = require('../../utils/TohidGenai');
+const { numberGuess } = require('../../utils/TohidHtmlGames');
+module.exports={name:'numberguess',aliases:['guessnumber','guess'],description:'HTML Number Guess',category:'games',async execute({sock,msg,from,reply}){try{return await sendRichHtml({sock,jid:from,quoted:msg,html:numberGuess()})}catch(e){console.error('[NUMBERGUESS HTML]',e.message);return reply('🔢 TOHID NUMBER GUESS\nUse .numberguess again.')}}};
