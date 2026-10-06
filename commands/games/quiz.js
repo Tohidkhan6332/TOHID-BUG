@@ -1,0 +1,4 @@
+'use strict';
+const {recordScore}=require('../../utils/TohidGameStats');
+const qs=[['What is the capital of India?','delhi'],['2 + 8 × 2 = ?','18'],['Which planet is known as the Red Planet?','mars'],['How many days are in a leap year?','366'],['What does CPU stand for?','central processing unit']];
+module.exports={name:'quiz',aliases:['quizgame'],description:'Quick knowledge quiz',category:'games',async execute({from,reply,pushName,args}){const q=qs[Math.floor(Math.random()*qs.length)];if(!args?.length)return reply('🧠 TOHID QUIZ\n\n❓ '+q[0]+'\n\nAnswer with .quiz <answer>');const ans=args.join(' ').toLowerCase().trim(),ok=ans===q[1],score=ok?100:10;recordScore(from,pushName,'quiz',score);await reply(ok?'✅ CORRECT! +'+score+' points':'❌ WRONG! Correct answer: '+q[1]+'\n⭐ +'+score+' participation points');}};
