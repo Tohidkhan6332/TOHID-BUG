@@ -38,7 +38,7 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
             view_model: {
                 __typename: 'GenAISingleLayoutViewModel',
                 primitive: {
-                    __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
+                    __typename: 'GenAIaeacdsnwHtmlPrimitive',
                     ...(title ? { title: String(title) } : {}),
                     trusted_sources: Array.isArray(trustedSources) ? trustedSources : [],
                     ...(url ? { url: String(url) } : {}),
@@ -257,7 +257,7 @@ async function sendRichHtmlMessage({ sock, jid, quoted, title, html, url, truste
         sections: [{
             view_model: {
                 primitive: {
-                    __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
+                    __typename: 'GenAIaeacdsnwHtmlPrimitive',
                     payload: String(html),
                     title: String(title || ''),
                     url: String(url || ''),
