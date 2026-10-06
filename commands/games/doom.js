@@ -1,5 +1,5 @@
 'use strict';
-const { sendArcade } = require('../../utils/TohidArcadeGames');
+const { sendArcade } = require('../../utils/TohidGame');
 module.exports = {
     name: 'doom',
     aliases: ['doomgame', 'redzone'],
