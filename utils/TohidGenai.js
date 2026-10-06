@@ -46,7 +46,7 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
                 },
             },
         }],
-    })).toString('base64');
+    }), 'utf8');
 
     return proto.Message.fromObject({
         messageContextInfo: {
