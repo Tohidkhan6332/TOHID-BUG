@@ -1379,14 +1379,73 @@ async function sendMainMenu(chatId, userId, userName, isAdminUser = false, isOwn
 
     try {
       // Main menu is intentionally image + inline buttons only.
-      await bot.sendPhoto(chatId, randomImage, {
+      // When the deployed host does not contain the repository media folder,
+      // download the GitHub Raw image on the bot server and upload the bytes
+      // to Telegram. Telegram should not have to fetch GitHub Raw itself.
+      let photoSource = randomImage;
+
+      if (typeof photoSource === 'string' && /^https?:\\/\\//i.test(photoSource)) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        try {
+          const response = await fetch(photoSource, { signal: controller.signal });
+          if (!response.ok) {
+            throw new Error(`Image HTTP ${response.status}`);
+          }
+
+          const contentType = response.headers.get('content-type') || '';
+          if (!contentType.toLowerCase().includes('image')) {
+            throw new Error(`Unexpected image content-type: ${contentType || 'unknown'}`);
+          }
+
+          photoSource = Buffer.from(await response.arrayBuffer());
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+
+      await bot.sendPhoto(chatId, photoSource, {
         reply_markup: keyboard
       });
     } catch (photoError) {
       console.error('[sendMainMenu PHOTO ERROR]:', photoError.message);
-      await originalSendMessage(chatId, '⚠️ Main menu image unavailable.', {
-        reply_markup: keyboard
-      });
+
+      // Try the next configured image before falling back to text.
+      const fallbackUrls = (ASSETS.menuImages || []).filter(url => url && url !== randomImage);
+      let recovered = false;
+
+      for (const fallbackUrl of fallbackUrls) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+
+          try {
+            const response = await fetch(fallbackUrl, { signal: controller.signal });
+            if (!response.ok) continue;
+
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.toLowerCase().includes('image')) continue;
+
+            const fallbackBuffer = Buffer.from(await response.arrayBuffer());
+            await bot.sendPhoto(chatId, fallbackBuffer, {
+              reply_markup: keyboard
+            });
+            recovered = true;
+            break;
+          } finally {
+            clearTimeout(timeout);
+          }
+        } catch (fallbackError) {
+          console.error('[sendMainMenu FALLBACK PHOTO ERROR]:', fallbackError.message);
+        }
+      }
+
+      if (!recovered) {
+        await originalSendMessage(chatId, '⚠️ Main menu image unavailable.', {
+          reply_markup: keyboard
+        });
+      }
     }
 
   } catch (err) {
