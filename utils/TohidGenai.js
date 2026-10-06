@@ -32,16 +32,13 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
     const data = Buffer.from(JSON.stringify({
         __typename: 'GenAIUnifiedResponse',
         response_id: crypto.randomUUID(),
-        ...(title ? { title: String(title) } : {}),
         sections: [{
             __typename: 'GenAIUnifiedResponseSection',
             view_model: {
                 __typename: 'GenAISingleLayoutViewModel',
                 primitive: {
                     __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
-                    ...(title ? { title: String(title) } : {}),
                     trusted_sources: Array.isArray(trustedSources) ? trustedSources : [],
-                    ...(url ? { url: String(url) } : {}),
                     payload: String(html),
                 },
             },
