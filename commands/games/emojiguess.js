@@ -1,4 +1,5 @@
 'use strict';
-const {recordScore}=require('../../utils/TohidGameStats');
+const { sendRichHtml } = require('../../utils/TohidGenai');
+const { emojiGuess } = require('../../utils/TohidHtmlGames');
 const qs=[['🦁👑','lion king'],['🕷️🧑','spider man'],['🚢🧊','titanic'],['🧙‍♂️💍','lord of the rings'],['🦈🌊','jaws']];
-module.exports={name:'emojiguess',aliases:['emojigame','guessemoji'],description:'Guess the movie from emojis',category:'games',async execute({from,reply,pushName,args}){const q=qs[Math.floor(Math.random()*qs.length)];if(!args?.length)return reply('🎭 TOHID EMOJI GUESS\n\n'+q[0]+'\n\nGuess: .emojiguess <answer>');const ok=args.join(' ').toLowerCase().trim()===q[1],score=ok?150:5;recordScore(from,pushName,'emojiguess',score);await reply(ok?'🎉 Correct! +'+score+' points':'❌ Nope! Answer: '+q[1]);}};
+module.exports={name:'emojiguess',aliases:['emojigame','guessemoji'],description:'HTML Emoji Movie Guess',category:'games',async execute({sock,msg,from,reply}){try{const q=qs[Math.floor(Math.random()*qs.length)];return await sendRichHtml({sock,jid:from,quoted:msg,html:emojiGuess(q)})}catch(e){console.error('[EMOJI HTML]',e.message);return reply('🎭 TOHID EMOJI GUESS\nUse .emojiguess again.')}}};
