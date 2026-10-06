@@ -1075,7 +1075,12 @@ function smsg(tohid, m, store) {
         m.chat = m.key.remoteJid
         m.fromMe = m.key.fromMe
         m.isGroup = m.chat.endsWith('@g.us')
-        m.sender = tohid.decodeJid(m.fromMe && tohid.user.id || m.participant || m.key.participant || m.chat || '')
+        // Prefer the socket's own JID for fromMe messages, but fall back to
+        // the message remote JID when WhatsApp exposes the account as a LID.
+        const ownJid = m.fromMe
+            ? (tohid.user?.id || m.key.remoteJid || m.chat || '')
+            : (m.participant || m.key.participant || m.chat || '');
+        m.sender = tohid.decodeJid(ownJid) || m.key.remoteJid || '';
         if (m.isGroup) m.participant = tohid.decodeJid(m.key.participant) || ''
     }
     if (m.message) {
