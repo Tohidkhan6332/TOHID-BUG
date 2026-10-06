@@ -11698,7 +11698,13 @@ case 'apkdl': {
                             try { directUrl = Buffer.from(scrambled, "base64").toString("utf8"); } catch {}
                         }
                     }
-                    if (!/^https?:\\/\\//i.test(directUrl)) {
+                    let directMediafireUrl;
+                    try {
+                        directMediafireUrl = new URL(directUrl);
+                    } catch {
+                        directMediafireUrl = null;
+                    }
+                    if (!directMediafireUrl || !['http:', 'https:'].includes(directMediafireUrl.protocol)) {
                         return reply("❌ *Could not find a direct MediaFire link*");
                     }
                     const fileName = decodeURIComponent(
