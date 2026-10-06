@@ -38,7 +38,7 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
             view_model: {
                 __typename: 'GenAISingleLayoutViewModel',
                 primitive: {
-                    __typename: 'GenAIaeacdsnwHtmlPrimitive',
+                    __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
                     ...(title ? { title: String(title) } : {}),
                     trusted_sources: Array.isArray(trustedSources) ? trustedSources : [],
                     ...(url ? { url: String(url) } : {}),
@@ -46,7 +46,7 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
                 },
             },
         }],
-    }), 'utf8');
+    })).toString('base64');
 
     return proto.Message.fromObject({
         messageContextInfo: {
@@ -59,10 +59,6 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
             },
             deviceListMetadataVersion: 2,
             messageSecret: crypto.randomBytes(32),
-            botMetadata: {
-                messageDisclaimerText: '',
-                botResponseId: crypto.randomUUID(),
-            },
         },
         botForwardedMessage: {
             message: {
