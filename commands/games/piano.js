@@ -223,20 +223,20 @@ body{padding:8px;background:#f0f2f5}
   <div class="piano">
     <div class="keys-row" id="keys-row">
       <!-- White keys -->
-      <button class="wkey" data-note="C"><span class="note-name">C</span></button>
-      <button class="wkey" data-note="D"><span class="note-name">D</span></button>
-      <button class="wkey" data-note="E"><span class="note-name">E</span></button>
-      <button class="wkey" data-note="F"><span class="note-name">F</span></button>
-      <button class="wkey" data-note="G"><span class="note-name">G</span></button>
-      <button class="wkey" data-note="A"><span class="note-name">A</span></button>
-      <button class="wkey" data-note="B"><span class="note-name">B</span></button>
-      <button class="wkey" data-note="C5" id="high-c"><span class="note-name">C</span></button>
+      <button type="button" class="wkey" data-note="C" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('C')"><span class="note-name">C</span></button>
+      <button type="button" class="wkey" data-note="D" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('D')"><span class="note-name">D</span></button>
+      <button type="button" class="wkey" data-note="E" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('E')"><span class="note-name">E</span></button>
+      <button type="button" class="wkey" data-note="F" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('F')"><span class="note-name">F</span></button>
+      <button type="button" class="wkey" data-note="G" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('G')"><span class="note-name">G</span></button>
+      <button type="button" class="wkey" data-note="A" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('A')"><span class="note-name">A</span></button>
+      <button type="button" class="wkey" data-note="B" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('B')"><span class="note-name">B</span></button>
+      <button type="button" class="wkey" data-note="C5" id="high-c" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('C5')"><span class="note-name">C</span></button>
       <!-- Black keys -->
-      <button class="bkey bk-cs" data-note="C#"><span>C#</span></button>
-      <button class="bkey bk-ds" data-note="D#"><span>D#</span></button>
-      <button class="bkey bk-fs" data-note="F#"><span>F#</span></button>
-      <button class="bkey bk-gs" data-note="G#"><span>G#</span></button>
-      <button class="bkey bk-as" data-note="A#"><span>A#</span></button>
+      <button type="button" class="bkey bk-cs" data-note="C#" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('C#')"><span>C#</span></button>
+      <button type="button" class="bkey bk-ds" data-note="D#" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('D#')"><span>D#</span></button>
+      <button type="button" class="bkey bk-fs" data-note="F#" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('F#')"><span>F#</span></button>
+      <button type="button" class="bkey bk-gs" data-note="G#" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('G#')"><span>G#</span></button>
+      <button type="button" class="bkey bk-as" data-note="A#" onclick="window.tohidPianoPlay&&window.tohidPianoPlay('A#')"><span>A#</span></button>
     </div>
   </div>
 </div>
@@ -394,13 +394,7 @@ function flashKey(el) {
 }
 
 /* ── BIND PIANO KEYS ── */
-document.querySelectorAll('[data-note]').forEach(function(btn) {
-  btn.addEventListener('pointerdown', function(e) {
-    e.preventDefault();
-    playNote(btn.dataset.note);
-    flashKey(btn);
-  });
-});
+window.tohidPianoPlay=function(name){var btn=document.querySelector('[data-note="'+name+'"]');playNote(name);if(btn)flashKey(btn)};document.querySelectorAll('[data-note]').forEach(function(btn){btn.addEventListener('click',function(e){e.preventDefault();window.tohidPianoPlay(btn.dataset.note)})});
 
 /* ── OCTAVE BUTTONS ── */
 document.getElementById('oct-down').addEventListener('click', function() {
