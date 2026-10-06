@@ -2112,6 +2112,34 @@ const Premium = getPremium();
             ''
         );
 
+        const ownerNumber = owner[0] || "917849917350";
+        let prefix = getUserPrefix(m.sender) || '.';
+
+        const normalizedBody = typeof body === 'string'
+            ? body.trim()
+            : String(body || '').trim();
+
+        const defaultPrefixes = prefix === '.' ? ['.', '!', '?', '/'] : [prefix];
+        const commandPrefix = prefix === ''
+            ? ''
+            : defaultPrefixes.find(candidate => candidate && normalizedBody.startsWith(candidate));
+        const isCmd = prefix === ''
+            ? normalizedBody.length > 0
+            : Boolean(commandPrefix && normalizedBody.length > commandPrefix.length);
+
+        let command = '';
+        let args = [];
+        let text = '';
+
+        if (isCmd) {
+            const afterPrefix = normalizedBody.slice(commandPrefix.length).trim();
+            const parts = afterPrefix ? afterPrefix.split(/ +/) : [];
+            command = (parts[0] || '').toLowerCase();
+            args = parts.slice(1);
+            text = args.join(' ');
+            console.log('✅ Command detected for user:', command);
+        }
+
         const qtext = args.join(" ");
         const q = args.join(" ");
         const tempMailData = {};
