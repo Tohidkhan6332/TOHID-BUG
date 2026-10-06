@@ -5474,6 +5474,30 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┗━━━━━━━━━━━━━━┛
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒◆━┓
+│ ✨ HTML / INTERACTIVE
+│❖ ${prefix}snake
+│❖ ${prefix}2048
+│❖ ${prefix}matrix
+│❖ ${prefix}doom
+│❖ ${prefix}vampire
+│❖ ${prefix}cyber
+│❖ ${prefix}cursedash
+│❖ ${prefix}dangerdash
+│❖ ${prefix}cursearena
+│❖ ${prefix}piano
+│❖ ${prefix}scrabble
+│❖ ${prefix}sudoku
+│❖ ${prefix}wordscramble
+│
+│ 🎯 SIMPLE / TEXT
+│❖ ${prefix}ttt
+│❖ ${prefix}rps
+│❖ ${prefix}quiz
+│❖ ${prefix}mathrush
+│❖ ${prefix}emojiguess
+│❖ ${prefix}truthordare
+│❖ ${prefix}dicebattle
+│❖ ${prefix}numberguess
 │❖ ${prefix}coin
 │❖ ${prefix}coinbattle
 │❖ ${prefix}dice
@@ -5485,37 +5509,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}mathfact
 │❖ ${prefix}numbattle
 │❖ ${prefix}numberbattle
-│❖ ${prefix}rps
 │❖ ${prefix}rpsls
-│❖ ${prefix}tictactoe
-│❖ ${prefix}cursearena
-│❖ ${prefix}cursedash
-│❖ ${prefix}cyber
-│❖ ${prefix}dangerdash
-│❖ ${prefix}doom
-│❖ ${prefix}eye
-│❖ ${prefix}matrix
-│❖ ${prefix}naijawhot
-│❖ ${prefix}piano
-│❖ ${prefix}scrabble
-│❖ ${prefix}snake
-│❖ ${prefix}sudoku
-│❖ ${prefix}vampire
-│❖ ${prefix}wordscramble
-│❖ ${prefix}cursearena
-│❖ ${prefix}cursedash
-│❖ ${prefix}cyber
-│❖ ${prefix}dangerdash
-│❖ ${prefix}doom
-│❖ ${prefix}eye
-│❖ ${prefix}matrix
-│❖ ${prefix}naijawhot
-│❖ ${prefix}piano
-│❖ ${prefix}scrabble
-│❖ ${prefix}snake
-│❖ ${prefix}sudoku
-│❖ ${prefix}vampire
-│❖ ${prefix}wordscramble
 ┗━━━━━━━━━━━━━━┛
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏◆━┓
@@ -6059,25 +6053,43 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                       title: "✨ HTML / INTERACTIVE GAMES",
                       rows: [
                         { title: "🐍 Snake", description: "Interactive HTML Snake", rowId: ".snake" },
-                        { title: "🔢 2048", description: "Merge numbers to 2048", rowId: ".2048" },
-                        { title: "⭕ Tic Tac Toe", description: "Play X/O", rowId: ".ttt" },
-                        { title: "✊ Rock Paper Scissors", description: "Challenge or play AI", rowId: ".rps" },
+                        { title: "🔢 2048", description: "Interactive number-merge game", rowId: ".2048" },
+                        { title: "💻 Matrix", description: "Interactive HTML arcade", rowId: ".matrix" },
+                        { title: "👹 Doom", description: "Interactive HTML arcade", rowId: ".doom" },
+                        { title: "🧛 Vampire", description: "Interactive HTML arcade", rowId: ".vampire" },
+                        { title: "⚡ Cyber", description: "Interactive HTML arcade", rowId: ".cyber" },
+                        { title: "☠️ Curse Dash", description: "Interactive HTML game", rowId: ".cursedash" },
+                        { title: "💀 Danger Dash", description: "Interactive HTML game", rowId: ".dangerdash" },
+                        { title: "🩸 Curse Arena", description: "Interactive HTML game", rowId: ".cursearena" },
+                        { title: "🎹 Piano", description: "Interactive HTML game", rowId: ".piano" },
+                        { title: "🔤 Scrabble", description: "Interactive HTML word game", rowId: ".scrabble" },
+                        { title: "🔢 Sudoku", description: "Interactive HTML puzzle", rowId: ".sudoku" },
+                        { title: "🔀 Word Scramble", description: "Interactive HTML word game", rowId: ".wordscramble" }
+                      ]
+                    },
+                    {
+                      title: "🎯 SIMPLE / TEXT GAMES",
+                      rows: [
+                        { title: "⭕ Tic Tac Toe", description: "Text / multiplayer game", rowId: ".ttt" },
+                        { title: "✊ Rock Paper Scissors", description: "Text / multiplayer game", rowId: ".rps" },
                         { title: "🧠 Quiz", description: "Quick knowledge quiz", rowId: ".quiz" },
                         { title: "➗ Math Rush", description: "Fast arithmetic", rowId: ".mathrush" },
                         { title: "😀 Emoji Guess", description: "Guess the movie", rowId: ".emojiguess" },
                         { title: "🎭 Truth or Dare", description: "Group-friendly game", rowId: ".truthordare" },
                         { title: "🎲 Dice Battle", description: "Roll and battle", rowId: ".dicebattle" },
-                        { title: "🔮 Number Guess", description: "Guess the hidden number", rowId: ".numberguess" }
-                      ]
-                    },
-                    {
-                      title: "⚡ ARCADE",
-                      rows: [
-                        { title: "💻 Matrix", rowId: ".matrix" },
-                        { title: "👹 Doom", rowId: ".doom" },
-                        { title: "🧛 Vampire", rowId: ".vampire" },
-                        { title: "⚡ Cyber", rowId: ".cyber" },
-                        { title: "☠️ Curse Dash", rowId: ".cursedash" }
+                        { title: "🔮 Number Guess", description: "Guess the hidden number", rowId: ".numberguess" },
+                        { title: "🪙 Coin", description: "Heads or tails", rowId: ".coin" },
+                        { title: "⚔️ Coin Battle", description: "Coin battle", rowId: ".coinbattle" },
+                        { title: "🎲 Dice", description: "Simple dice roll", rowId: ".dice" },
+                        { title: "😀 Emoji Quiz", description: "Emoji quiz", rowId: ".emojiquiz" },
+                        { title: "🎯 Guess", description: "Guessing game", rowId: ".guess" },
+                        { title: "🪢 Hangman", description: "Word guessing game", rowId: ".hangman" },
+                        { title: "➕ Math", description: "Simple math game", rowId: ".math" },
+                        { title: "🔢 Number Battle", description: "Number battle", rowId: ".numberbattle" },
+                        { title: "⚔️ Num Battle", description: "Number battle", rowId: ".numbattle" },
+                        { title: "🧠 Math Fact", description: "Math fact game", rowId: ".mathfact" },
+                        { title: "🎮 RPSLS", description: "Rock Paper Scissors Lizard Spock", rowId: ".rpsls" },
+                        { title: "📚 Game Fact", description: "Random game fact", rowId: ".gamefact" }
                       ]
                     }
                   ]
