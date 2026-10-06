@@ -5,7 +5,7 @@ const fs = require('fs');
 const { recordPlay } = require('../../utils/TohidGameStats');
 
 const GAME_DIR = __dirname;
-const SKIP = new Set(['join.js', 'games.js', 'gameprofile.js', 'gameleaderboard.js', 'gamedaily.js', 'gamescore.js']);
+const SKIP = new Set(['join.js', 'games.js', 'gameprofile.js', 'gameleaderboard.js', 'gamedaily.js', 'gamescore.js', 'challenge.js', 'gamechallenge.js']);
 
 let registry = null;
 
