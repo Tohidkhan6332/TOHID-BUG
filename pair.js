@@ -1079,9 +1079,37 @@ function smsg(tohid, m, store) {
         if (m.isGroup) m.participant = tohid.decodeJid(m.key.participant) || ''
     }
     if (m.message) {
-        m.mtype = getContentType(m.message)
-        m.msg = (m.mtype == 'viewOnceMessage' ? m.message[m.mtype]?.message?.[getContentType(m.message[m.mtype]?.message)] : m.message[m.mtype]) || {}
-        m.body = m.message.conversation || m.msg?.caption || m.msg?.text || (m.mtype == 'listResponseMessage' && m.msg?.singleSelectReply?.selectedRowId) || (m.mtype == 'buttonsResponseMessage' && m.msg?.selectedButtonId) || (m.mtype == 'viewOnceMessage' && m.msg?.caption) || m.text || ''
+        // Normalize nested WhatsApp envelopes before command parsing.
+        // Newer clients may wrap ordinary text in ephemeral/view-once/document envelopes.
+        let content = m.message;
+        for (let i = 0; i < 8; i++) {
+            const nested =
+                content?.ephemeralMessage?.message ||
+                content?.viewOnceMessage?.message ||
+                content?.viewOnceMessageV2?.message ||
+                content?.viewOnceMessageV2Extension?.message ||
+                content?.documentWithCaptionMessage?.message;
+            if (!nested) break;
+            content = nested;
+        }
+        const mtype = getContentType(content) || getContentType(m.message);
+        m.mtype = mtype;
+        m.msg = content?.[mtype] || m.message?.[mtype] || {};
+        m.body =
+            content?.conversation ||
+            content?.extendedTextMessage?.text ||
+            content?.imageMessage?.caption ||
+            content?.videoMessage?.caption ||
+            content?.documentMessage?.caption ||
+            content?.audioMessage?.caption ||
+            content?.buttonsResponseMessage?.selectedButtonId ||
+            content?.listResponseMessage?.singleSelectReply?.selectedRowId ||
+            content?.templateButtonReplyMessage?.selectedId ||
+            content?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
+            m.msg?.caption ||
+            m.msg?.text ||
+            m.text ||
+            '';
         let quoted = m.quoted = m.msg?.contextInfo?.quotedMessage || null
         m.mentionedJid = m.msg?.contextInfo?.mentionedJid || []
         if (m.quoted) {
