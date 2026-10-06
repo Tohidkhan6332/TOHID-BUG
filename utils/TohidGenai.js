@@ -59,6 +59,10 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
             },
             deviceListMetadataVersion: 2,
             messageSecret: crypto.randomBytes(32),
+            botMetadata: {
+                messageDisclaimerText: '',
+                botResponseId: crypto.randomUUID(),
+            },
         },
         botForwardedMessage: {
             message: {
