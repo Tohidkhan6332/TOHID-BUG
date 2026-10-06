@@ -1,6 +1,6 @@
 'use strict';
 
-const { sendRichHtml } = require('../../utils/genaiRich');
+const { sendRichHtml } = require('../../utils/TohidGenai');
 
 const WORDS = [
     'anime','battle','chakra','courage','dragon','energy','friend','future','galaxy','hero',
