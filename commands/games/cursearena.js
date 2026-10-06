@@ -1,6 +1,6 @@
 'use strict';
 
-const { sendRichHtml } = require('../../utils/genaiRich');
+const { sendRichHtml } = require('../../utils/TohidGenai');
 
 function curseArenaHtml() {
     return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
