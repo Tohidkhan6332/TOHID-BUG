@@ -238,7 +238,13 @@ async function sendTohidPianoCanvas({ sock, jid, quoted, rows = [], score = 0, c
     return sock.sendMessage(jid, { image, caption: `TOHID-AI PIANO · ${status || `SCORE ${score}`}`, ...(gameOver ? {} : {}) }, { quoted });
 }
 
-function brandGameHtml(html) { const footer='<div style="margin-top:10px;text-align:center;color:#d8b46a;font:700 10px monospace;letter-spacing:1px">TOHID-AI · POWERED BY MR TOHID</div>'; const value=String(html||''); return value.includes('TOHID-AI · POWERED BY MR TOHID') ? value : value.replace('</body>',footer+'</body>'); }
+function brandGameHtml(html) {
+    const footer='<div style="margin-top:10px;text-align:center;color:#d8b46a;font:700 10px monospace;letter-spacing:1px">TOHID-AI · POWERED BY MR TOHID</div>';
+    const theme='<style id="tohid-game-theme">html,body{background:transparent!important}body{background:radial-gradient(circle at 50% 8%,#3d174f,#10091b 68%)!important;color:#f1dcff!important}button{font-family:Arial,sans-serif!important}button:not(:disabled){cursor:pointer}.card,.wrap{border-color:#a65bdd!important;box-shadow:inset 0 0 0 3px #39155b,0 8px 18px #000b!important;background:linear-gradient(145deg,#190d2e,#32134b 48%,#110818)!important;color:#f1dcff!important}.title,.game-title,.header h1{color:#f5ddff!important;text-shadow:0 0 12px #b55dff!important}.sub,.subtitle,.hint,.help{color:#c6a2d8!important}.controls button,.buttons button,.btn,.action,.restart,.start,.mode button,.actions button{border-color:#7b3fb1!important;background:linear-gradient(#7130a1,#32134b)!important;color:#fff3ff!important;box-shadow:0 0 8px #b55dff33!important}.controls button:active,.buttons button:active,.btn:active,.action:active,.restart:active,.start:active{transform:scale(.96)}input,select{border-color:#7b3fb1!important;background:#10091b!important;color:#fff!important}.hud,.score,.status,.message,.result,.log{border-color:#7b3fb166!important;background:#10091b!important;color:#e8d4f2!important}.hud b,.score b{color:#d99cff!important}</style>';
+    const value=String(html||'');
+    const withTheme=value.includes('tohid-game-theme')?value:value.replace('</head>',theme+'</head>');
+    return withTheme.includes('TOHID-AI · POWERED BY MR TOHID') ? withTheme : withTheme.replace('</body>',footer+'</body>');
+}
 async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, caption, theme, mentions = [], interactive = false }) {
     const content = buildRichContent(brandGameHtml(html), quoted, { title: title || 'TOHID-AI' });
     const safeQuoted = quoted?.message ? quoted : undefined;
