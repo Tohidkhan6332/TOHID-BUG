@@ -10,7 +10,16 @@ module.exports = {
   async execute({ sock, from, reply, pushName, msg }) {
     const p = profile(from, pushName || msg?.pushName || 'Player');
     const games = listGames();
-    const lines = games.map((g, i) => '┃ ' + (i + 1) + '. 🎮 .' + g.name + ' — ' + g.description).join('\n');
+    const htmlGames = new Set([
+      'snake', '2048', 'matrix', 'doom', 'vampire', 'cyber',
+      'cursedash', 'dangerdash', 'cursearena', 'piano', 'scrabble',
+      'sudoku', 'wordscramble'
+    ]);
+    const interactive = games.filter(g => htmlGames.has(g.name));
+    const simple = games.filter(g => !htmlGames.has(g.name));
+    const formatGames = (items, offset) => items.map((g, i) =>
+      '┃ ' + (offset + i + 1) + '. 🎮 .' + g.name + ' — ' + g.description
+    ).join('\n');
     const level = levelForXp(p.xp);
     const text =
       '╭━━〔 🎮 TOHID GAME CENTER 〕━━╮\n' +
@@ -25,7 +34,11 @@ module.exports = {
       '┃ .rps • .quiz • .mathrush\n' +
       '┃ .emojiguess • .truthordare\n' +
       '┃ .dicebattle • .numberguess\n\n' +
-      '📚 ALL GAMES\n' + lines + '\n\n' +
+      '📚 ALL GAMES\n' +
+      '✨ HTML / INTERACTIVE\n' +
+      (formatGames(interactive, 0) || '┃ No HTML games loaded') + '\n\n' +
+      '🎯 SIMPLE / TEXT\n' +
+      (formatGames(simple, interactive.length) || '┃ No simple games loaded') + '\n\n' +
       '╭━━〔 QUICK ACTIONS 〕━━╮\n' +
       '┃ 🏆 .gameleaderboard\n' +
       '┃ 👤 .gameprofile\n' +
