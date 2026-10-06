@@ -2155,9 +2155,9 @@ const Premium = getPremium();
             if (!value) return '';
             try {
                 const decoded = devtrust.decodeJid(value) || value;
-                return decoded.split(':')[0].split('@')[0].replace(/\\D/g, '');
+                return decoded.split(':')[0].split('@')[0].replace(/\D/g, '');
             } catch (_) {
-                return value.split(':')[0].split('@')[0].replace(/\\D/g, '');
+                return value.split(':')[0].split('@')[0].replace(/\D/g, '');
             }
         };
         const ownerNumbers = new Set(
