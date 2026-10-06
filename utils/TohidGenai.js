@@ -121,7 +121,7 @@ async function sendCanvasFallback({ sock, jid, quoted, html, canvasText, title, 
     const textSvg = lines.map((line, index) =>
         `<text x="96" y="${190 + index * lineHeight}" class="body">${escapeXml(line)}</text>`
     ).join('');
-    const tohidTheme = theme === 'sukuna';
+    const tohidTheme = theme === 'tohid';
     const bgStart = tohidTheme ? '#050204' : '#250b35';
     const bgMid = tohidTheme ? '#580914' : '#43123f';
     const bgEnd = tohidTheme ? '#1a0308' : '#12091d';
