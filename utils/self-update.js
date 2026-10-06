@@ -191,8 +191,13 @@ async function updateFromGitHub() {
         throw new Error('GitHub check failed: ' + String(detail).trim().slice(-1800));
     }
 
-    if (currentSha === latestSha) {
-        restoreStash();
+    // Even when the commit SHA is already current, the working tree may
+    // contain a broken/stale tracked source file. In that case .update must
+    // still restore the exact GitHub version. Runtime JSON changes were stashed
+    // above and are restored selectively after the source reset.
+    const sourceNeedsRefresh = currentSha !== latestSha || Boolean(updateStash);
+
+    if (!sourceNeedsRefresh) {
         return {
             updated: false,
             currentSha,
@@ -201,7 +206,9 @@ async function updateFromGitHub() {
         };
     }
 
-    // Only allow a fast-forward update. This prevents .update from
+    // Only allow a fast-forward update when the commit itself changed. This
+    // prevents .update from silently destroying local history or merging
+    // unexpected changes.
     // silently destroying local history or merging unexpected changes.
     try {
         git(['merge-base', '--is-ancestor', currentSha, latestSha]);
