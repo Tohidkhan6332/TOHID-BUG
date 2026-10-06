@@ -6051,6 +6051,39 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                 })
               },
               {
+                name: "single_select",
+                buttonParamsJson: JSON.stringify({
+                  title: "🎮 PLAY TOHID AI GAMES",
+                  sections: [
+                    {
+                      title: "✨ HTML / INTERACTIVE GAMES",
+                      rows: [
+                        { title: "🐍 Snake", description: "Interactive HTML Snake", rowId: ".snake" },
+                        { title: "🔢 2048", description: "Merge numbers to 2048", rowId: ".2048" },
+                        { title: "⭕ Tic Tac Toe", description: "Play X/O", rowId: ".ttt" },
+                        { title: "✊ Rock Paper Scissors", description: "Challenge or play AI", rowId: ".rps" },
+                        { title: "🧠 Quiz", description: "Quick knowledge quiz", rowId: ".quiz" },
+                        { title: "➗ Math Rush", description: "Fast arithmetic", rowId: ".mathrush" },
+                        { title: "😀 Emoji Guess", description: "Guess the movie", rowId: ".emojiguess" },
+                        { title: "🎭 Truth or Dare", description: "Group-friendly game", rowId: ".truthordare" },
+                        { title: "🎲 Dice Battle", description: "Roll and battle", rowId: ".dicebattle" },
+                        { title: "🔮 Number Guess", description: "Guess the hidden number", rowId: ".numberguess" }
+                      ]
+                    },
+                    {
+                      title: "⚡ ARCADE",
+                      rows: [
+                        { title: "💻 Matrix", rowId: ".matrix" },
+                        { title: "👹 Doom", rowId: ".doom" },
+                        { title: "🧛 Vampire", rowId: ".vampire" },
+                        { title: "⚡ Cyber", rowId: ".cyber" },
+                        { title: "☠️ Curse Dash", rowId: ".cursedash" }
+                      ]
+                    }
+                  ]
+                })
+              },
+              {
                 name: "cta_url",
                 buttonParamsJson: JSON.stringify({
                   display_text: "📢 CHANNEL",
@@ -6974,21 +7007,34 @@ case 'groupban': {
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒◆━┓
-│❖ ${prefix}coin
-│❖ ${prefix}coinbattle
-│❖ ${prefix}dice
-│❖ ${prefix}emojiquiz
-│❖ ${prefix}gamefact
-│❖ ${prefix}guess
-│❖ ${prefix}hangman
-│❖ ${prefix}math
-│❖ ${prefix}mathfact
-│❖ ${prefix}numbattle
-│❖ ${prefix}numberbattle
-│❖ ${prefix}rps
-│❖ ${prefix}rpsls
-│❖ ${prefix}tictactoe
+│❖ ${prefix}snake — HTML Snake
+│❖ ${prefix}2048 — HTML 2048
+│❖ ${prefix}ttt — Tic Tac Toe
+│❖ ${prefix}rps — Rock Paper Scissors
+│❖ ${prefix}quiz — Quick Quiz
+│❖ ${prefix}mathrush — Math Rush
+│❖ ${prefix}emojiguess — Emoji Guess
+│❖ ${prefix}truthordare — Truth or Dare
+│❖ ${prefix}dicebattle — Dice Battle
+│❖ ${prefix}numberguess — Number Guess
+│❖ ${prefix}matrix — Matrix Arcade
+│❖ ${prefix}doom — Doom Arcade
+│❖ ${prefix}vampire — Vampire Arcade
+│❖ ${prefix}cyber — Cyber Arcade
+│❖ ${prefix}cursedash — Curse Dash
+│❖ ${prefix}dangerdash — Danger Dash
+│❖ ${prefix}cursearena — Curse Arena
+│❖ ${prefix}piano — Piano
+│❖ ${prefix}scrabble — Scrabble
+│❖ ${prefix}sudoku — Sudoku
+│❖ ${prefix}wordscramble — Word Scramble
 ┗━━━━━━━━━━━━━━┛
+
+🏆 ${prefix}gameleaderboard
+👤 ${prefix}gameprofile
+🎁 ${prefix}gamedaily
+👥 ${prefix}challenge ttt @user
+👥 ${prefix}challenge rps @user
 
 ⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
 `;
