@@ -481,6 +481,8 @@ module.exports = {
     category: 'games',
     async execute({ sock, msg, from, reply }) {
         try {
+            // Diagnostic only: prove routing reaches Piano before Rich HTML transport.
+            await reply('🎹 Piano command received — opening interactive game...');
             await sendRichHtml({ sock, jid: from, quoted: msg, html: pianoHtml(), interactive: true });
         } catch (error) {
             console.error('[PIANO]', error.message);
