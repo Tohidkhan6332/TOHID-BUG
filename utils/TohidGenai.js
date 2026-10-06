@@ -121,13 +121,13 @@ async function sendCanvasFallback({ sock, jid, quoted, html, canvasText, title, 
     const textSvg = lines.map((line, index) =>
         `<text x="96" y="${190 + index * lineHeight}" class="body">${escapeXml(line)}</text>`
     ).join('');
-    const sukuna = theme === 'sukuna';
-    const bgStart = sukuna ? '#050204' : '#250b35';
-    const bgMid = sukuna ? '#580914' : '#43123f';
-    const bgEnd = sukuna ? '#1a0308' : '#12091d';
-    const accent = sukuna ? '#ff3158' : '#ee4fa3';
-    const titleText = title || (sukuna ? '☠ TOHID-AI BAN CHECKER ☠' : 'TOHID-AI · IPHONE MODE');
-    const footerText = sukuna ? 'TOHID-AI API · CURSED VERIFICATION' : 'COLOURED CANVAS FALLBACK';
+    const tohidTheme = theme === 'sukuna';
+    const bgStart = tohidTheme ? '#050204' : '#250b35';
+    const bgMid = tohidTheme ? '#580914' : '#43123f';
+    const bgEnd = tohidTheme ? '#1a0308' : '#12091d';
+    const accent = tohidTheme ? '#ff3158' : '#ee4fa3';
+    const titleText = title || (tohidTheme ? '☠ TOHID-AI BAN CHECKER ☠' : 'TOHID-AI · IPHONE MODE');
+    const footerText = tohidTheme ? 'TOHID-AI API · CURSED VERIFICATION' : 'COLOURED CANVAS FALLBACK';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="${height}">
       <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${bgStart}"/><stop offset=".52" stop-color="${bgMid}"/><stop offset="1" stop-color="${bgEnd}"/></linearGradient></defs>
       <rect width="100%" height="100%" rx="34" fill="url(#bg)"/>
@@ -143,7 +143,7 @@ async function sendCanvasFallback({ sock, jid, quoted, html, canvasText, title, 
     return sock.sendMessage(jid, { image, caption: caption || 'TOHID-AI · iPhone mode', ...(mentions.length ? { mentions } : {}) }, { quoted });
 }
 
-async function sendSukunaTTTCanvas({ sock, jid, quoted, board, players = [], status = '', mentions = [] }) {
+async function sendTohidTTTCanvas({ sock, jid, quoted, board, players = [], status = '', mentions = [] }) {
     const cells = Array.isArray(board) ? board : Array(9).fill('');
     const cellSize = 220;
     const boardX = 150;
@@ -177,7 +177,7 @@ async function sendSukunaTTTCanvas({ sock, jid, quoted, board, players = [], sta
     return sock.sendMessage(jid, { image, caption: status || 'TOHID-AI TTT', ...(mentions.length ? { mentions } : {}) }, { quoted });
 }
 
-async function sendSukunaBanCanvas({ sock, jid, quoted, number, banned, caption }) {
+async function sendTohidBanCanvas({ sock, jid, quoted, number, banned, caption }) {
     const status = banned ? 'BANNED' : 'NOT BANNED';
     const statusColor = banned ? '#ff3158' : '#65ffad';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1100">
@@ -206,7 +206,7 @@ function labelForCanvas(jid) {
     return String(jid || '').split(':')[0].split('@')[0];
 }
 
-async function sendSukunaPianoCanvas({ sock, jid, quoted, rows = [], score = 0, combo = 0, level = 1, status = '', gameOver = false }) {
+async function sendTohidPianoCanvas({ sock, jid, quoted, rows = [], score = 0, combo = 0, level = 1, status = '', gameOver = false }) {
     const safeRows = Array.isArray(rows) ? rows.slice(-8).reverse() : [];
     const boardX = 100;
     const boardY = 230;
@@ -304,4 +304,4 @@ function createEconomyGenAISock(sock, { title = 'ECONOMY' } = {}) {
     });
 }
 
-module.exports = { escapeHtml, buildRichContent, htmlToPlainText, sendCanvasFallback, sendSukunaTTTCanvas, sendSukunaBanCanvas, sendSukunaPianoCanvas, sendRichHtml, sendRichHtmlMessage, sendRichText, createEconomyGenAISock };
+module.exports = { escapeHtml, buildRichContent, htmlToPlainText, sendCanvasFallback, sendTohidTTTCanvas, sendTohidBanCanvas, sendTohidPianoCanvas, sendRichHtml, sendRichHtmlMessage, sendRichText, createEconomyGenAISock };
