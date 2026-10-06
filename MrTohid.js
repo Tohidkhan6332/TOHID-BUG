@@ -5474,7 +5474,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 ┗━━━━━━━━━━━━━━┛
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒◆━┓
-│ ✨ HTML / INTERACTIVE — ALL TOHID GAMES
+│ ✨ HTML / INTERACTIVE — ALL GAMES
 │❖ ${prefix}snake
 │❖ ${prefix}2048
 │❖ ${prefix}matrix
@@ -5501,21 +5501,6 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │
 │ 👥 MULTIPLAYER
 │❖ ${prefix}challenge
-│❖ ${prefix}gamechallenge
-│
-│ 🎯 OTHER / LEGACY
-│❖ ${prefix}coin
-│❖ ${prefix}coinbattle
-│❖ ${prefix}dice
-│❖ ${prefix}emojiquiz
-│❖ ${prefix}gamefact
-│❖ ${prefix}guess
-│❖ ${prefix}hangman
-│❖ ${prefix}math
-│❖ ${prefix}mathfact
-│❖ ${prefix}numbattle
-│❖ ${prefix}numberbattle
-│❖ ${prefix}rpsls
 ┗━━━━━━━━━━━━━━┛
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏◆━┓
