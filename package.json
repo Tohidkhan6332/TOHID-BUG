@@ -100,7 +100,7 @@
     "snapsave-media-downloader": "^2.5.1",
     "nodemailer": "^10.0.13",
     "js-confuser": "^2.1.3",
-    "@pasqua-baileys/baileys": "2.8.8",
+    "@whiskeysockets/baileys": "github:pou-code/Baileys",
     "webcrack": "^2.15.1"
   },
   "devDependencies": {
