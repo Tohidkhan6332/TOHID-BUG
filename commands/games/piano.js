@@ -1,6 +1,6 @@
 'use strict';
 
-const { sendRichHtml } = require('../../utils/genaiRich');
+const { sendRichHtml } = require('../../utils/TohidGenai');
 
 function pianoHtml() {
     return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Piano</title><style>
