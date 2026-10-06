@@ -4900,6 +4900,21 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         }
         // ============ MENU COMMAND ============
       if (isCmd) {
+        // Dynamic GenAI games from commands/games.
+        if (command !== 'tictactoe') {
+            try {
+                const { executeGame } = require('./commands/games');
+                const handledGame = await executeGame(command, {
+                    sock: devtrust, msg: m, from: m.chat, sender: m.sender,
+                    reply, args, prefix
+                });
+                if (handledGame) return;
+            } catch (gameLoaderError) {
+                console.error('[GAME LOADER]', gameLoaderError.message);
+                return reply('❌ Game failed to load. Please try again.');
+            }
+        }
+
         switch (command) {
             // ============ ANTI STATUS CONTROLS ============
             case 'antistatus':
@@ -5473,6 +5488,20 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
 │❖ ${prefix}rps
 │❖ ${prefix}rpsls
 │❖ ${prefix}tictactoe
+│❖ ${prefix}cursearena
+│❖ ${prefix}cursedash
+│❖ ${prefix}cyber
+│❖ ${prefix}dangerdash
+│❖ ${prefix}doom
+│❖ ${prefix}eye
+│❖ ${prefix}matrix
+│❖ ${prefix}naijawhot
+│❖ ${prefix}piano
+│❖ ${prefix}scrabble
+│❖ ${prefix}snake
+│❖ ${prefix}sudoku
+│❖ ${prefix}vampire
+│❖ ${prefix}wordscramble
 ┗━━━━━━━━━━━━━━┛
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏◆━┓
