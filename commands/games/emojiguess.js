@@ -1,0 +1,4 @@
+'use strict';
+const {recordScore}=require('../../utils/TohidGameStats');
+const qs=[['🦁👑','lion king'],['🕷️🧑','spider man'],['🚢🧊','titanic'],['🧙‍♂️💍','lord of the rings'],['🦈🌊','jaws']];
+module.exports={name:'emojiguess',aliases:['emojigame','guessemoji'],description:'Guess the movie from emojis',category:'games',async execute({from,reply,pushName,args}){const q=qs[Math.floor(Math.random()*qs.length)];if(!args?.length)return reply('🎭 TOHID EMOJI GUESS\n\n'+q[0]+'\n\nGuess: .emojiguess <answer>');const ok=args.join(' ').toLowerCase().trim()===q[1],score=ok?150:5;recordScore(from,pushName,'emojiguess',score);await reply(ok?'🎉 Correct! +'+score+' points':'❌ Nope! Answer: '+q[1]);}};
