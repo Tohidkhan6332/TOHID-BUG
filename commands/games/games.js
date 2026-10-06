@@ -18,16 +18,24 @@ module.exports = {
       '┃ ⚡ Level: ' + level + ' • XP: ' + p.xp + '/' + xpForNextLevel(level) + '\n' +
       '┃ 💰 Coins: ' + p.coins + '\n' +
       '┃ 🏆 Best Score: ' + p.bestScore + '\n' +
+      '┃ 🎮 Games: ' + games.length + '\n' +
       '╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n' +
-      lines + '\n\n' +
+      '🔥 POPULAR\n' +
+      '┃ .snake • .2048 • .ttt\n' +
+      '┃ .rps • .quiz • .mathrush\n' +
+      '┃ .emojiguess • .truthordare\n' +
+      '┃ .dicebattle • .numberguess\n\n' +
+      '📚 ALL GAMES\n' + lines + '\n\n' +
       '╭━━〔 QUICK ACTIONS 〕━━╮\n' +
       '┃ 🏆 .gameleaderboard\n' +
       '┃ 👤 .gameprofile\n' +
       '┃ 🎁 .gamedaily\n' +
       '┃ 💰 .gamescore <game> <score>\n' +
       '╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n' +
-      '💡 Neeche buttons se game directly open karo.';
-    const preferred = games.filter(g => ['matrix', 'doom', 'vampire', 'cyber'].includes(g.name)).slice(0, 4);
+      '💡 Buttons se popular games direct open karo.';
+    const preferred = ['snake', '2048', 'ttt']
+      .map(name => games.find(g => g.name === name))
+      .filter(Boolean);
     const buttons = preferred.map(g => ({
       buttonId: '.' + g.name,
       buttonText: { displayText: '🎮 ' + g.name.toUpperCase() },
