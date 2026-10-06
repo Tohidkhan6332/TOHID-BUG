@@ -238,8 +238,9 @@ async function sendSukunaPianoCanvas({ sock, jid, quoted, rows = [], score = 0, 
     return sock.sendMessage(jid, { image, caption: `SUKUNA PIANO · ${status || `SCORE ${score}`}`, ...(gameOver ? {} : {}) }, { quoted });
 }
 
+function brandGameHtml(html) { const footer='<div style="margin-top:10px;text-align:center;color:#d8b46a;font:700 10px monospace;letter-spacing:1px">TOHID-AI · POWERED BY MR TOHID</div>'; const value=String(html||''); return value.includes('TOHID-AI · POWERED BY MR TOHID') ? value : value.replace('</body>',footer+'</body>'); }
 async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, caption, theme, mentions = [], interactive = false }) {
-    const content = buildRichContent(html, quoted);
+    const content = buildRichContent(brandGameHtml(html), quoted, { title: title || 'TOHID-AI' });
     const safeQuoted = quoted?.message ? quoted : undefined;
     const wrapped = generateWAMessageFromContent(jid, content, { userJid: sock.user?.id, quoted: safeQuoted });
     await sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
