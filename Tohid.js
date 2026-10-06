@@ -148,11 +148,14 @@ const PATHS = {
 
 // Media Assets
 const ASSETS = {
+  // jsDelivr is used as the public fallback because Telegram can fail to
+  // fetch GitHub Raw URLs directly. Local files are still preferred by the
+  // main menu when the repository media directory exists.
   menuImages: [
-    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
-    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
-    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
-    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg',
+    'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid.jpg',
+    'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid1.jpg',
+    'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid2.jpg',
+    'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid3.jpg',
   ],
   pairingVideos: [
     'https://h.uguu.se/qWcJAzsK.mp4',
@@ -205,10 +208,10 @@ const COMMAND_RESPONSE_IMAGES = [
   path.join(__dirname, 'media', 'Tohid3.jpg')
 ];
 const COMMAND_RESPONSE_IMAGE_URLS = [
-  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
-  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
-  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
-  'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
+  'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid.jpg',
+  'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid1.jpg',
+  'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid2.jpg',
+  'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid3.jpg'
 ];
 const commandResponseContext = new AsyncLocalStorage();
 const originalOnText = bot.onText.bind(bot);
