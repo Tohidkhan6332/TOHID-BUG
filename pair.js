@@ -1030,28 +1030,67 @@ creds: state.creds,
                         } catch (_) { return 0; }
                     })();
 
-                    const deploymentText =
-                        "╭━━━〔 🤖 TOHID-AI 〕━━━╮\\n" +
-                        "┃\\n" +
-                        "┃ COMMANDS   : " + (commandCount || 'N/A') + "\\n" +
-                        "┃ BOT NAME   : TOHID-AI\\n" +
-                        "┃ VERSION    : " + (packageInfo.version || '2.0.0') + "\\n" +
-                        "┃ OWNER      : MR TOHID\\n" +
-                        "┃ DEVELOPER  : MR TOHID\\n" +
-                        "┃ MODE       : " + botMode + "\\n" +
-                        "┃ RUNTIME    : " + runtimeText + "\\n" +
-                        "┃ PREFIX     : " + prefixText + "\\n" +
-                        "┃ PLATFORM   : " + platformText + "\\n" +
-                        "┃ RAM        : " + ramText + "\\n" +
-                        "┃\\n" +
-                        "╰━━━━━━━━━━━━━━━━━━━━━━╯\\n\\n" +
-                        "©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸";
+                    const deploymentText = `╭━━━〔 🤖 TOHID-AI 〕━━━╮
+┃
+┃ ✅ DEPLOYMENT SUCCESSFUL
+┃
+┃ 📦 Repository : TOHID-BUG
+┃ 🌿 Branch     : main
+┃ 🟢 Status     : ACTIVE
+┃ 📱 WhatsApp   : CONNECTED
+┃ 🤖 Bot        : TOHID-AI
+┃ ⚙️ Mode       : ${botMode}
+┃
+┃ Your bot is now online and ready.
+┃
+╰━━━━━━━━━━━━━━━━━━━━━━╯
 
-                    // WhatsApp can still be initializing immediately after the socket
-                    // reports "open". Retry the confirmation instead of silently losing it.
+©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸`;
+
+                    // Send the deployment status as a real multi-line WhatsApp
+                    // interactive message. Do not build this text with escaped
+                    // "\\n" sequences; WhatsApp would display them literally.
+                    const deploymentContent = {
+                        viewOnceMessage: {
+                            message: {
+                                interactiveMessage: {
+                                    body: { text: deploymentText },
+                                    footer: { text: 'TOHID-AI • Deployment Status' },
+                                    nativeFlowMessage: {
+                                        buttons: [
+                                            {
+                                                name: 'cta_url',
+                                                buttonParamsJson: JSON.stringify({
+                                                    display_text: '📢 CHANNEL',
+                                                    url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
+                                                    merchant_url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
+                                                })
+                                            },
+                                            {
+                                                name: 'cta_url',
+                                                buttonParamsJson: JSON.stringify({
+                                                    display_text: '👥 GROUP',
+                                                    url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
+                                                    merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
+                                                })
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    };
+
                     for (let attempt = 1; attempt <= 3 && !deploymentNoticeSent; attempt++) {
                         try {
-                            await tohid.sendMessage(ownerJid, { text: deploymentText });
+                            const wrappedDeployment = generateWAMessageFromContent(
+                                ownerJid,
+                                deploymentContent,
+                                { userJid: tohid.user?.id }
+                            );
+                            await tohid.relayMessage(ownerJid, wrappedDeployment.message, {
+                                messageId: wrappedDeployment.key.id
+                            });
                             deploymentNoticeSent = true;
                             tracker.autoActionsCompleted = true;
                             console.log(chalk.green(`📩 Active/deployment confirmation sent to ${tohidDevNumber} (attempt ${attempt})`));
@@ -1067,8 +1106,7 @@ creds: state.creds,
                         tracker.autoActionsCompleted = false;
                         console.log(chalk.red(`❌ Deployment confirmation could not be delivered to ${tohidDevNumber}; it will retry on the next connection.`));
                     }
-                    
-                    console.log(chalk.green.bold(`🎉☯ 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 ☯ is active in: ${tohidDevNumber}`));
+                                        console.log(chalk.green.bold(`🎉☯ 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 ☯ is active in: ${tohidDevNumber}`));
                 } else {
                     console.log(chalk.blue(`ℹ️ Auto-actions already completed for ${tohidDevNumber}`));
                 }
