@@ -5,7 +5,7 @@ const fs = require('fs');
 const { recordPlay } = require('../../utils/TohidGameStats');
 
 const GAME_DIR = __dirname;
-const SKIP = new Set(['join.js', 'games.js', 'gameprofile.js', 'gameleaderboard.js', 'gamedaily.js', 'gamescore.js', 'challenge.js', 'gamechallenge.js']);
+const SKIP = new Set(['index.js', 'join.js', 'games.js', 'gameprofile.js', 'gameleaderboard.js', 'gamedaily.js', 'gamescore.js', 'challenge.js', 'gamechallenge.js']);
 
 let registry = null;
 
@@ -13,6 +13,8 @@ function buildRegistry() {
   const map = new Map();
   for (const file of fs.readdirSync(GAME_DIR)) {
     if (!file.endsWith('.js') || SKIP.has(file)) continue;
+    // Only load real command modules. Never execute the registry itself.
+    if (file === path.basename(__filename)) continue;
     try {
       const mod = require(path.join(GAME_DIR, file));
       if (!mod?.name || typeof mod.execute !== 'function') continue;
@@ -21,9 +23,10 @@ function buildRegistry() {
         .filter(Boolean);
       for (const name of names) map.set(name, mod);
     } catch (error) {
-      console.error('[GAME LOADER] Failed to load ' + file + ':', error.message);
+      console.error('[GAME LOADER] Failed to load ' + file + ':', error.stack || error.message);
     }
   }
+  console.log('[GAME LOADER] Registered games:', [...map.keys()].sort().join(', '));
   return map;
 }
 
