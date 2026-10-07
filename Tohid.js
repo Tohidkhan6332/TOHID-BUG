@@ -3684,22 +3684,22 @@ bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
         console.log('[UPDATE] Git update completed on ' + (result?.platform || platform) + '.');
         if (updateDetails) console.log('[UPDATE] Details:', updateDetails.slice(-4000));
 
-        const deploymentText =
-            '┌──〔 🤖 TOHID-AI 〕──┐\\n' +
-            '│\\n' +
-            '│ ✅ *DEPLOYMENT SUCCESSFUL*\\n' +
-            '│\\n' +
-            '│ 📦 Repository : TOHID-BUG\\n' +
-            '│ 🌿 Branch     : main\\n' +
-            '│ 🟢 Status     : ACTIVE\\n' +
-            '│ 📱 Telegram   : CONNECTED\\n' +
-            '│ 🤖 Bot        : TOHID-AI\\n' +
-            '│ ⚙️ Mode       : ACTIVE\\n' +
-            '│\\n' +
-            '│ 🔄 Restarting TOHID-AI now...\\n' +
-            '│\\n' +
-            '└────────────────────┘\\n\\n' +
-            '©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸';
+        const deploymentText = `┌──〔 🤖 TOHID-AI 〕──┐
+│
+│ ✅ DEPLOYMENT SUCCESSFUL
+│
+│ 📦 Repository : TOHID-BUG
+│ 🌿 Branch     : main
+│ 🟢 Status     : ACTIVE
+│ 📱 Telegram   : CONNECTED
+│ 🤖 Bot        : TOHID-AI
+│ ⚙️ Mode       : ACTIVE
+│
+│ 🔄 Restarting TOHID-AI now...
+│
+└────────────────────┘
+
+©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸`;
 
         await bot.sendMessage(chatId, deploymentText, {
             parse_mode: 'Markdown',
@@ -3724,10 +3724,13 @@ bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
         try {
             await bot.sendMessage(
                 chatId,
-                '┌──〔 🤖 TOHID-AI 〕──┐\\n│\\n│ ❌ *DEPLOYMENT FAILED*\\n│\\n│ ⚠️ Reason : ' +
-                details.slice(-2500) +
-                '\\n│\\n└────────────────────┘',
-                { parse_mode: 'Markdown' }
+                `┌──〔 🤖 TOHID-AI 〕──┐
+│
+│ ❌ DEPLOYMENT FAILED
+│
+│ ⚠️ Reason : ${details.slice(-2500)}
+│
+└────────────────────┘`                { parse_mode: 'Markdown' }
             );
         } catch (sendError) {
             console.error('[UPDATE] Could not send failure message:', sendError.message);
