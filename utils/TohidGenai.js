@@ -1,8 +1,13 @@
 'use strict';
 
 const crypto = require('crypto');
-const { generateWAMessageFromContent, proto } = require('../tohidstore/baileys-compat');
+const { generateWAMessageFromContent, proto } = require('@pasqua-baileys/baileys');
 const sharp = require('sharp');
+
+// HTML/GenAI rich responses require the Baileys build that supports
+// WhatsApp's experimental FOA HTML primitive. The main bot socket can keep
+// using its existing Baileys fork; only message construction uses this build.
+
 
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
