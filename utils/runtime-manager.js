@@ -177,6 +177,19 @@ async function localGitUpdate() {
     }
   }
 
+  // Never restart into a broken checkout. Validate the main entry point
+  // after Git/npm work and before handing off to the replacement process.
+  const entryPoint = path.join(process.cwd(), 'index.js');
+  if (fs.existsSync(entryPoint)) {
+    try {
+      await run(process.execPath, ['--check', entryPoint], { cwd: process.cwd(), env: process.env });
+      console.log('[UPDATE] index.js syntax check passed.');
+    } catch (error) {
+      const details = String(error.stderr || error.stdout || error.message || '').trim();
+      throw new Error('Update validation failed; keeping the current bot process alive. ' + details.slice(-1800));
+    }
+  }
+
   let head = null;
   try {
     head = await run('git', ['rev-parse', 'HEAD'], gitOptions);
