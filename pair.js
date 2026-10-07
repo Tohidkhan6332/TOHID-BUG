@@ -701,7 +701,7 @@ creds: state.creds,
         })
     }
 
-    tohid.public = true
+    // Restore the persisted bot visibility mode instead of resetting every new/restarted session to public.\n    let persistedPublic = false;\n    try {\n        const modeFile = './database/bot-mode.json';\n        if (fs.existsSync(modeFile)) {\n            const savedMode = JSON.parse(fs.readFileSync(modeFile, 'utf8'));\n            persistedPublic = savedMode?.mode === 'public';\n        }\n    } catch (modeError) {\n        console.error('⚠️ Could not read persisted bot mode:', modeError.message);\n    }\n    tohid.public = persistedPublic;
 
     tohid.sendText = (jid, text, quoted = '', options) => tohid.sendMessage(jid, { text: text, ...options }, { quoted })
 
