@@ -4934,7 +4934,12 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         }
 
         function getBotVersion() {
-            return "1.1";
+            try {
+                const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+                return pkg?.version || '2.0.0';
+            } catch (_) {
+                return '2.0.0';
+            }
         }
 
         function getBotMode() {
