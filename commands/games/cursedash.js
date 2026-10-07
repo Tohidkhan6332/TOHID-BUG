@@ -20,17 +20,10 @@ module.exports = {
     description: 'Play Cursed Dash, an interactive GenAI HTML mini-game',
     category: 'games',
     async execute({ sock, msg, from, reply }) {
-        // Always acknowledge the command first. This makes the game command
-        // reliable even when WhatsApp rejects the experimental HTML primitive.
         try {
-            await reply('🎮 *CURSED DASH*\\n\\n⏳ Opening game...');
-        } catch (ackError) {
-            console.error('[CURSEDASH ACK]', ackError.stack || ackError.message);
-            return;
-        }
-
-        try {
+            console.log('[CURSEDASH] Building HTML game for:', from);
             await sendRichGame({ sock, jid: from, quoted: msg });
+            console.log('[CURSEDASH] HTML game send completed for:', from);
         } catch (error) {
             console.error('[CURSEDASH GenAI]', error.stack || error.message);
             try {
