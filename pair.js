@@ -660,24 +660,44 @@ creds: state.creds,
         }
     };
     
-    tohid.ev.on('messages.upsert', async chatUpdate => {
-        try {
-            const tohidMessage = chatUpdate?.messages?.[0];
-            if (!tohidMessage?.message || !Object.keys(tohidMessage.message).length) return;
+    // WhatsApp can deliver more than one message in a single upsert.
+    // Process every message instead of only messages[0]. This is important after
+    // reconnect/update because queued messages may arrive together.
+    tohid.ev.on('messages.upsert', async (chatUpdate = {}) => {
+        const messages = Array.isArray(chatUpdate.messages) ? chatUpdate.messages : [];
+        if (!messages.length) return;
 
-            const messageKeys = Object.keys(tohidMessage.message);
-            if (messageKeys[0] === 'ephemeralMessage') {
-                tohidMessage.message = tohidMessage.message.ephemeralMessage.message || {};
+        const tracker = rentbotTracker.get(tohidDevNumber);
+        if (tracker) {
+            tracker.lastMessageAt = Date.now();
+            tracker.lastActivity = Date.now();
+        }
+
+        console.log(chalk.gray(
+            `📩 WhatsApp upsert: ${messages.length} message(s), type=${chatUpdate.type || 'unknown'}`
+        ));
+
+        for (const tohidMessage of messages) {
+            try {
+                if (!tohidMessage?.message || !Object.keys(tohidMessage.message).length) continue;
+
+                const messageKeys = Object.keys(tohidMessage.message);
+                if (messageKeys[0] === 'ephemeralMessage') {
+                    tohidMessage.message = tohidMessage.message.ephemeralMessage.message || {};
+                }
+
+                if (tohidMessage.key?.id?.startsWith('BAE5') && tohidMessage.key.id.length === 16) continue;
+
+                const mek = smsg(tohid, tohidMessage, store);
+                if (!mek?.chat) continue;
+
+                await require('./MrTohid')(tohid, mek, chatUpdate, store);
+            } catch (err) {
+                console.error(
+                    `❌ WhatsApp message handler error [${tohidDevNumber}]:`,
+                    err?.stack || err?.message || err
+                );
             }
-
-            if (tohidMessage.key?.id?.startsWith('BAE5') && tohidMessage.key.id.length === 16) return;
-
-            const mek = smsg(tohid, tohidMessage, store);
-            if (!mek?.chat) return;
-
-            await require("./MrTohid")(tohid, mek, chatUpdate, store);
-        } catch (err) {
-            console.error('❌ WhatsApp message handler error:', err);
         }
     });
 
