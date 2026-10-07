@@ -2,7 +2,14 @@
 
 const crypto = require('crypto');
 const { generateWAMessageFromContent, proto } = require('../tohidstore/baileys-compat');
-const sharp = require('sharp');
+// Sharp is only needed by legacy image-canvas helpers. Do NOT load it at
+// module startup: an incompatible/native Sharp build (for example after a
+// Node.js upgrade) must not prevent ALL HTML games from loading.
+let sharp;
+function getSharp() {
+    if (!sharp) sharp = require('sharp');
+    return sharp;
+}
 
 // HTML/GenAI rich responses require the Baileys build that supports
 // WhatsApp's experimental FOA HTML primitive. The main bot socket can keep
@@ -144,7 +151,7 @@ async function sendCanvasFallback({ sock, jid, quoted, html, canvasText, title, 
       <text x="800" y="${height - 48}" text-anchor="middle" class="footer">${footerText}</text>
       <style>.title{font:700 48px Arial,sans-serif;fill:#fff0f7;letter-spacing:4px}.body{font:700 38px monospace;fill:#fff5fa}.footer{font:600 23px monospace;fill:#f0a8c5;letter-spacing:4px}</style>
     </svg>`;
-    const image = await sharp(Buffer.from(svg)).png().toBuffer();
+    const image = await getSharp()(Buffer.from(svg)).png().toBuffer();
     return sock.sendMessage(jid, { image, caption: caption || 'TOHID-AI · iPhone mode', ...(mentions.length ? { mentions } : {}) }, { quoted });
 }
 
@@ -178,7 +185,7 @@ async function sendTohidTTTCanvas({ sock, jid, quoted, board, players = [], stat
       <text x="600" y="${boardY + boardSize + 145}" text-anchor="middle" class="hint">TOHID-AI GAME · CHOOSE A SQUARE</text>
       <style>.title{font:900 48px Arial,sans-serif;fill:#fff2f6;letter-spacing:6px}.players{font:700 23px monospace;fill:#ffc6d4;letter-spacing:1px}.mark{font:900 150px Arial,sans-serif;paint-order:stroke;stroke:#25030b;stroke-width:6}.status{font:800 29px monospace;fill:#fff0f4}.hint{font:600 17px monospace;fill:#f094ab;letter-spacing:3px}</style>
     </svg>`;
-    const image = await sharp(Buffer.from(svg)).jpeg({ quality: 88, chromaSubsampling: '4:4:4' }).toBuffer();
+    const image = await getSharp()(Buffer.from(svg)).jpeg({ quality: 88, chromaSubsampling: '4:4:4' }).toBuffer();
     return sock.sendMessage(jid, { image, caption: status || 'TOHID-AI TTT', ...(mentions.length ? { mentions } : {}) }, { quoted });
 }
 
@@ -203,7 +210,7 @@ async function sendTohidBanCanvas({ sock, jid, quoted, number, banned, caption }
       <text x="600" y="972" text-anchor="middle" class="hint">TOHID-AI · BAN CHECKER</text>
       <style>.title{font:900 48px Arial,sans-serif;fill:#fff2f6;letter-spacing:6px}.sub{font:700 20px monospace;fill:#f094ab;letter-spacing:4px}.label{font:700 24px monospace;fill:#ff9bb0;letter-spacing:5px}.number{font:900 67px monospace;fill:#fff5f8;letter-spacing:3px}.status{font:900 92px Arial,sans-serif;letter-spacing:7px}.footer{font:700 22px monospace;fill:#ffc4d2;letter-spacing:3px}.hint{font:600 18px monospace;fill:#e987a3;letter-spacing:3px}</style>
     </svg>`;
-    const image = await sharp(Buffer.from(svg)).jpeg({ quality: 88, chromaSubsampling: '4:4:4' }).toBuffer();
+    const image = await getSharp()(Buffer.from(svg)).jpeg({ quality: 88, chromaSubsampling: '4:4:4' }).toBuffer();
     return sock.sendMessage(jid, { image, caption: caption || 'TOHID-AI BAN CHECK' }, { quoted });
 }
 
@@ -239,7 +246,7 @@ async function sendTohidPianoCanvas({ sock, jid, quoted, rows = [], score = 0, c
       <text x="600" y="1005" text-anchor="middle" class="hint">BLACK NOTES · RED HOLD NOTES · DO NOT MISS</text>
       <style>.title{font:900 45px Arial,sans-serif;fill:#fff2f6;letter-spacing:6px}.stats{font:800 24px monospace;fill:#ffc4d2;letter-spacing:2px}.tile{font:900 27px Arial,sans-serif;fill:#fff5f8}.status{font:900 30px monospace;fill:#fff2f6}.hint{font:700 17px monospace;fill:#f094ab;letter-spacing:2px}</style>
     </svg>`;
-    const image = await sharp(Buffer.from(svg)).jpeg({ quality: 88, chromaSubsampling: '4:4:4' }).toBuffer();
+    const image = await getSharp()(Buffer.from(svg)).jpeg({ quality: 88, chromaSubsampling: '4:4:4' }).toBuffer();
     return sock.sendMessage(jid, { image, caption: `TOHID-AI PIANO · ${status || `SCORE ${score}`}`, ...(gameOver ? {} : {}) }, { quoted });
 }
 
