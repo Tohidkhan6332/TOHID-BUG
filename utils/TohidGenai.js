@@ -38,7 +38,7 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
             view_model: {
                 __typename: 'GenAISingleLayoutViewModel',
                 primitive: {
-                    __typename: 'GenAIaeacdsnwHtmlPrimitive',
+                    __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
                     ...(title ? { title: String(title) } : {}),
                     trusted_sources: Array.isArray(trustedSources) ? trustedSources : [],
                     ...(url ? { url: String(url) } : {}),
