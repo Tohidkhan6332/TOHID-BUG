@@ -18932,24 +18932,62 @@ case 'update': {
 
         const dependencyText = result.dependenciesChanged ? '\n│ 📦 Dependencies : UPDATED' : '';
 
-        await devtrust.sendMessage(m.chat, addNewsletterContext({
-            text:
-                '┌──〔 🤖 TOHID-AI 〕──┐\n' +
-                '│\n' +
-                '│ ✅ *DEPLOYMENT SUCCESSFUL*\n' +
-                '│\n' +
-                '│ 📦 Repository : TOHID-BUG\n' +
-                '│ 🌿 Branch     : main\n' +
-                '│ 🟢 Status     : ACTIVE\n' +
-                '│ 📱 WhatsApp  : CONNECTED\n' +
-                '│ 🤖 Bot       : TOHID-AI\n' +
-                '│ ⚙️ Mode      : ' + (devtrust.public ? 'PUBLIC' : 'PRIVATE') + '\n' +
-                dependencyText +
-                '\n' +
-                '│ 🔄 Restarting TOHID-AI now...\n' +
-                '│\n' +
-                '└────────────────────┘'
-        }), { quoted: m });
+        const deploymentText =
+            '┌──〔 🤖 TOHID-AI 〕──┐\n' +
+            '│\n' +
+            '│ ✅ *DEPLOYMENT SUCCESSFUL*\n' +
+            '│\n' +
+            '│ 📦 Repository : TOHID-BUG\n' +
+            '│ 🌿 Branch     : main\n' +
+            '│ 🟢 Status     : ACTIVE\n' +
+            '│ 📱 WhatsApp   : CONNECTED\n' +
+            '│ 🤖 Bot        : TOHID-AI\n' +
+            '│ ⚙️ Mode       : ' + (devtrust.public ? 'PUBLIC' : 'PRIVATE') + dependencyText + '\n' +
+            '│\n' +
+            '│ 🔄 Restarting TOHID-AI now...\n' +
+            '│\n' +
+            '└────────────────────┘\n\n' +
+            '©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸';
+
+        const deploymentButtons = {
+            viewOnceMessage: {
+                message: {
+                    interactiveMessage: {
+                        body: { text: deploymentText },
+                        footer: { text: 'TOHID-AI • Deployment Status' },
+                        nativeFlowMessage: {
+                            buttons: [
+                                {
+                                    name: 'cta_url',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: '📢 CHANNEL',
+                                        url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
+                                        merchant_url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
+                                    })
+                                },
+                                {
+                                    name: 'cta_url',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: '👥 GROUP',
+                                        url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
+                                        merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
+                                    })
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        const wrappedDeployment = generateWAMessageFromContent(m.chat, deploymentButtons, {
+            quoted: m,
+            userJid: devtrust.user?.id
+        });
+
+        await devtrust.relayMessage(m.chat, wrappedDeployment.message, {
+            messageId: wrappedDeployment.key.id
+        });
 
         setTimeout(() => {
             try {
