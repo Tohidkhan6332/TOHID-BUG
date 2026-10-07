@@ -4,6 +4,76 @@ const chalk = require('chalk');
 const figlet = require('figlet');
 const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('./debug.js');
 const processGuard = require('./utils/process-guard');
+
+// ─── SINGLE INSTANCE LOCK ──────────────────────────────────────────────
+// Prevent duplicate Telegram polling and duplicate WhatsApp sessions when
+// /update or a hosting supervisor starts a replacement process.
+const RUNTIME_LOCK_FILE = path.join(__dirname, '.tohid-runtime.lock');
+const WAITING_PARENT_PID = Number(process.env.TOHID_WAIT_FOR_PARENT_PID || 0);
+
+function pidIsAlive(pid) {
+    if (!Number.isInteger(pid) || pid <= 0) return false;
+    try { process.kill(pid, 0); return true; }
+    catch (error) { return error?.code === 'EPERM'; }
+}
+
+function readRuntimeLock() {
+    try {
+        return JSON.parse(fs.readFileSync(RUNTIME_LOCK_FILE, 'utf8'));
+    } catch (_) {
+        return null;
+    }
+}
+
+function removeRuntimeLock() {
+    try {
+        const lock = readRuntimeLock();
+        if (!lock || Number(lock.pid) === process.pid) fs.unlinkSync(RUNTIME_LOCK_FILE);
+    } catch (_) {}
+}
+
+async function acquireRuntimeLock() {
+    // During a controlled /update restart, the replacement process waits for
+    // the old process to fully exit before it acquires the lock and starts
+    // Telegram/WhatsApp. This removes the 409/440 handover race.
+    if (WAITING_PARENT_PID && WAITING_PARENT_PID !== process.pid) {
+        const deadline = Date.now() + 30000;
+        while (pidIsAlive(WAITING_PARENT_PID) && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 250));
+        }
+        if (pidIsAlive(WAITING_PARENT_PID)) {
+            throw new Error('Previous TOHID-AI process did not exit within 30 seconds. Refusing to start a duplicate instance.');
+        }
+    }
+
+    try {
+        fs.writeFileSync(RUNTIME_LOCK_FILE, JSON.stringify({
+            pid: process.pid,
+            startedAt: new Date().toISOString()
+        }), { flag: 'wx' });
+        return true;
+    } catch (error) {
+        if (error.code !== 'EEXIST') throw error;
+
+        const existing = readRuntimeLock();
+        const existingPid = Number(existing?.pid || 0);
+        if (existingPid && existingPid !== process.pid && pidIsAlive(existingPid)) {
+            throw new Error(\`Another TOHID-AI instance is already running (PID \${existingPid}). Stopping this duplicate instance to prevent Telegram 409 / WhatsApp 440 conflicts.\`);
+        }
+
+        // Stale lock left by a crashed process.
+        try { fs.unlinkSync(RUNTIME_LOCK_FILE); } catch (_) {}
+        fs.writeFileSync(RUNTIME_LOCK_FILE, JSON.stringify({
+            pid: process.pid,
+            startedAt: new Date().toISOString()
+        }), { flag: 'wx' });
+        return true;
+    }
+}
+
+process.on('exit', removeRuntimeLock);
+process.on('SIGINT', () => { removeRuntimeLock(); });
+process.on('SIGTERM', () => { removeRuntimeLock(); });
 attachGlobalHandlers();
 processGuard.install();
 startSessionMonitor();
@@ -135,11 +205,12 @@ process.on('SIGTERM', () => {
     process.exit(0);
 });
 
-initializeBot().catch((error) => {
-    console.log(chalk.red('\n❌ Fatal error during initialization:'));
-    console.log(chalk.yellow('Error:'), error.message);
-    if (error.stack) {
-        console.log(chalk.gray(error.stack));
-    }
-    process.exit(1);
-});
+acquireRuntimeLock()
+    .then(() => initializeBot())
+    .catch((error) => {
+        console.log(chalk.red('\\n❌ Fatal error during initialization:'));
+        console.log(chalk.yellow('Error:'), error.message);
+        if (error.stack) console.log(chalk.gray(error.stack));
+        removeRuntimeLock();
+        process.exit(1);
+    });
