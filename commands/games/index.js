@@ -120,22 +120,43 @@ function loadGame(command) {
 
 async function executeGame(command, context) {
     const requested = normalize(command);
-    const mod = loadGame(requested);
-    if (!mod) return false;
+    const fileName = GAME_FILES[ALIASES[requested] || requested];
 
-    console.log('[GAME] Executing:', requested, '=>', mod.name || requested);
+    // IMPORTANT: only commands registered in GAME_FILES are game commands.
+    // Unknown bot commands must fall through to MrTohid.js.
+    if (!fileName) return false;
 
-    // Acknowledge BEFORE stats/database work or HTML rendering. This proves
-    // the command reached the game layer even if an experimental game renderer
-    // is unavailable on the WhatsApp client.
+    // Send a plain WhatsApp acknowledgement BEFORE loading any game module.
+    // This isolates command routing from HTML/Baileys/game-module failures.
+    const ackText = `🎮 *TOHID-AI GAME*\\n\\n⏳ Opening *.${requested}*...`;
     try {
-        if (typeof context?.reply === 'function') {
-            await context.reply(`🎮 *${mod.name || requested}*\\n\\n⏳ Opening game...`);
+        if (typeof context?.sock?.sendMessage === 'function' && context?.from) {
+            await context.sock.sendMessage(
+                context.from,
+                { text: ackText },
+                { quoted: context.msg }
+            );
+        } else if (typeof context?.reply === 'function') {
+            await context.reply(ackText);
         }
     } catch (ackError) {
         console.error('[GAME ACK] Failed for ' + requested + ':', ackError.stack || ackError.message);
     }
 
+    const mod = loadGame(requested);
+    if (!mod) {
+        const errorText = `❌ Game module *.${requested}* could not be loaded.\\nCheck the Termux log for [GAME LOADER].`;
+        try {
+            await context.sock.sendMessage(context.from, { text: errorText }, { quoted: context.msg });
+        } catch (replyError) {
+            console.error('[GAME LOAD ERROR REPLY] Failed:', replyError.stack || replyError.message);
+        }
+        return true;
+    }
+
+    console.log('[GAME] Executing:', requested, '=>', mod.name || requested);
+
+    // Stats must never delay or block the actual game.
     try {
         recordPlay(
             context?.from,
@@ -156,9 +177,11 @@ async function executeGame(command, context) {
     } catch (error) {
         console.error('[GAME] Failed:', requested, error.stack || error.message);
         try {
-            if (typeof context?.reply === 'function') {
-                await context.reply(`⚠️ *${mod.name || requested}* could not open.\\n\\n${error.message || 'Unknown game error'}`);
-            }
+            await context.sock.sendMessage(
+                context.from,
+                { text: `⚠️ *${mod.name || requested}* could not open.\\n\\n${error.message || 'Unknown error'}` },
+                { quoted: context.msg }
+            );
         } catch (replyError) {
             console.error('[GAME ERROR REPLY] Failed:', replyError.stack || replyError.message);
         }
