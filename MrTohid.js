@@ -18943,7 +18943,7 @@ case 'update': {
 │ 🟢 Status     : ACTIVE
 │ 📱 WhatsApp   : CONNECTED
 │ 🤖 Bot        : TOHID-AI
-│ ⚙️ Mode       : ${devtrust.public ? 'PUBLIC' : 'PRIVATE'}${result.dependenciesChanged ? '\\n│ 📦 Dependencies : UPDATED' : ''}
+│ ⚙️ Mode       : ${devtrust.public ? 'PUBLIC' : 'PRIVATE'}${result.dependenciesChanged ? '\n│ 📦 Dependencies : UPDATED' : ''}
 │
 │ 🔄 Restarting TOHID-AI now...
 │
