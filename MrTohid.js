@@ -2097,6 +2097,29 @@ const Premium = getPremium();
             messageContent = nested;
         }
 
+        // WhatsApp Native Flow / "Open Menu" replies carry the selected
+        // row ID inside paramsJson. Extract it so menu taps become normal
+        // bot commands (for example ".gamemenu" or ".allmenu").
+        let nativeFlowCommand = '';
+        try {
+            const rawParams = messageContent?.interactiveResponseMessage
+                ?.nativeFlowResponseMessage?.paramsJson;
+            if (rawParams) {
+                const params = typeof rawParams === 'string'
+                    ? JSON.parse(rawParams)
+                    : rawParams;
+                nativeFlowCommand =
+                    params?.id ||
+                    params?.selected_row_id ||
+                    params?.selectedRowId ||
+                    params?.command ||
+                    params?.cmd ||
+                    '';
+            }
+        } catch (nativeFlowError) {
+            console.log('⚠️ Native Flow response parse failed:', nativeFlowError.message);
+        }
+
         const body = (
             messageContent?.conversation ||
             messageContent?.extendedTextMessage?.text ||
@@ -2107,6 +2130,7 @@ const Premium = getPremium();
             messageContent?.buttonsResponseMessage?.selectedButtonId ||
             messageContent?.listResponseMessage?.singleSelectReply?.selectedRowId ||
             messageContent?.templateButtonReplyMessage?.selectedId ||
+            nativeFlowCommand ||
             m.body ||
             m.text ||
             ''
