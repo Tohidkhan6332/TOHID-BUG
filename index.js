@@ -58,7 +58,7 @@ async function acquireRuntimeLock() {
         const existing = readRuntimeLock();
         const existingPid = Number(existing?.pid || 0);
         if (existingPid && existingPid !== process.pid && pidIsAlive(existingPid)) {
-            throw new Error(\`Another TOHID-AI instance is already running (PID \${existingPid}). Stopping this duplicate instance to prevent Telegram 409 / WhatsApp 440 conflicts.\`);
+            throw new Error(`Another TOHID-AI instance is already running (PID ${existingPid}). Stopping this duplicate instance to prevent Telegram 409 / WhatsApp 440 conflicts.`);
         }
 
         // Stale lock left by a crashed process.
