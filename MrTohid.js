@@ -4934,12 +4934,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         }
 
         function getBotVersion() {
-            try {
-                const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
-                return pkg?.version || '2.0.0';
-            } catch (_) {
-                return '2.0.0';
-            }
+            return "1.1";
         }
 
         function getBotMode() {
@@ -5149,10 +5144,8 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                         { upload: devtrust.waUploadToServer }
                     );
 
-                    const menuContent = {
-                        viewOnceMessage: {
-                            message: {
-                                interactiveMessage: {
+                    await devtrust.relayMessage(m.chat, {
+                        interactiveMessage: {
                             header: {
                                 title: "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
                                 subtitle: "TOHID-AI • WhatsApp Bot",
@@ -5206,14 +5199,6 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                     {
                                         name: "cta_url",
                                         buttonParamsJson: JSON.stringify({
-                                            display_text: "👥 GROUP",
-                                            url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud",
-                                            merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
-                                        })
-                                    },
-                                    {
-                                        name: "cta_url",
-                                        buttonParamsJson: JSON.stringify({
                                             display_text: "📢 CHANNEL",
                                             url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
                                             merchant_url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
@@ -5248,18 +5233,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                     mediaType: 1,
                                     renderLargerThumbnail: true
                                 }
-                                }
-                            }
-                        }
-                    };
-
-                    const wrappedMenu = generateWAMessageFromContent(m.chat, menuContent, {
-                        quoted: m,
-                        userJid: devtrust.user?.id
-                    });
-                    await devtrust.relayMessage(m.chat, wrappedMenu.message, {
-                        messageId: wrappedMenu.key.id
-                    });
+                    }, {});
                 } catch (err) {
                     console.log("❌ ERROR CATEGORY MENU:", err);
                     await devtrust.sendMessage(m.chat, { text: categoryMenu }, { quoted: m });
@@ -18943,45 +18917,40 @@ case 'update': {
     global.__TOHID_UPDATE_RUNNING = true;
 
     try {
-        await devtrust.sendMessage(
-            m.chat,
-            addNewsletterContext({
-                text: '🔄 *TOHID-AI UPDATE*\n\n🔍 Checking GitHub for the latest version...'
-            }),
-            { quoted: m }
-        );
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            text: '🔄 *TOHID-AI UPDATE*\n\n🔍 Checking GitHub for the latest version...'
+        }), { quoted: m });
 
         const result = await updateFromGitHub();
 
         if (!result.updated) {
-            await devtrust.sendMessage(
-                m.chat,
-                addNewsletterContext({
-                    text: '✅ *TOHID-AI is already up to date.*\n\n📦 Branch: main'
-                }),
-                { quoted: m }
-            );
+            await devtrust.sendMessage(m.chat, addNewsletterContext({
+                text: '┌──〔 🤖 TOHID-AI 〕──┐\n│\n│ ✅ *UPDATE STATUS*\n│\n│ 📦 Repository : TOHID-BUG\n│ 🌿 Branch     : main\n│ 📌 Status     : ALREADY UP TO DATE\n│\n└────────────────────┘'
+            }), { quoted: m });
             return;
         }
 
-        const dependencyText = result.dependenciesChanged
-            ? '\n📦 Dependencies: updated'
-            : '';
+        const dependencyText = result.dependenciesChanged ? '\n│ 📦 Dependencies : UPDATED' : '';
 
-        await devtrust.sendMessage(
-            m.chat,
-            addNewsletterContext({
-                text:
-                    '✅ *Update downloaded successfully!*\n\n' +
-                    '📦 Repository: TOHID-BUG\n' +
-                    '🌿 Branch: main' +
-                    dependencyText +
-                    '\n\n🔄 Restarting TOHID-AI now...'
-            }),
-            { quoted: m }
-        );
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            text:
+                '┌──〔 🤖 TOHID-AI 〕──┐\n' +
+                '│\n' +
+                '│ ✅ *DEPLOYMENT SUCCESSFUL*\n' +
+                '│\n' +
+                '│ 📦 Repository : TOHID-BUG\n' +
+                '│ 🌿 Branch     : main\n' +
+                '│ 🟢 Status     : ACTIVE\n' +
+                '│ 📱 WhatsApp  : CONNECTED\n' +
+                '│ 🤖 Bot       : TOHID-AI\n' +
+                '│ ⚙️ Mode      : ' + (devtrust.public ? 'PUBLIC' : 'PRIVATE') + '\n' +
+                dependencyText +
+                '\n' +
+                '│ 🔄 Restarting TOHID-AI now...\n' +
+                '│\n' +
+                '└────────────────────┘'
+        }), { quoted: m });
 
-        // Give WhatsApp a moment to deliver the confirmation message.
         setTimeout(() => {
             try {
                 restartProcess();
@@ -18992,15 +18961,16 @@ case 'update': {
     } catch (error) {
         console.error('❌ TOHID-AI update failed:', error);
 
-        await devtrust.sendMessage(
-            m.chat,
-            addNewsletterContext({
-                text:
-                    '❌ *Update failed*\n\n' +
-                    '⚠️ ' + (error?.message || 'Unknown update error')
-            }),
-            { quoted: m }
-        );
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            text:
+                '┌──〔 🤖 TOHID-AI 〕──┐\n' +
+                '│\n' +
+                '│ ❌ *DEPLOYMENT FAILED*\n' +
+                '│\n' +
+                '│ ⚠️ Reason : ' + (error?.message || 'Unknown update error') + '\n' +
+                '│\n' +
+                '└────────────────────┘'
+        }), { quoted: m });
     } finally {
         global.__TOHID_UPDATE_RUNNING = false;
     }
