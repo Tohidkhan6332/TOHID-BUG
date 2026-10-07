@@ -20,11 +20,24 @@ module.exports = {
     description: 'Play Cursed Dash, an interactive GenAI HTML mini-game',
     category: 'games',
     async execute({ sock, msg, from, reply }) {
+        // Always acknowledge the command first. This makes the game command
+        // reliable even when WhatsApp rejects the experimental HTML primitive.
+        try {
+            await reply('🎮 *CURSED DASH*\\n\\n⏳ Opening game...');
+        } catch (ackError) {
+            console.error('[CURSEDASH ACK]', ackError.stack || ackError.message);
+            return;
+        }
+
         try {
             await sendRichGame({ sock, jid: from, quoted: msg });
         } catch (error) {
-            console.error('[CURSEDASH GenAI]', error.message);
-            await reply('Cursed Dash could not open on this client. Please update WhatsApp or run `.cursedash` again.');
+            console.error('[CURSEDASH GenAI]', error.stack || error.message);
+            try {
+                await reply('⚠️ HTML game could not be rendered on this WhatsApp client. The command itself is working.');
+            } catch (fallbackError) {
+                console.error('[CURSEDASH FALLBACK]', fallbackError.stack || fallbackError.message);
+            }
         }
     },
 };
