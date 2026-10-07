@@ -4927,50 +4927,25 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         }
         // ============ MENU COMMAND ============
       if (isCmd) {
-        // Games get an explicit dispatch path. Keep the owner/private check
-        // here so moving game execution earlier can never make private mode
-        // public.
-        const gameCommands = new Set([
-            'snake','2048','matrix','doom','vampire','cyber','cursedash',
-            'dangerdash','cursearena','piano','scrabble','sudoku','wordscramble',
-            'ttt','rps','quiz','mathrush','emojiguess','truthordare','dicebattle',
-            'numberguess','eye','naijawhot','challenge',
-            'bluesnake','snakegame','twenty48','matrixgame','spaceshooter',
-            'vampiregame','nightvamp','cybergame','neonrunner','cyberrun',
-            'dashgame','cursedashgame','ninjadash','dangergame','danger',
-            'curse','cursearenagame','keyboard','keys','pianokeyboard',
-            'scrabblegame','sudokugame','wordscramblegame','tictactoe','tic',
-            'rockpaperscissors','quizgame','mathgame','emoji','tod','dice',
-            'guessnumber','naijawhotgame','games','game','gamemenu','gamecenter','arcade','gamedaily','dailygame','gameleaderboard','gameprofile','gamescore','gamestats'
-        ]);
-
-        if (gameCommands.has(command)) {
-            console.log('[GAME COMMAND] Received:', command, 'from:', m.sender, 'owner:', isCreator);
-
-            if (!isCreator) {
-                console.log('[GAME COMMAND] Blocked because bot is in private mode.');
-                return reply('🔒 *Private mode:* only owner can use games.');
-            }
-
-            try {
-                const { executeGame } = require('./commands/games');
-                const handledGame = await executeGame(command, {
-                    sock: devtrust,
-                    msg: m,
-                    from: m.chat,
-                    sender: m.sender,
-                    reply,
-                    args,
-                    prefix,
-                    pushName: m.pushName || 'Player'
-                });
-
-                console.log('[GAME COMMAND] Dispatcher result:', command, handledGame);
-                if (handledGame) return;
-            } catch (gameLoaderError) {
-                console.error('[GAME LOADER]', gameLoaderError.stack || gameLoaderError.message);
-                return reply('❌ Game failed to load. Check Termux logs for [GAME LOADER].');
-            }
+        // Central game dispatcher. The registry is lazy, so unknown normal
+        // commands return false without loading every game module. This keeps
+        // ALL game aliases/utility commands in one source of truth.
+        try {
+            const { executeGame } = require('./commands/games');
+            const handledGame = await executeGame(command, {
+                sock: devtrust,
+                msg: m,
+                from: m.chat,
+                sender: m.sender,
+                reply,
+                args,
+                prefix,
+                pushName: m.pushName || 'Player'
+            });
+            if (handledGame) return;
+        } catch (gameLoaderError) {
+            console.error('[GAME LOADER]', gameLoaderError.stack || gameLoaderError.message);
+            return reply('❌ Game failed to load. Check Termux logs for [GAME LOADER].');
         }
 
         switch (command) {
