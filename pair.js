@@ -115,6 +115,7 @@ const readline = require("readline");
 const pino = require('pino')
 const FileType = require('file-type')
 const fs = require('fs')
+const os = require('os')
 const path = require('path')
 let themeemoji = "😇";
 const chalk = require('chalk')
@@ -993,7 +994,58 @@ creds: state.creds,
                         console.log(chalk.yellow('⚠️ Could not read bot mode for deployment notice:', modeError.message));
                     }
 
-                    const deploymentText = "╭━━━〔 🤖 TOHID-AI 〕━━━╮\\n┃\\n┃ ✅ DEPLOYMENT SUCCESSFUL\\n┃\\n┃ 🟢 Status: ACTIVE\\n┃ 🔐 Mode: " + botMode + "\\n┃ 📱 WhatsApp: CONNECTED\\n┃ ⚙️ Bot: TOHID-AI\\n┃\\n┃ Your bot is now online and ready.\\n┃\\n╰━━━━━━━━━━━━━━━━━━━━━━╯\\n\\n👑 Powered by MR TOHID";
+                    const packageInfo = (() => {
+                        try { return JSON.parse(fs.readFileSync('./package.json', 'utf8')); }
+                        catch (_) { return {}; }
+                    })();
+                    const runtimeSeconds = Math.floor(process.uptime());
+                    const runtimeDays = Math.floor(runtimeSeconds / 86400);
+                    const runtimeHours = Math.floor((runtimeSeconds % 86400) / 3600);
+                    const runtimeMinutes = Math.floor((runtimeSeconds % 3600) / 60);
+                    const runtimeSecs = runtimeSeconds % 60;
+                    const runtimeText =
+                        (runtimeDays ? runtimeDays + 'd ' : '') +
+                        String(runtimeHours).padStart(2, '0') + ':' +
+                        String(runtimeMinutes).padStart(2, '0') + ':' +
+                        String(runtimeSecs).padStart(2, '0');
+                    const ramUsed = Math.round((os.totalmem() - os.freemem()) / 1024 / 1024);
+                    const ramTotal = Math.round(os.totalmem() / 1024 / 1024);
+                    const ramText = ramUsed + 'MB / ' + ramTotal + 'MB';
+                    const platformText = process.platform + ' • Node ' + process.versions.node;
+                    const prefixText = '.';
+
+                    const commandCount = (() => {
+                        try {
+                            const root = path.join(process.cwd(), 'commands');
+                            let count = 0;
+                            const walk = dir => {
+                                for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                                    const full = path.join(dir, entry.name);
+                                    if (entry.isDirectory()) walk(full);
+                                    else if (entry.isFile() && entry.name.endsWith('.js')) count++;
+                                }
+                            };
+                            walk(root);
+                            return count;
+                        } catch (_) { return 0; }
+                    })();
+
+                    const deploymentText =
+                        "╭━━━〔 🤖 TOHID-AI 〕━━━╮\\n" +
+                        "┃\\n" +
+                        "┃ COMMANDS   : " + (commandCount || 'N/A') + "\\n" +
+                        "┃ BOT NAME   : TOHID-AI\\n" +
+                        "┃ VERSION    : " + (packageInfo.version || '2.0.0') + "\\n" +
+                        "┃ OWNER      : MR TOHID\\n" +
+                        "┃ DEVELOPER  : MR TOHID\\n" +
+                        "┃ MODE       : " + botMode + "\\n" +
+                        "┃ RUNTIME    : " + runtimeText + "\\n" +
+                        "┃ PREFIX     : " + prefixText + "\\n" +
+                        "┃ PLATFORM   : " + platformText + "\\n" +
+                        "┃ RAM        : " + ramText + "\\n" +
+                        "┃\\n" +
+                        "╰━━━━━━━━━━━━━━━━━━━━━━╯\\n\\n" +
+                        "©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸";
 
                     // WhatsApp can still be initializing immediately after the socket
                     // reports "open". Retry the confirmation instead of silently losing it.
