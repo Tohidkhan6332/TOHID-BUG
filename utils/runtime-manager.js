@@ -70,7 +70,14 @@ async function restartProcess() {
     catch (error) { console.error('[RUNTIME] PM2 restart failed:', error.message); }
   }
   if (platform === 'termux' || platform === 'generic') {
-    const child = spawn(process.execPath, process.argv.slice(1), { cwd: process.cwd(), env: { ...process.env, TOHID_RESTARTED: '1' }, detached: true, stdio: 'inherit' });
+    const child = spawn(process.execPath, process.argv.slice(1), {
+      cwd: process.cwd(),
+      // The replacement process must wait for this PID to exit before it
+      // starts Telegram polling or restores WhatsApp sessions.
+      env: { ...process.env, TOHID_RESTARTED: '1', TOHID_WAIT_FOR_PARENT_PID: String(process.pid) },
+      detached: true,
+      stdio: 'inherit'
+    });
     child.unref();
     await sleep(700);
     process.exit(0);
