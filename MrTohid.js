@@ -5144,8 +5144,10 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                         { upload: devtrust.waUploadToServer }
                     );
 
-                    await devtrust.relayMessage(m.chat, {
-                        interactiveMessage: {
+                    const menuContent = {
+                        viewOnceMessage: {
+                            message: {
+                                interactiveMessage: {
                             header: {
                                 title: "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈",
                                 subtitle: "TOHID-AI • WhatsApp Bot",
@@ -5199,6 +5201,14 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                     {
                                         name: "cta_url",
                                         buttonParamsJson: JSON.stringify({
+                                            display_text: "👥 GROUP",
+                                            url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud",
+                                            merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
+                                        })
+                                    },
+                                    {
+                                        name: "cta_url",
+                                        buttonParamsJson: JSON.stringify({
                                             display_text: "📢 CHANNEL",
                                             url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
                                             merchant_url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
@@ -5233,9 +5243,18 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                     mediaType: 1,
                                     renderLargerThumbnail: true
                                 }
+                                }
                             }
                         }
-                    }, {});
+                    };
+
+                    const wrappedMenu = generateWAMessageFromContent(m.chat, menuContent, {
+                        quoted: m,
+                        userJid: devtrust.user?.id
+                    });
+                    await devtrust.relayMessage(m.chat, wrappedMenu.message, {
+                        messageId: wrappedMenu.key.id
+                    });
                 } catch (err) {
                     console.log("❌ ERROR CATEGORY MENU:", err);
                     await devtrust.sendMessage(m.chat, { text: categoryMenu }, { quoted: m });
