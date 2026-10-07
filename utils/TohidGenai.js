@@ -32,13 +32,16 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
     const data = Buffer.from(JSON.stringify({
         __typename: 'GenAIUnifiedResponse',
         response_id: crypto.randomUUID(),
+        ...(title ? { title: String(title) } : {}),
         sections: [{
             __typename: 'GenAIUnifiedResponseSection',
             view_model: {
                 __typename: 'GenAISingleLayoutViewModel',
                 primitive: {
                     __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
+                    ...(title ? { title: String(title) } : {}),
                     trusted_sources: Array.isArray(trustedSources) ? trustedSources : [],
+                    ...(url ? { url: String(url) } : {}),
                     payload: String(html),
                 },
             },
@@ -243,9 +246,13 @@ function brandGameHtml(html) {
     return withTheme.includes('TOHID-AI · POWERED BY MR TOHID') ? withTheme : withTheme.replace('</body>',footer+'</body>');
 }
 async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, caption, theme, mentions = [], interactive = false }) {
-    const content = buildRichContent(brandGameHtml(html), quoted, { title: title || 'TOHID-AI' });
-    const safeQuoted = quoted?.message ? quoted : undefined;
-    const wrapped = generateWAMessageFromContent(jid, content, { userJid: sock.user?.id, quoted: safeQuoted });
+    const content = buildRichContent(brandGameHtml(html), quoted, {
+        title: title || 'TOHID-AI',
+    });
+    const wrapped = generateWAMessageFromContent(jid, content, {
+        userJid: sock.user?.id,
+        quoted,
+    });
     await sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
     return wrapped;
 }
