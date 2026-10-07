@@ -253,7 +253,25 @@ async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, captio
         userJid: sock.user?.id,
         quoted,
     });
-    await sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
+    // Some WhatsApp/Baileys builds can leave relayMessage pending when an
+    // experimental HTML primitive is rejected. Never let a game command hang.
+    const relay = sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
+    let sent = false;
+    try {
+        await Promise.race([
+            relay.then(() => { sent = true; }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('HTML relay timeout')), 8000))
+        ]);
+    } catch (error) {
+        console.error('[HTML GAME] Rich relay failed:', error.message);
+        try {
+            await sock.sendMessage(jid, {
+                text: '🎮 TOHID-AI GAME\n\nHTML game could not be rendered by this WhatsApp client. The command itself is working. Please update WhatsApp and try again.'
+            }, { quoted });
+        } catch (fallbackError) {
+            console.error('[HTML GAME] Text fallback failed:', fallbackError.message);
+        }
+    }
     return wrapped;
 }
 async function sendRichHtmlMessage({ sock, jid, quoted, title, html, url, trustedSources = [] }) {
