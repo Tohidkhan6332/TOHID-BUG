@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
-const { generateWAMessageFromContent, proto } = require('@pasqua-baileys/baileys');
+const { generateWAMessageFromContent, proto } = require('../tohidstore/baileys-compat');
 const sharp = require('sharp');
 
 // HTML/GenAI rich responses require the Baileys build that supports
