@@ -116,6 +116,9 @@ function loadGame(command) {
         return mod;
     } catch (error) {
         console.error('[GAME LOADER] Failed to load ' + file + ':', error.stack || error.message);
+        // Keep the exact loader error available to executeGame(), so a broken
+        // dependency cannot look like a mysterious "game not found" failure.
+        loadGame.lastError = error;
         return null;
     }
 }
@@ -145,9 +148,14 @@ async function executeGame(command, context) {
         console.error('[GAME ACK] Failed for ' + requested + ':', ackError.stack || ackError.message);
     }
 
+    loadGame.lastError = null;
     const mod = loadGame(requested);
     if (!mod) {
-        const errorText = `❌ Game module *.${requested}* could not be loaded.\\nCheck the Termux log for [GAME LOADER].`;
+        const detail = loadGame.lastError?.message || 'Unknown module loading error';
+        console.error('[GAME LOADER] Command failed:', requested, detail);
+        const errorText =
+            `❌ Game *.${requested}* could not be loaded.\\n\\n` +
+            `⚠️ Loader error: ${detail}`;
         try {
             await context.sock.sendMessage(context.from, { text: errorText }, { quoted: context.msg });
         } catch (replyError) {
