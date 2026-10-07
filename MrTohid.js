@@ -15355,6 +15355,12 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                 setSetting("bot", "mode", "public");
                 devtrust.public = true;
+                try {
+                    fs.mkdirSync('./database', { recursive: true });
+                    fs.writeFileSync('./database/bot-mode.json', JSON.stringify({ mode: 'public' }, null, 2));
+                } catch (modeError) {
+                    console.error('[BOT MODE] Failed to persist public mode:', modeError.message);
+                }
                 reply("🌍 *Public mode activated*\nEveryone can use the bot");
             }
                 break;
@@ -15365,6 +15371,12 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                 setSetting("bot", "mode", "self");
                 devtrust.public = false;
+                try {
+                    fs.mkdirSync('./database', { recursive: true });
+                    fs.writeFileSync('./database/bot-mode.json', JSON.stringify({ mode: 'self' }, null, 2));
+                } catch (modeError) {
+                    console.error('[BOT MODE] Failed to persist private mode:', modeError.message);
+                }
                 reply("🔐 *Private mode activated*\nOnly owner can use the bot");
             }
                 break;
