@@ -1,6 +1,6 @@
 'use strict';
 
-const { sendRichHtmlMessage } = require('../../utils/TohidGenai');
+const { sendRichHtml } = require('../../utils/TohidGenai');
 
 const GAME_URL = 'https://pair.crysnovax.link';
 const TRUSTED_SOURCES = ['crysnovax.link'];
