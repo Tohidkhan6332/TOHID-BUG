@@ -3660,37 +3660,78 @@ bot.onText(/^\/restart(?:@[\w_]+)?$/i, async (msg) => {
 });
 
 // ==================== GITHUB UPDATE ====================
-bot.onText(/^\/update(?:@[\w_]+)?$/i, async (msg) => {
+bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
     if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
+
     try {
         const platform = detectPlatform();
-        await bot.sendMessage(chatId, '⬆️ *Updating TOHID-AI...*\n\n📦 Source: *' + GITHUB_OWNER + '/' + GITHUB_REPO + ':' + GITHUB_BRANCH + '*\n🖥️ Platform: *' + platform + '*\n⏳ Getting the latest version...', { parse_mode: 'Markdown' });
-        console.log('[UPDATE] Owner requested update on ' + platform + '.');
-        const result = await updateFromGitHub();
-        const updateDetails = String(result?.pullOutput || result?.installOutput || '').trim();
-        console.log('[UPDATE] Git update completed on ' + (result?.platform || platform) + '.');
-        if (updateDetails) {
-            console.log('[UPDATE] Details:', updateDetails.slice(-4000));
-        }
 
         await bot.sendMessage(
             chatId,
-            '✅ *Update completed successfully.*\n\n📦 Latest GitHub version has been applied.\n🔄 Restarting with the updated version...',
+            '⬆️ *Updating TOHID-AI...*\\n\\n' +
+            '📦 Source: *' + GITHUB_OWNER + '/' + GITHUB_REPO + ':' + GITHUB_BRANCH + '*\\n' +
+            '🖥️ Platform: *' + platform + '*\\n' +
+            '⏳ Getting the latest version...',
             { parse_mode: 'Markdown' }
         );
 
-        console.log('[UPDATE] Restart requested after successful update.');
+        console.log('[UPDATE] Owner requested update on ' + platform + '.');
+        const result = await updateFromGitHub();
+
+        const updateDetails = String(result?.pullOutput || result?.installOutput || '').trim();
+        console.log('[UPDATE] Git update completed on ' + (result?.platform || platform) + '.');
+        if (updateDetails) console.log('[UPDATE] Details:', updateDetails.slice(-4000));
+
+        const deploymentText =
+            '┌──〔 🤖 TOHID-AI 〕──┐\\n' +
+            '│\\n' +
+            '│ ✅ *DEPLOYMENT SUCCESSFUL*\\n' +
+            '│\\n' +
+            '│ 📦 Repository : TOHID-BUG\\n' +
+            '│ 🌿 Branch     : main\\n' +
+            '│ 🟢 Status     : ACTIVE\\n' +
+            '│ 📱 Telegram   : CONNECTED\\n' +
+            '│ 🤖 Bot        : TOHID-AI\\n' +
+            '│ ⚙️ Mode       : ACTIVE\\n' +
+            '│\\n' +
+            '│ 🔄 Restarting TOHID-AI now...\\n' +
+            '│\\n' +
+            '└────────────────────┘\\n\\n' +
+            '©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸';
+
+        await bot.sendMessage(chatId, deploymentText, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: '📢 CHANNEL', url: SOCIAL.telegram.primary },
+                        { text: '👥 GROUP', url: SOCIAL.telegram.group }
+                    ]
+                ]
+            }
+        });
+
+        console.log('[UPDATE] Deployment confirmation sent. Restarting...');
         if (!result.restartHandled) {
-            setTimeout(() => {
-                restartProcess().catch(error => console.error('[UPDATE] Restart after update failed:', error));
-            }, 1200);
+            await sleep(800);
+            await restartProcess();
         }
     } catch (error) {
         console.error('[UPDATE] Failed:', error);
-        const details = String(error.stderr || error.stdout || error.message || 'Unknown error').trim();
-        await bot.sendMessage(chatId, '❌ *Update failed.*\n\n' + details.slice(-3000), { parse_mode: 'Markdown' });
+        const details = String(error?.stderr || error?.stdout || error?.message || 'Unknown error').trim();
+        try {
+            await bot.sendMessage(
+                chatId,
+                '┌──〔 🤖 TOHID-AI 〕──┐\\n│\\n│ ❌ *DEPLOYMENT FAILED*\\n│\\n│ ⚠️ Reason : ' +
+                details.slice(-2500) +
+                '\\n│\\n└────────────────────┘',
+                { parse_mode: 'Markdown' }
+            );
+        } catch (sendError) {
+            console.error('[UPDATE] Could not send failure message:', sendError.message);
+        }
     }
 });
 // ==================== CALLBACK HANDLER ====================
