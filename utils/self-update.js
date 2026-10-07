@@ -317,8 +317,6 @@ function restartProcess() {
         ? path.resolve(process.argv[1])
         : path.join(process.cwd(), 'index.js');
 
-    // Supervisors such as PM2/Pterodactyl/Render commonly restart the
-    // service after exit. In that case, do not create a second process.
     const supervised = Boolean(
         process.env.pm_id ||
         process.env.PM2_HOME ||
@@ -332,25 +330,56 @@ function restartProcess() {
         return;
     }
 
-    // For a plain "node index.js" process, start the same entry point first.
-    // Controlled handoff for plain Termux/generic processes.
-    // The replacement process waits for this process to exit before acquiring
-    // the runtime lock and opening Telegram/WhatsApp. Starting it immediately
-    // used to create a deadlock: the new process saw the old PID as active,
-    // exited, and then the old process exited too — leaving the bot offline.
-    const child = spawn(process.execPath, [entryPoint, ...process.argv.slice(2)], {
-        cwd: process.cwd(),
-        env: {
-            ...process.env,
-            TOHID_UPDATE_RESTART: '1',
-            TOHID_WAIT_FOR_PARENT_PID: String(process.pid)
-        },
-        detached: true,
-        stdio: 'ignore'
-    });
+    // Plain Termux/node deployments need a real detached replacement process.
+    // Keep a small restart log because detached children otherwise fail silently.
+    const restartLog = path.join(process.cwd(), 'database', 'update-restart.log');
+    try {
+        fs.mkdirSync(path.dirname(restartLog), { recursive: true });
+        fs.appendFileSync(
+            restartLog,
+            `\\n[${new Date().toISOString()}] Starting replacement process: ${entryPoint}\\n`
+        );
+    } catch (_) {}
 
-    child.unref();
-    setTimeout(() => process.exit(0), 800);
+    let child;
+    try {
+        child = spawn(
+            process.execPath,
+            [entryPoint, ...process.argv.slice(2)],
+            {
+                cwd: process.cwd(),
+                env: {
+                    ...process.env,
+                    TOHID_UPDATE_RESTART: '1',
+                    TOHID_WAIT_FOR_PARENT_PID: String(process.pid)
+                },
+                detached: true,
+                stdio: ['ignore', 'ignore', 'ignore']
+            }
+        );
+        child.unref();
+
+        try {
+            fs.appendFileSync(
+                restartLog,
+                `[${new Date().toISOString()}] Replacement spawned, pid=${child.pid}\\n`
+            );
+        } catch (_) {}
+
+        // Give the replacement process a moment to start before terminating
+        // the old process. The replacement waits for this PID to disappear.
+        setTimeout(() => process.exit(0), 1500);
+    } catch (error) {
+        console.error('[UPDATE] Replacement process could not be spawned:', error);
+        try {
+            fs.appendFileSync(
+                restartLog,
+                `[${new Date().toISOString()}] SPAWN FAILED: ${error.stack || error.message}\\n`
+            );
+        } catch (_) {}
+        // Never kill the currently working bot if a replacement could not
+        // be created.
+    }
 }
 
 module.exports = {
