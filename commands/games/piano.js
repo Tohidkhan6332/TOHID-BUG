@@ -396,6 +396,15 @@ function flashKey(el) {
 /* ── BIND PIANO KEYS ── */
 window.tohidPianoPlay=function(name){var btn=document.querySelector('[data-note="'+name+'"]');playNote(name);if(btn)flashKey(btn)};
 
+/* Touch/pointer support for WhatsApp's embedded HTML renderer. */
+document.querySelectorAll('[data-note]').forEach(function(btn){
+  btn.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    playNote(btn.dataset.note);
+    flashKey(btn);
+  });
+});
+
 /* ── OCTAVE BUTTONS ── */
 document.getElementById('oct-down').addEventListener('click', function() {
   if (octave > 1) { octave--; octEl.textContent = octave; resultEl.textContent = 'Octave ' + octave; }
