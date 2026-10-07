@@ -3730,7 +3730,7 @@ bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
 │
 │ ⚠️ Reason : ${details.slice(-2500)}
 │
-└────────────────────┘`                { parse_mode: 'Markdown' }
+└────────────────────┘`, { parse_mode: 'Markdown' }
             );
         } catch (sendError) {
             console.error('[UPDATE] Could not send failure message:', sendError.message);
