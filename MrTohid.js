@@ -5233,6 +5233,8 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
                                     mediaType: 1,
                                     renderLargerThumbnail: true
                                 }
+                            }
+                        }
                     }, {});
                 } catch (err) {
                     console.log("❌ ERROR CATEGORY MENU:", err);
