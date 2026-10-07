@@ -4941,7 +4941,7 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
             'curse','cursearenagame','keyboard','keys','pianokeyboard',
             'scrabblegame','sudokugame','wordscramblegame','tictactoe','tic',
             'rockpaperscissors','quizgame','mathgame','emoji','tod','dice',
-            'guessnumber','naijawhotgame'
+            'guessnumber','naijawhotgame','games','game','gamemenu','gamecenter','arcade','gamedaily','dailygame','gameleaderboard','gameprofile','gamescore','gamestats'
         ]);
 
         if (gameCommands.has(command)) {
