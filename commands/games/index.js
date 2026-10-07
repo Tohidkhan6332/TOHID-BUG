@@ -34,6 +34,11 @@ const GAME_FILES = {
     eye: 'eye.js',
     naijawhot: 'naijawhot.js',
     challenge: 'challenge.js',
+    games: 'games.js',
+    gamedaily: 'gamedaily.js',
+    gameleaderboard: 'gameleaderboard.js',
+    gameprofile: 'gameprofile.js',
+    gamescore: 'gamescore.js',
 };
 
 const ALIASES = {
@@ -70,6 +75,12 @@ const ALIASES = {
     dice: 'dicebattle',
     guessnumber: 'numberguess',
     naijawhotgame: 'naijawhot',
+    game: 'games',
+    gamemenu: 'games',
+    gamecenter: 'games',
+    arcade: 'games',
+    dailygame: 'gamedaily',
+    gamestats: 'gamescore',
 };
 
 const loaded = new Map();
