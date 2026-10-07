@@ -980,7 +980,20 @@ creds: state.creds,
                             ? tohidDevNumber
                             : tohidDevNumber + '@s.whatsapp.net'
                     );
-                    const deploymentText = "╭━━━〔 🤖 TOHID-AI 〕━━━╮\n┃\n┃ ✅ DEPLOYMENT SUCCESSFUL\n┃\n┃ 🟢 Status: ACTIVE\n┃ 📱 WhatsApp: CONNECTED\n┃ ⚙️ Bot: TOHID-AI\n┃\n┃ Your bot is now online and ready.\n┃\n╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n👑 Powered by MR TOHID";
+                    // Restore the persisted bot mode so the deployment notice
+                    // always tells the owner whether TOHID-AI is PRIVATE or PUBLIC.
+                    let botMode = 'PRIVATE';
+                    try {
+                        const modeFile = './database/bot-mode.json';
+                        if (fs.existsSync(modeFile)) {
+                            const savedMode = JSON.parse(fs.readFileSync(modeFile, 'utf8'));
+                            botMode = savedMode?.mode === 'public' ? 'PUBLIC' : 'PRIVATE';
+                        }
+                    } catch (modeError) {
+                        console.log(chalk.yellow('⚠️ Could not read bot mode for deployment notice:', modeError.message));
+                    }
+
+                    const deploymentText = "╭━━━〔 🤖 TOHID-AI 〕━━━╮\\n┃\\n┃ ✅ DEPLOYMENT SUCCESSFUL\\n┃\\n┃ 🟢 Status: ACTIVE\\n┃ 🔐 Mode: " + botMode + "\\n┃ 📱 WhatsApp: CONNECTED\\n┃ ⚙️ Bot: TOHID-AI\\n┃\\n┃ Your bot is now online and ready.\\n┃\\n╰━━━━━━━━━━━━━━━━━━━━━━╯\\n\\n👑 Powered by MR TOHID";
 
                     // WhatsApp can still be initializing immediately after the socket
                     // reports "open". Retry the confirmation instead of silently losing it.
