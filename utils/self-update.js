@@ -330,8 +330,9 @@ function restartProcess() {
         return;
     }
 
-    // Plain Termux/node deployments need a real detached replacement process.
-    // Keep a small restart log because detached children otherwise fail silently.
+    // Termux/plain Node: start the replacement in the same process group.
+    // Android can kill detached orphan processes when the old process exits,
+    // which made .update report SUCCESSFUL while WhatsApp stayed offline.
     const restartLog = path.join(process.cwd(), 'database', 'update-restart.log');
     try {
         fs.mkdirSync(path.dirname(restartLog), { recursive: true });
@@ -343,6 +344,7 @@ function restartProcess() {
 
     let child;
     try {
+        const logFd = fs.openSync(restartLog, 'a');
         child = spawn(
             process.execPath,
             [entryPoint, ...process.argv.slice(2)],
@@ -353,22 +355,21 @@ function restartProcess() {
                     TOHID_UPDATE_RESTART: '1',
                     TOHID_WAIT_FOR_PARENT_PID: String(process.pid)
                 },
-                detached: true,
-                stdio: ['ignore', 'ignore', 'ignore']
+                detached: false,
+                stdio: ['ignore', logFd, logFd]
             }
         );
         child.unref();
+        try { fs.closeSync(logFd); } catch (_) {}
 
-        try {
-            fs.appendFileSync(
-                restartLog,
-                `[${new Date().toISOString()}] Replacement spawned, pid=${child.pid}\\n`
-            );
-        } catch (_) {}
+        fs.appendFileSync(
+            restartLog,
+            `[${new Date().toISOString()}] Replacement spawned, pid=${child.pid}; waiting for old process to exit.\\n`
+        );
 
-        // Give the replacement process a moment to start before terminating
-        // the old process. The replacement waits for this PID to disappear.
-        setTimeout(() => process.exit(0), 1500);
+        // The replacement waits for this PID to disappear before taking the
+        // runtime lock, so WhatsApp/Telegram are never started twice.
+        setTimeout(() => process.exit(0), 2000);
     } catch (error) {
         console.error('[UPDATE] Replacement process could not be spawned:', error);
         try {
@@ -377,11 +378,9 @@ function restartProcess() {
                 `[${new Date().toISOString()}] SPAWN FAILED: ${error.stack || error.message}\\n`
             );
         } catch (_) {}
-        // Never kill the currently working bot if a replacement could not
-        // be created.
+        // Keep the current bot alive if the replacement could not be created.
     }
 }
-
 module.exports = {
     updateFromGitHub,
     restartProcess,
