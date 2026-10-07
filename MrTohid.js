@@ -2120,17 +2120,20 @@ const Premium = getPremium();
             console.log('⚠️ Native Flow response parse failed:', nativeFlowError.message);
         }
 
+        // Native Flow / Open Menu selection is authoritative. WhatsApp
+        // may also expose the button's display label as m.body; that label
+        // must never override the actual row/button command id.
         const body = (
+            nativeFlowCommand ||
+            messageContent?.buttonsResponseMessage?.selectedButtonId ||
+            messageContent?.listResponseMessage?.singleSelectReply?.selectedRowId ||
+            messageContent?.templateButtonReplyMessage?.selectedId ||
             messageContent?.conversation ||
             messageContent?.extendedTextMessage?.text ||
             messageContent?.imageMessage?.caption ||
             messageContent?.videoMessage?.caption ||
             messageContent?.documentMessage?.caption ||
             messageContent?.audioMessage?.caption ||
-            messageContent?.buttonsResponseMessage?.selectedButtonId ||
-            messageContent?.listResponseMessage?.singleSelectReply?.selectedRowId ||
-            messageContent?.templateButtonReplyMessage?.selectedId ||
-            nativeFlowCommand ||
             m.body ||
             m.text ||
             ''
