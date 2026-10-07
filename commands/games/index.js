@@ -114,6 +114,17 @@ async function executeGame(command, context) {
 
     console.log('[GAME] Executing:', requested, '=>', mod.name || requested);
 
+    // Acknowledge BEFORE stats/database work or HTML rendering. This proves
+    // the command reached the game layer even if an experimental game renderer
+    // is unavailable on the WhatsApp client.
+    try {
+        if (typeof context?.reply === 'function') {
+            await context.reply(`🎮 *${mod.name || requested}*\\n\\n⏳ Opening game...`);
+        }
+    } catch (ackError) {
+        console.error('[GAME ACK] Failed for ' + requested + ':', ackError.stack || ackError.message);
+    }
+
     try {
         recordPlay(
             context?.from,
@@ -124,7 +135,24 @@ async function executeGame(command, context) {
         console.error('[GAME STATS] Failed to record play:', error.message);
     }
 
-    await mod.execute(context);
+    try {
+        await Promise.race([
+            Promise.resolve().then(() => mod.execute(context)),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Game execution timeout after 15000ms')), 15000)
+            ),
+        ]);
+    } catch (error) {
+        console.error('[GAME] Failed:', requested, error.stack || error.message);
+        try {
+            if (typeof context?.reply === 'function') {
+                await context.reply(`⚠️ *${mod.name || requested}* could not open.\\n\\n${error.message || 'Unknown game error'}`);
+            }
+        } catch (replyError) {
+            console.error('[GAME ERROR REPLY] Failed:', replyError.stack || replyError.message);
+        }
+    }
+
     console.log('[GAME] Finished:', requested);
     return true;
 }
