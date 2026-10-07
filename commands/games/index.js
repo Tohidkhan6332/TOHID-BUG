@@ -34,7 +34,6 @@ const GAME_FILES = {
     eye: 'eye.js',
     naijawhot: 'naijawhot.js',
     challenge: 'challenge.js',
-    gamechallenge: 'gamechallenge.js',
     games: 'games.js',
     gamedaily: 'gamedaily.js',
     gameleaderboard: 'gameleaderboard.js',
@@ -82,6 +81,7 @@ const ALIASES = {
     arcade: 'games',
     dailygame: 'gamedaily',
     gamestats: 'gamescore',
+    gamechallenge: 'challenge',
     challengegame: 'challenge',
 };
 
