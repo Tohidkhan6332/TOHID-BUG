@@ -56,33 +56,63 @@ function requestJson(url, options = {}) {
 
 async function restartProcess() {
   const platform = detectPlatform();
+
   if (platform === 'render' && process.env.RENDER_API_KEY && process.env.RENDER_SERVICE_ID) {
-    await requestJson('https://api.render.com/v1/services/' + encodeURIComponent(process.env.RENDER_SERVICE_ID) + '/restart', { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.RENDER_API_KEY } });
+    await requestJson(
+      'https://api.render.com/v1/services/' + encodeURIComponent(process.env.RENDER_SERVICE_ID) + '/restart',
+      { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.RENDER_API_KEY } }
+    );
     return { platform, method: 'render-api' };
   }
+
   if (platform === 'koyeb' && process.env.KOYEB_API_TOKEN && process.env.KOYEB_SERVICE_ID) {
-    await requestJson('https://app.koyeb.com/v1/services/' + encodeURIComponent(process.env.KOYEB_SERVICE_ID) + '/redeploy', { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.KOYEB_API_TOKEN } });
+    await requestJson(
+      'https://app.koyeb.com/v1/services/' + encodeURIComponent(process.env.KOYEB_SERVICE_ID) + '/redeploy',
+      { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.KOYEB_API_TOKEN } }
+    );
     return { platform, method: 'koyeb-api' };
   }
+
   if (platform === 'pm2') {
     const name = process.env.name || process.env.pm_exec_path || process.argv[1];
-    try { await run('pm2', ['restart', name]); return { platform, method: 'pm2' }; }
-    catch (error) { console.error('[RUNTIME] PM2 restart failed:', error.message); }
+    try {
+      await run('pm2', ['restart', name]);
+      return { platform, method: 'pm2' };
+    } catch (error) {
+      console.error('[RUNTIME] PM2 restart failed:', error.message);
+    }
   }
+
   if (platform === 'termux' || platform === 'generic') {
-    const child = spawn(process.execPath, process.argv.slice(1), {
-      cwd: process.cwd(),
-      // The replacement process must wait for this PID to exit before it
-      // starts Telegram polling or restores WhatsApp sessions.
-      env: { ...process.env, TOHID_RESTARTED: '1', TOHID_WAIT_FOR_PARENT_PID: String(process.pid) },
-      detached: true,
-      stdio: 'inherit'
-    });
-    child.unref();
-    await sleep(700);
+    const entryPoint = process.argv[1] ? path.resolve(process.argv[1]) : path.join(process.cwd(), 'index.js');
+
+    // Spawn a completely detached replacement process. Its stdio must NOT
+    // inherit the Telegram/Termux process, otherwise the child can be killed
+    // together with the old process.
+    let child;
+    try {
+      child = spawn(process.execPath, [entryPoint, ...process.argv.slice(2)], {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          TOHID_RESTARTED: '1',
+          TOHID_WAIT_FOR_PARENT_PID: String(process.pid)
+        },
+        detached: true,
+        stdio: 'ignore'
+      });
+      child.unref();
+      console.log('[RUNTIME] Replacement process spawned:', child.pid);
+    } catch (error) {
+      throw new Error('Could not start replacement process: ' + (error.message || error));
+    }
+
+    // Let Telegram send the final update message before this process exits.
+    await sleep(1800);
     process.exit(0);
   }
-  setTimeout(() => process.exit(0), 700);
+
+  setTimeout(() => process.exit(0), 1000);
   return { platform, method: 'supervisor-exit' };
 }
 
