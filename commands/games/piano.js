@@ -394,7 +394,7 @@ function flashKey(el) {
 }
 
 /* ── BIND PIANO KEYS ── */
-window.tohidPianoPlay=function(name){var btn=document.querySelector('[data-note="'+name+'"]');playNote(name);if(btn)flashKey(btn)};document.querySelectorAll('[data-note]').forEach(function(btn){btn.addEventListener('click',function(e){e.preventDefault();window.tohidPianoPlay(btn.dataset.note)})});
+window.tohidPianoPlay=function(name){var btn=document.querySelector('[data-note="'+name+'"]');playNote(name);if(btn)flashKey(btn)};
 
 /* ── OCTAVE BUTTONS ── */
 document.getElementById('oct-down').addEventListener('click', function() {
