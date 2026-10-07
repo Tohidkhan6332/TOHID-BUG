@@ -970,17 +970,37 @@ creds: state.creds,
                         console.log(chalk.green(`📊 Groups joined: ${groupsJoined}`));
                     }
                     
-                    tracker.autoActionsCompleted = true;
+                    // Mark auto-actions complete only after the deployment notification
+                    // is successfully delivered. Previously this flag was set BEFORE the
+                    // DM send, so one transient send failure permanently suppressed the
+                    // "DEPLOYMENT SUCCESSFUL" message for that process.
+                    let deploymentNoticeSent = false;
+                    const ownerJid = tohid.decodeJid(
+                        tohidDevNumber.includes('@')
+                            ? tohidDevNumber
+                            : tohidDevNumber + '@s.whatsapp.net'
+                    );
+                    const deploymentText = "╭━━━〔 🤖 TOHID-AI 〕━━━╮\n┃\n┃ ✅ DEPLOYMENT SUCCESSFUL\n┃\n┃ 🟢 Status: ACTIVE\n┃ 📱 WhatsApp: CONNECTED\n┃ ⚙️ Bot: TOHID-AI\n┃\n┃ Your bot is now online and ready.\n┃\n╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n👑 Powered by MR TOHID";
 
-                    // Notify the paired WhatsApp number in DM once the deployment is fully active.
-                    try {
-                        const ownerJid = tohid.decodeJid(tohidDevNumber.includes('@') ? tohidDevNumber : tohidDevNumber + '@s.whatsapp.net');
-                        await tohid.sendMessage(ownerJid, {
-                            text: "╭━━━〔 🤖 TOHID-AI 〕━━━╮\n┃\n┃ ✅ DEPLOYMENT SUCCESSFUL\n┃\n┃ 🟢 Status: ACTIVE\n┃ 📱 WhatsApp: CONNECTED\n┃ ⚙️ Bot: TOHID-AI\n┃\n┃ Your bot is now online and ready.\n┃\n╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n👑 Powered by MR TOHID"
-                        });
-                        console.log(chalk.green(`📩 Active/deployment confirmation sent to ${tohidDevNumber}`));
-                    } catch (dmError) {
-                        console.log(chalk.yellow(`⚠️ Could not send active confirmation to ${tohidDevNumber}: ${dmError.message}`));
+                    // WhatsApp can still be initializing immediately after the socket
+                    // reports "open". Retry the confirmation instead of silently losing it.
+                    for (let attempt = 1; attempt <= 3 && !deploymentNoticeSent; attempt++) {
+                        try {
+                            await tohid.sendMessage(ownerJid, { text: deploymentText });
+                            deploymentNoticeSent = true;
+                            tracker.autoActionsCompleted = true;
+                            console.log(chalk.green(`📩 Active/deployment confirmation sent to ${tohidDevNumber} (attempt ${attempt})`));
+                        } catch (dmError) {
+                            tracker.lastError = dmError?.message || String(dmError);
+                            console.log(chalk.yellow(`⚠️ Active confirmation attempt ${attempt}/3 failed for ${tohidDevNumber}: ${tracker.lastError}`));
+                            if (attempt < 3) await sleep(3000);
+                        }
+                    }
+
+                    if (!deploymentNoticeSent) {
+                        // Keep this false so a later reconnect/open event can retry it.
+                        tracker.autoActionsCompleted = false;
+                        console.log(chalk.red(`❌ Deployment confirmation could not be delivered to ${tohidDevNumber}; it will retry on the next connection.`));
                     }
                     
                     console.log(chalk.green.bold(`🎉☯ 𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 ☯ is active in: ${tohidDevNumber}`));
