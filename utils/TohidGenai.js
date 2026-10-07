@@ -255,21 +255,38 @@ async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, captio
     });
     // Some WhatsApp/Baileys builds can leave relayMessage pending when an
     // experimental HTML primitive is rejected. Never let a game command hang.
-    const relay = sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
-    let sent = false;
     try {
+        if (typeof sock.relayMessage !== 'function') {
+            throw new Error('relayMessage is not available in this Baileys build');
+        }
+
+        const relay = sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
+        if (!relay || typeof relay.then !== 'function') {
+            throw new Error('relayMessage did not return a Promise');
+        }
+
+        // Do not allow an experimental HTML primitive to block the command
+        // handler forever. Also consume relay rejection so it cannot become an
+        // unhandled promise rejection.
         await Promise.race([
-            relay.then(() => { sent = true; }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('HTML relay timeout')), 8000))
+            relay.then(
+                () => true,
+                error => { throw error; }
+            ),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('HTML relay timeout after 5000ms')), 5000)
+            ),
         ]);
+
+        console.log('[HTML GAME] Rich HTML relay accepted:', jid);
     } catch (error) {
-        console.error('[HTML GAME] Rich relay failed:', error.message);
+        console.error('[HTML GAME] Rich relay failed:', error.stack || error.message);
         try {
             await sock.sendMessage(jid, {
-                text: '🎮 TOHID-AI GAME\n\nHTML game could not be rendered by this WhatsApp client. The command itself is working. Please update WhatsApp and try again.'
+                text: '🎮 TOHID-AI GAME\n\nHTML game could not be rendered by this WhatsApp client. The command is working, but this WhatsApp/Baileys client rejected the HTML card.'
             }, { quoted });
         } catch (fallbackError) {
-            console.error('[HTML GAME] Text fallback failed:', fallbackError.message);
+            console.error('[HTML GAME] Text fallback failed:', fallbackError.stack || fallbackError.message);
         }
     }
     return wrapped;
