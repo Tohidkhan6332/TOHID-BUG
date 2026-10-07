@@ -33,7 +33,7 @@ function richContext(quoted) {
     };
 }
 
-function buildRichContent(html, quoted, { title = '', url = '', trustedSources = [] } = {}) {
+function buildRichContent(html, quoted, { title = '', url = '', trustedSources = [], primitiveType = 'GenAIaeacdsnwHtmlPrimitive' } = {}) {
     const data = Buffer.from(JSON.stringify({
         __typename: 'GenAIUnifiedResponse',
         response_id: crypto.randomUUID(),
@@ -43,7 +43,7 @@ function buildRichContent(html, quoted, { title = '', url = '', trustedSources =
             view_model: {
                 __typename: 'GenAISingleLayoutViewModel',
                 primitive: {
-                    __typename: 'FOAHtmlPrimitiveDemoDONOTUSE',
+                    __typename: primitiveType,
                     ...(title ? { title: String(title) } : {}),
                     trusted_sources: Array.isArray(trustedSources) ? trustedSources : [],
                     ...(url ? { url: String(url) } : {}),
@@ -250,51 +250,76 @@ function brandGameHtml(html) {
     const withTheme=value.includes('tohid-game-theme')?value:value.replace('</head>',theme+'</head>');
     return withTheme.includes('TOHID-AI · POWERED BY MR TOHID') ? withTheme : withTheme.replace('</body>',footer+'</body>');
 }
+async function relayRichHtml(sock, jid, wrapped) {
+    if (typeof sock.relayMessage !== 'function') {
+        throw new Error('relayMessage is not available in this Baileys build');
+    }
+
+    const relay = sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
+    if (!relay || typeof relay.then !== 'function') {
+        throw new Error('relayMessage did not return a Promise');
+    }
+
+    await Promise.race([
+        relay.then(
+            () => true,
+            error => { throw error; }
+        ),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('HTML relay timeout after 5000ms')), 5000)
+        ),
+    ]);
+}
+
 async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, caption, theme, mentions = [], interactive = false }) {
-    const content = buildRichContent(brandGameHtml(html), quoted, {
-        title: title || 'TOHID-AI',
-    });
-    const wrapped = generateWAMessageFromContent(jid, content, {
-        userJid: sock.user?.id,
-        quoted,
-    });
-    // Some WhatsApp/Baileys builds can leave relayMessage pending when an
-    // experimental HTML primitive is rejected. Never let a game command hang.
-    try {
-        if (typeof sock.relayMessage !== 'function') {
-            throw new Error('relayMessage is not available in this Baileys build');
-        }
+    const brandedHtml = brandGameHtml(html);
+    const primitiveTypes = [
+        'GenAIaeacdsnwHtmlPrimitive',
+        'FOAHtmlPrimitiveDemoDONOTUSE',
+    ];
+    let lastError = null;
 
-        const relay = sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
-        if (!relay || typeof relay.then !== 'function') {
-            throw new Error('relayMessage did not return a Promise');
-        }
-
-        // Do not allow an experimental HTML primitive to block the command
-        // handler forever. Also consume relay rejection so it cannot become an
-        // unhandled promise rejection.
-        await Promise.race([
-            relay.then(
-                () => true,
-                error => { throw error; }
-            ),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('HTML relay timeout after 5000ms')), 5000)
-            ),
-        ]);
-
-        console.log('[HTML GAME] Rich HTML relay accepted:', jid);
-    } catch (error) {
-        console.error('[HTML GAME] Rich relay failed:', error.stack || error.message);
+    for (const primitiveType of primitiveTypes) {
         try {
-            await sock.sendMessage(jid, {
-                text: '🎮 TOHID-AI GAME\n\nHTML game could not be rendered by this WhatsApp client. The command is working, but this WhatsApp/Baileys client rejected the HTML card.'
-            }, { quoted });
-        } catch (fallbackError) {
-            console.error('[HTML GAME] Text fallback failed:', fallbackError.stack || fallbackError.message);
+            const content = buildRichContent(brandedHtml, quoted, {
+                title: title || 'TOHID-AI',
+                primitiveType,
+            });
+            const wrapped = generateWAMessageFromContent(jid, content, {
+                userJid: sock.user?.id,
+                quoted,
+            });
+
+            console.log('[HTML GAME] Trying primitive:', primitiveType, 'bytes:', Buffer.byteLength(brandedHtml, 'utf8'));
+
+            await relayRichHtml(sock, jid, wrapped);
+
+            console.log('[HTML GAME] Rich HTML relay accepted:', jid, primitiveType);
+            return wrapped;
+        } catch (error) {
+            lastError = error;
+            console.error('[HTML GAME] Primitive failed:', primitiveType, error.stack || error.message);
         }
     }
-    return wrapped;
+
+    // Never leave a game command silent. The HTML transport is experimental
+    // and client-dependent, so always provide a normal WhatsApp fallback.
+    const fallbackText =
+        '🎮 TOHID-AI GAME\\n\\n' +
+        '⚠️ HTML game could not be rendered on this WhatsApp client.\\n' +
+        'The game command is working, but this device/client rejected the HTML card.' +
+        (lastError?.message ? '\\n\\nDebug: ' + lastError.message : '');
+
+    try {
+        return await sock.sendMessage(
+            jid,
+            { text: fallbackText, ...(mentions.length ? { mentions } : {}) },
+            { quoted }
+        );
+    } catch (fallbackError) {
+        console.error('[HTML GAME] Text fallback failed:', fallbackError.stack || fallbackError.message);
+        throw lastError || fallbackError;
+    }
 }
 async function sendRichHtmlMessage({ sock, jid, quoted, title, html, url, trustedSources = [] }) {
     const content = buildRichContent(html, quoted, { title, url, trustedSources });
