@@ -133,7 +133,7 @@ async function executeGame(command, context) {
 
     // Send a plain WhatsApp acknowledgement BEFORE loading any game module.
     // This isolates command routing from HTML/Baileys/game-module failures.
-    const ackText = `🎮 *TOHID-AI GAME*\\n\\n⏳ Opening *.${requested}*...`;
+    const ackText = `🎮 *TOHID-AI GAME*\n\n⏳ Opening *.${requested}*...`;
     try {
         if (typeof context?.sock?.sendMessage === 'function' && context?.from) {
             await context.sock.sendMessage(
@@ -154,7 +154,7 @@ async function executeGame(command, context) {
         const detail = loadGame.lastError?.message || 'Unknown module loading error';
         console.error('[GAME LOADER] Command failed:', requested, detail);
         const errorText =
-            `❌ Game *.${requested}* could not be loaded.\\n\\n` +
+            `❌ Game *.${requested}* could not be loaded.\n\n` +
             `⚠️ Loader error: ${detail}`;
         try {
             await context.sock.sendMessage(context.from, { text: errorText }, { quoted: context.msg });
@@ -189,7 +189,7 @@ async function executeGame(command, context) {
         try {
             await context.sock.sendMessage(
                 context.from,
-                { text: `⚠️ *${mod.name || requested}* could not open.\\n\\n${error.message || 'Unknown error'}` },
+                { text: `⚠️ *${mod.name || requested}* could not open.\n\n${error.message || 'Unknown error'}` },
                 { quoted: context.msg }
             );
         } catch (replyError) {
