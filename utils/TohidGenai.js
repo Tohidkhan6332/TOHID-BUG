@@ -322,13 +322,40 @@ async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, captio
     }
 }
 async function sendRichHtmlMessage({ sock, jid, quoted, title, html, url, trustedSources = [] }) {
-    const content = buildRichContent(html, quoted, { title, url, trustedSources });
-    const safeQuoted = quoted?.message ? quoted : undefined;
-    const wrapped = generateWAMessageFromContent(jid, content, { userJid: sock.user?.id, quoted: safeQuoted });
-    await sock.relayMessage(jid, wrapped.message, { messageId: wrapped.key.id });
-    return wrapped;
-}
+    const brandedHtml = brandGameHtml(html);
+    let lastError = null;
 
+    for (const primitiveType of ['GenAIaeacdsnwHtmlPrimitive', 'FOAHtmlPrimitiveDemoDONOTUSE']) {
+        try {
+            const content = buildRichContent(brandedHtml, quoted, {
+                title,
+                url,
+                trustedSources,
+                primitiveType,
+            });
+            const safeQuoted = quoted?.message ? quoted : undefined;
+            const wrapped = generateWAMessageFromContent(jid, content, {
+                userJid: sock.user?.id,
+                quoted: safeQuoted,
+            });
+            await relayRichHtml(sock, jid, wrapped);
+            console.log('[HTML GAME] Rich HTML message accepted:', jid, primitiveType);
+            return wrapped;
+        } catch (error) {
+            lastError = error;
+            console.error('[HTML GAME] Rich message primitive failed:', primitiveType, error.stack || error.message);
+        }
+    }
+
+    try {
+        return await sock.sendMessage(jid, {
+            text: '🎮 TOHID-AI GAME\\n\\n⚠️ HTML game could not be rendered on this WhatsApp client.\\nThe command is working, but this device/client rejected the HTML card.',
+        }, { quoted });
+    } catch (fallbackError) {
+        console.error('[HTML GAME] Rich message fallback failed:', fallbackError.stack || fallbackError.message);
+        throw lastError || fallbackError;
+    }
+}
 async function sendRichText({ sock, jid, quoted, text, title }) {
     return sendRichHtml({ sock, jid, quoted, html: textHtml(text, title) });
 }
