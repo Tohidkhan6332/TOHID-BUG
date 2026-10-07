@@ -286,12 +286,30 @@ async function updateFromGitHub() {
         } catch (_) {}
     }
 
+    // Validate the entry point before restarting. A bad update must not
+    // take down the currently running bot.
+    try {
+        run(process.execPath, ['--check', entryPointForValidation()], { timeout: 30000 });
+    } catch (error) {
+        try { git(['reset', '--hard', currentSha]); } catch (_) {}
+        throw new Error(
+            'Update validation failed; bot was NOT restarted: ' +
+            String(error.stderr || error.stdout || error.message || 'syntax error').trim().slice(-1800)
+        );
+    }
+
     return {
         updated: true,
         currentSha,
         latestSha,
         dependenciesChanged
     };
+}
+
+function entryPointForValidation() {
+    return process.argv[1]
+        ? path.resolve(process.argv[1])
+        : path.join(process.cwd(), 'index.js');
 }
 
 function restartProcess() {
@@ -315,11 +333,17 @@ function restartProcess() {
     }
 
     // For a plain "node index.js" process, start the same entry point first.
+    // Controlled handoff for plain Termux/generic processes.
+    // The replacement process waits for this process to exit before acquiring
+    // the runtime lock and opening Telegram/WhatsApp. Starting it immediately
+    // used to create a deadlock: the new process saw the old PID as active,
+    // exited, and then the old process exited too — leaving the bot offline.
     const child = spawn(process.execPath, [entryPoint, ...process.argv.slice(2)], {
         cwd: process.cwd(),
         env: {
             ...process.env,
-            TOHID_UPDATE_RESTART: '1'
+            TOHID_UPDATE_RESTART: '1',
+            TOHID_WAIT_FOR_PARENT_PID: String(process.pid)
         },
         detached: true,
         stdio: 'ignore'
