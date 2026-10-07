@@ -18934,23 +18934,23 @@ case 'update': {
 
         const dependencyText = result.dependenciesChanged ? '\n│ 📦 Dependencies : UPDATED' : '';
 
-        const deploymentText =
-            '┌──〔 🤖 TOHID-AI 〕──┐\n' +
-            '│\n' +
-            '│ ✅ *DEPLOYMENT SUCCESSFUL*\n' +
-            '│\n' +
-            '│ 📦 Repository : TOHID-BUG\n' +
-            '│ 🌿 Branch     : main\n' +
-            '│ 🟢 Status     : ACTIVE\n' +
-            '│ 📱 WhatsApp   : CONNECTED\n' +
-            '│ 🤖 Bot        : TOHID-AI\n' +
-            '│ ⚙️ Mode       : ' + (devtrust.public ? 'PUBLIC' : 'PRIVATE') + dependencyText + '\n' +
-            '│\n' +
-            '│ 🔄 Restarting TOHID-AI now...\n' +
-            '│\n' +
-            '└────────────────────┘\n\n' +
-            '©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸';
+        const deploymentText = `┌──〔 🤖 TOHID-AI 〕──┐
+│
+│ ✅ *DEPLOYMENT SUCCESSFUL*
+│
+│ 📦 Repository : TOHID-BUG
+│ 🌿 Branch     : main
+│ 🟢 Status     : ACTIVE
+│ 📱 WhatsApp   : CONNECTED
+│ 🤖 Bot        : TOHID-AI
+│ ⚙️ Mode       : ${devtrust.public ? 'PUBLIC' : 'PRIVATE'}${result.dependenciesChanged ? '\\n│ 📦 Dependencies : UPDATED' : ''}
+│
+│ 🔄 Restarting TOHID-AI now...
+│
+└────────────────────┘
 
+©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸`;
+        
         const deploymentButtons = {
             viewOnceMessage: {
                 message: {
