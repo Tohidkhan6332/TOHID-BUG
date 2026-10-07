@@ -2165,6 +2165,37 @@ const Premium = getPremium();
             args = parts.slice(1);
             text = args.join(' ');
             console.log('✅ Command detected for user:', command);
+
+            // GAME FAST-PATH
+            // Dispatch games immediately after command parsing. This prevents
+            // unrelated AI/feature middleware from swallowing a game command.
+            // The game registry is lazy, so normal commands are not loaded here.
+            try {
+                const { executeGame } = require('./commands/games');
+                const handledGame = await executeGame(command, {
+                    sock: devtrust,
+                    msg: m,
+                    from: m.chat,
+                    sender: m.sender,
+                    reply,
+                    args,
+                    prefix,
+                    pushName: m.pushName || 'Player'
+                });
+                if (handledGame) {
+                    console.log('[GAME FAST-PATH] Handled:', command);
+                    return;
+                }
+            } catch (gameFastPathError) {
+                console.error('[GAME FAST-PATH]', gameFastPathError.stack || gameFastPathError.message);
+                try {
+                    await devtrust.sendMessage(m.chat, {
+                        text: '⚠️ Game command reached the bot, but the game system failed to load.\n\n' +
+                            (gameFastPathError.message || 'Unknown game loader error')
+                    }, { quoted: m });
+                } catch (_) {}
+                return;
+            }
         }
 
         const qtext = args.join(" ");
@@ -4927,27 +4958,6 @@ const autoJoinGroup = async (devtrust, inviteLink) => {
         }
         // ============ MENU COMMAND ============
       if (isCmd) {
-        // Central game dispatcher. The registry is lazy, so unknown normal
-        // commands return false without loading every game module. This keeps
-        // ALL game aliases/utility commands in one source of truth.
-        try {
-            const { executeGame } = require('./commands/games');
-            const handledGame = await executeGame(command, {
-                sock: devtrust,
-                msg: m,
-                from: m.chat,
-                sender: m.sender,
-                reply,
-                args,
-                prefix,
-                pushName: m.pushName || 'Player'
-            });
-            if (handledGame) return;
-        } catch (gameLoaderError) {
-            console.error('[GAME LOADER]', gameLoaderError.stack || gameLoaderError.message);
-            return reply('❌ Game failed to load. Check Termux logs for [GAME LOADER].');
-        }
-
         switch (command) {
             // ============ ANTI STATUS CONTROLS ============
             case 'antistatus':
