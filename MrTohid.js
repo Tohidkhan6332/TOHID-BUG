@@ -15373,23 +15373,15 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                     await new Promise(resolve => setTimeout(resolve, 700));
 
-                    // Use the fork's own newsletterMsg wrapper when available.
-                    // It returns the raw query response, unlike this Baileys
-                    // build's newsletterReactMessage(), which resolves undefined
-                    // after awaiting the query. The wrapper now sends the same
-                    // native newsletter reaction stanza.
+                    // Use Baileys' native newsletter reaction API.
+                    // pou-code/Baileys implements newsletterReactMessage() specifically
+                    // for WhatsApp Channel/Newsletter posts.
                     const reactionResult = await Promise.race([
-                        typeof devtrust.newsletterMsg === 'function'
-                            ? devtrust.newsletterMsg(
-                                newsletterJid,
-                                { react: reaction, id: serverId, newsletter_id: newsletterJid },
-                                10000
-                            )
-                            : devtrust.newsletterReactMessage(
-                                newsletterJid,
-                                serverId,
-                                reaction
-                            ),
+                        devtrust.newsletterReactMessage(
+                            newsletterJid,
+                            serverId,
+                            reaction
+                        ),
                         new Promise((_, reject) =>
                             setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 10000)
                         )
