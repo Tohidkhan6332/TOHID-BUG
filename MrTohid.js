@@ -15326,11 +15326,74 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                 try {
                     // Resolve the real newsletter JID.
-                    const meta = await devtrust.newsletterMetadata('invite', channelInvite);
-                    const newsletterJid = meta?.id;
+                    // Some PouCode/WhatsApp metadata responses are not JSON and
+                    // newsletterMetadata() can fail while parsing them. Fall back
+                    // to the newsletter messages endpoint, which exposes the
+                    // channel JID through the fetched WAMessage key.
+                    let meta = null;
+                    let newsletterJid = null;
+                    let metadataResolveError = null;
+
+                    try {
+                        if (typeof devtrust.newsletterMetadata === 'function') {
+                            meta = await devtrust.newsletterMetadata('invite', channelInvite);
+                            newsletterJid = meta?.id || null;
+                        }
+                    } catch (metaErr) {
+                        metadataResolveError = metaErr;
+                        console.warn(
+                            '[REACT-CH] metadata resolver failed: ' +
+                            (metaErr?.message || metaErr)
+                        );
+                    }
+
+                    if (!newsletterJid && typeof devtrust.newsletterFetchMessages === 'function') {
+                        try {
+                            const inviteMessages = await Promise.race([
+                                devtrust.newsletterFetchMessages('invite', channelInvite, 50),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => reject(new Error('INVITE_RESOLVE_TIMEOUT')), 10000)
+                                )
+                            ]);
+
+                            const inviteList = Array.isArray(inviteMessages)
+                                ? inviteMessages
+                                : (Array.isArray(inviteMessages?.messages)
+                                    ? inviteMessages.messages
+                                    : []);
+
+                            for (const item of inviteList) {
+                                const candidate =
+                                    item?.message?.key?.remoteJid ||
+                                    item?.message?.key?.remoteJidAlt ||
+                                    item?.from ||
+                                    item?.jid ||
+                                    null;
+
+                                if (typeof candidate === 'string' && candidate.endsWith('@newsletter')) {
+                                    newsletterJid = candidate;
+                                    break;
+                                }
+                            }
+
+                            console.log(
+                                '[REACT-CH] invite-resolver jid=' +
+                                String(newsletterJid || 'NOT_FOUND') +
+                                ' messages=' + inviteList.length
+                            );
+                        } catch (resolveErr) {
+                            console.warn(
+                                '[REACT-CH] invite fallback failed: ' +
+                                (resolveErr?.message || resolveErr)
+                            );
+                        }
+                    }
 
                     if (!newsletterJid || !newsletterJid.endsWith('@newsletter')) {
-                        return reply('❌ *Could not resolve the channel JID.*');
+                        const detail = metadataResolveError?.message
+                            ? '\\n\\nResolver: ' + metadataResolveError.message
+                            : '';
+                        return reply('❌ *Could not resolve the channel JID.*' + detail);
                     }
 
                     // Make sure this account is subscribed before reacting.
