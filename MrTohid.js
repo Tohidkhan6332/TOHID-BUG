@@ -1,3 +1,4 @@
+require('dotenv').config();
 /**
  * © 2026 MR TOHID — TOHID-AI
  *
