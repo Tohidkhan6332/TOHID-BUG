@@ -15374,12 +15374,9 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         `[REACT-CH] target=${newsletterJid} serverId=${serverId} reaction=${reaction}`
                     );
 
-                    // Use the standard reaction transport first. This fork's
-                    // newsletterReactMessage() can close the socket with 428,
-                    // while sendMessage({ react }) uses the normal message path.
-                    // Wait for the socket when this Baileys fork exposes
-                    // waitForSocketOpen(). This prevents a reaction request from
-                    // starting while the WebSocket is still reconnecting.
+                    // Use the newsletter-native reaction API. The standard
+                    // sendMessage({ react }) path is not a reliable newsletter
+                    // transport in all Baileys forks.
                     if (typeof devtrust.waitForSocketOpen === 'function') {
                         await Promise.race([
                             devtrust.waitForSocketOpen(),
@@ -15389,21 +15386,12 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         ]);
                     }
 
-                    const reactionPromise = devtrust.sendMessage(newsletterJid, {
-                        react: {
-                            text: reaction,
-                            key: {
-                                remoteJid: newsletterJid,
-                                id: serverId,
-                                fromMe: false
-                            }
-                        }
-                    });
-
-                    // Do not leave the user stuck on "Processing..." if the
-                    // newsletter transport is unsupported/hung in this fork.
                     await Promise.race([
-                        reactionPromise,
+                        devtrust.newsletterReactMessage(
+                            newsletterJid,
+                            serverId,
+                            reaction
+                        ),
                         new Promise((_, reject) =>
                             setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 8000)
                         )
