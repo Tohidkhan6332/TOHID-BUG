@@ -118,24 +118,55 @@ const axios = require('axios');
  * Uses the same Prexzyvilla AI service already used by the newer AI commands.
  * Normalizes common response shapes so commands never print [object Object].
  */
-async function tohidGpt4(prompt) {
-    const response = await axios.get(
-        `https://apis.prexzyvilla.site/ai/gpt4?text=${encodeURIComponent(String(prompt || ''))}`,
-        { timeout: 30000 }
-    );
-    if (!response || !response.data) throw new Error('Empty AI response');
-    const data = response.data;
-    const answer =
-        (typeof data === 'string' && data) ||
-        data?.data ||
-        data?.result ||
-        data?.response ||
-        data?.answer ||
-        data?.message;
-    if (!answer) throw new Error('AI returned no usable response');
-    return typeof answer === 'string' ? answer : JSON.stringify(answer);
-}
+async function tohidGpt4(prompt, system = '') {
+    const key = String(process.env.AGNES_API_KEY || '').trim();
+    const model = String(process.env.AGNES_MODEL || 'agnes-2.5-flash').trim();
 
+    if (!key) throw new Error('AGNES_API_KEY is not configured');
+
+    const messages = [];
+    if (system) messages.push({ role: 'system', content: String(system) });
+    messages.push({ role: 'user', content: String(prompt || '').trim() });
+
+    const response = await axios.post(
+        'https://apihub.agnes-ai.com/v1/chat/completions',
+        {
+            model,
+            messages,
+            temperature: 0.8,
+            max_tokens: 1200
+        },
+        {
+            timeout: 30000,
+            headers: {
+                Authorization: 'Bearer ' + key,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0 TOHID-AI'
+            },
+            validateStatus: () => true
+        }
+    );
+
+    const data = response?.data;
+    if (response.status < 200 || response.status >= 300) {
+        throw new Error(
+            data?.error?.message ||
+            data?.message ||
+            ('Agnes AI HTTP ' + response.status)
+        );
+    }
+
+    const answer =
+        data?.choices?.[0]?.message?.content ??
+        data?.choices?.[0]?.text ??
+        data?.response ??
+        data?.result ??
+        data?.data;
+
+    if (!answer) throw new Error('Agnes AI returned no usable response');
+    return typeof answer === 'string' ? answer.trim() : JSON.stringify(answer);
+}
 const fsx = require('fs-extra')
 const crypto = require('crypto')
 const { updateFromGitHub, restartProcess } = require('./utils/self-update');
@@ -15757,29 +15788,16 @@ Possible cause: channel reactions are disabled/restricted, or this Baileys sessi
                 let query = args.join(" ").trim();
 
                 try {
-                    if (!query && m.message && m.message.extendedTextMessage &&
-                        m.message.extendedTextMessage.contextInfo &&
-                        m.message.extendedTextMessage.contextInfo.quotedMessage) {
-
+                    if (!query && m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
                         const quoted = m.message.extendedTextMessage.contextInfo.quotedMessage;
                         if (quoted.conversation) query = quoted.conversation;
-                        else if (quoted.extendedTextMessage && quoted.extendedTextMessage.text)
-                            query = quoted.extendedTextMessage.text;
+                        else if (quoted.extendedTextMessage?.text) query = quoted.extendedTextMessage.text;
                     }
 
-                    if (!query) {
-                        return reply("🤖 *Usage:* gpt4 your question");
-                    }
+                    if (!query) return reply("🤖 *Usage:* gpt4 your question");
 
-                    const res = await fetch(`https://apis.prexzyvilla.site/ai/gpt4?text=${encodeURIComponent(query)}`);
-                    if (!res.ok) return reply(`⚠️ *API error* • ${res.status}`);
-
-                    const json = await res.json();
-                    const answer = json?.data || "";
-
-                    if (!answer) return reply("⚠️ *No response from GPT-4*");
-
-                    const chunks = answer.match(/[\s\S]{1,3000}/g) || [answer];
+                    const answer = await tohidGpt4(query, 'You are TOHID-AI GPT-4 assistant. Give accurate, useful answers.');
+                    const chunks = String(answer).match(/[\s\S]{1,3000}/g) || [String(answer)];
 
                     for (let i = 0; i < chunks.length; i++) {
                         const header = i === 0 ? "🤖 *GPT-4*\n\n" : "";
@@ -15787,10 +15805,12 @@ Possible cause: channel reactions are disabled/restricted, or this Baileys sessi
                     }
                 } catch (err) {
                     console.error("gpt4 command error:", err);
-                    reply("⚠️ *GPT-4 unavailable* • Try later");
+                    reply("⚠️ *GPT-4 unavailable* • " + (err?.message || "Try later"));
                 }
             }
                 break;
+
+            case 'mode':                break;
 
             case 'mode': {
                 reply(`🔹 *Mode:* ${devtrust.public ? 'Public' : 'Private'}`);
@@ -16698,28 +16718,21 @@ case 'xnxx': {
 
                     if (!query) return reply("🤖 *Usage:* gpt5 your question");
 
-                    const res = await fetch(`https://apis.prexzyvilla.site/ai/gpt5?text=${encodeURIComponent(query)}`);
-                    if (!res.ok) return reply(`⚠️ *API error ${res.status}*`);
-
-                    const json = await res.json();
-                    const answer = json?.result || "";
-
-                    if (!answer) return reply("⚠️ *No response from GPT-5*");
-
-                    const chunks = answer.match(/[\s\S]{1,3000}/g) || [answer];
+                    const answer = await tohidGpt4(query, 'You are TOHID-AI GPT-5 style assistant. Reason carefully and provide a strong answer.');
+                    const chunks = String(answer).match(/[\s\S]{1,3000}/g) || [String(answer)];
 
                     for (let i = 0; i < chunks.length; i++) {
                         const header = i === 0 ? "🤖 *GPT-5*\n\n" : "";
                         await devtrust.sendMessage(chatId, addNewsletterContext({ text: header + chunks[i] }));
                     }
                 } catch (err) {
-                    console.error(err);
-                    reply("⚠️ *GPT-5 unavailable*");
+                    console.error("gpt5 command error:", err);
+                    reply("⚠️ *GPT-5 unavailable* • " + (err?.message || "Try later"));
                 }
             }
                 break;
 
-            case "lyrics": {
+            case "lyrics": {            case "lyrics": {
                 const chatId = m.key.remoteJid;
                 const query = args.join(" ");
 
@@ -17113,19 +17126,10 @@ case 'xnxx': {
                         else if (quoted.extendedTextMessage?.text) query = quoted.extendedTextMessage.text;
                     }
 
-                    if (!query) {
-                        return reply("🤖 *Usage:* gemini your question");
-                    }
+                    if (!query) return reply("🤖 *Usage:* gemini your question");
 
-                    const res = await fetch(`https://apis.prexzyvilla.site/ai/gemini?text=${encodeURIComponent(query)}`);
-                    if (!res.ok) return reply(`⚠️ *API error ${res.status}*`);
-
-                    const json = await res.json();
-                    const answer = json?.data || "";
-
-                    if (!answer) return reply("⚠️ *No response from Gemini*");
-
-                    const chunks = answer.match(/[\s\S]{1,3000}/g) || [answer];
+                    const answer = await tohidGpt4(query, 'You are TOHID-AI Gemini-style assistant. Answer clearly and accurately.');
+                    const chunks = String(answer).match(/[\s\S]{1,3000}/g) || [String(answer)];
 
                     for (let i = 0; i < chunks.length; i++) {
                         const header = i === 0 ? "🤖 *Gemini*\n\n" : "";
@@ -17133,12 +17137,12 @@ case 'xnxx': {
                     }
                 } catch (err) {
                     console.error(err);
-                    reply("⚠️ *Gemini unavailable*");
+                    reply("⚠️ *Gemini unavailable* • " + (err?.message || "Try later"));
                 }
             }
                 break;
 
-            // ============ MOVIE COMMANDS ============
+            // ============ MOVIE COMMANDS ============            // ============ MOVIE COMMANDS ============
             case 'movie2': {
                 if (!text) return reply(`🎬 *Usage:* ${prefix + command} movie name`);
 
@@ -17302,23 +17306,16 @@ case 'xnxx': {
                 if (!text) return reply("🤖 *Usage:* deepseek your question");
 
                 try {
-                    const response = await axios.get(
-                        `https://apis.prexzyvilla.site/ai/deepseek?text=${encodeURIComponent(text)}`
-                    );
-
-                    if (response.data && response.data.success) {
-                        reply(`🤖 *DeepSeek*\n\n${response.data.result}`);
-                    } else {
-                        reply(`⚠️ *No response*`);
-                    }
+                    const result = await tohidGpt4(text, 'You are TOHID-AI DeepSeek-style reasoning assistant. Be precise and practical.');
+                    reply('🤖 *DeepSeek*\n\n' + result);
                 } catch (error) {
                     console.error(error);
-                    reply(`❌ *DeepSeek error*`);
+                    reply('❌ *DeepSeek error* • ' + (error?.message || 'Try later'));
                 }
                 break;
             }
 
-            case "grok":
+            case "grok":            case "grok":
             case "grovnnk-ai": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
@@ -17332,15 +17329,8 @@ case 'xnxx': {
 
                     if (!query) return reply("🤖 *Usage:* grok your question");
 
-                    const res = await fetch(`https://apis.prexzyvilla.site/ai/grok?text=${encodeURIComponent(query)}`);
-                    if (!res.ok) return reply(`⚠️ *API error ${res.status}*`);
-
-                    const json = await res.json();
-                    const answer = json?.data || "";
-
-                    if (!answer) return reply("⚠️ *No response from Grok*");
-
-                    const chunks = answer.match(/[\s\S]{1,3000}/g) || [answer];
+                    const answer = await tohidGpt4(query, 'You are TOHID-AI Grok-style assistant. Be direct, current in reasoning, and useful.');
+                    const chunks = String(answer).match(/[\s\S]{1,3000}/g) || [String(answer)];
 
                     for (let i = 0; i < chunks.length; i++) {
                         const header = i === 0 ? "🤖 *Grok*\n\n" : "";
@@ -17348,12 +17338,12 @@ case 'xnxx': {
                     }
                 } catch (err) {
                     console.error(err);
-                    reply("⚠️ *Grok unavailable*");
+                    reply("⚠️ *Grok unavailable* • " + (err?.message || "Try later"));
                 }
             }
                 break;
 
-            case 'stupidcheck': case 'uncleancheck': case 'hotcheck': case 'smartcheck':
+            case 'stupidcheck':            case 'stupidcheck': case 'uncleancheck': case 'hotcheck': case 'smartcheck':
             case 'greatcheck': case 'evilcheck': case 'dogcheck': case 'coolcheck':
             case 'gaycheck': case 'waifucheck': {
                 const okebnh1 = Array.from({ length: 100 }, (_, i) => (i + 1).toString());
@@ -17415,15 +17405,8 @@ case 'xnxx': {
 
                     if (!query) return reply("🤖 *Usage:* meta your question");
 
-                    const res = await fetch(`https://apis.prexzyvilla.site/ai/meta-ai?text=${encodeURIComponent(query)}`);
-                    if (!res.ok) return reply(`⚠️ *API error ${res.status}*`);
-
-                    const json = await res.json();
-                    const answer = json?.data || "";
-
-                    if (!answer) return reply("⚠️ *No response from Meta AI*");
-
-                    const chunks = answer.match(/[\s\S]{1,3000}/g) || [answer];
+                    const answer = await tohidGpt4(query, 'You are TOHID-AI Meta AI-style assistant. Answer naturally and accurately.');
+                    const chunks = String(answer).match(/[\s\S]{1,3000}/g) || [String(answer)];
 
                     for (let i = 0; i < chunks.length; i++) {
                         const header = i === 0 ? "🤖 *Meta AI*\n\n" : "";
@@ -17431,12 +17414,12 @@ case 'xnxx': {
                     }
                 } catch (err) {
                     console.error(err);
-                    reply("⚠️ *Meta AI unavailable*");
+                    reply("⚠️ *Meta AI unavailable* • " + (err?.message || "Try later"));
                 }
             }
                 break;
 
-            case "qwen":
+            case "qwen":            case "qwen":
             case "qwenxj": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
@@ -17450,15 +17433,8 @@ case 'xnxx': {
 
                     if (!query) return reply("🤖 *Usage:* qwen your question");
 
-                    const res = await fetch(`https://apis.prexzyvilla.site/ai/qwen?text=${encodeURIComponent(query)}`);
-                    if (!res.ok) return reply(`⚠️ *API error ${res.status}*`);
-
-                    const json = await res.json();
-                    const answer = json?.data || "";
-
-                    if (!answer) return reply("⚠️ *No response from Qwen*");
-
-                    const chunks = answer.match(/[\s\S]{1,3000}/g) || [answer];
+                    const answer = await tohidGpt4(query, 'You are TOHID-AI Qwen-style assistant. Provide clear and structured answers.');
+                    const chunks = String(answer).match(/[\s\S]{1,3000}/g) || [String(answer)];
 
                     for (let i = 0; i < chunks.length; i++) {
                         const header = i === 0 ? "🤖 *Qwen*\n\n" : "";
@@ -17466,12 +17442,12 @@ case 'xnxx': {
                     }
                 } catch (err) {
                     console.error(err);
-                    reply("⚠️ *Qwen unavailable*");
+                    reply("⚠️ *Qwen unavailable* • " + (err?.message || "Try later"));
                 }
             }
                 break;
 
-case 'facebook':
+case 'facebook':case 'facebook':
             case 'fbdl':
             case 'fb': {
     const fbUrl = args[0];
