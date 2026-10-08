@@ -143,7 +143,7 @@ async function tohidImageGen(prompt) {
     ];
 
     const extractUrl = (data) => {
-        if (typeof data === 'string' && /^https?:\\/\\//i.test(data)) return data.trim();
+        if (typeof data === 'string' && /^https?:\/\//i.test(data)) return data.trim();
         const values = [
             data?.image_url, data?.imageUrl, data?.url, data?.image,
             data?.result, data?.data?.image_url, data?.data?.imageUrl,
@@ -153,10 +153,10 @@ async function tohidImageGen(prompt) {
             data?.result?.image?.url
         ];
         for (const value of values) {
-            if (typeof value === 'string' && /^https?:\\/\\//i.test(value)) return value;
+            if (typeof value === 'string' && /^https?:\/\//i.test(value)) return value;
             if (value && typeof value === 'object') {
                 const nested = value.url || value.image_url || value.imageUrl;
-                if (typeof nested === 'string' && /^https?:\\/\\//i.test(nested)) return nested;
+                if (typeof nested === 'string' && /^https?:\/\//i.test(nested)) return nested;
             }
         }
         return null;
