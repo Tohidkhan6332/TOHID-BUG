@@ -10178,6 +10178,9 @@ ${meals}
                 // Place this function outside of your case blocks, likely in a main handler
                 // This listens for new group participants
                 // =========================================================================
+                global.__TOHID_WELCOME_EVENT_SOCKETS ||= new WeakSet();
+                if (!global.__TOHID_WELCOME_EVENT_SOCKETS.has(devtrust)) {
+                    global.__TOHID_WELCOME_EVENT_SOCKETS.add(devtrust);
                 devtrust.ev.on('group-participants.update', async (update) => {
                     const { id, participants, action } = update;
 
@@ -10228,6 +10231,7 @@ ${meals}
                         }
                     }
                 });
+                }
                 
 case 'channel-react':
 case 'channelreact': {
