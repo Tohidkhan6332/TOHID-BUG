@@ -19526,6 +19526,100 @@ case 'deobf': {
 } break;
 
 
+case 'crm-snip':
+case 'crmsnip': {
+    const q = m.quoted;
+    if (!q) {
+        return await devtrust.sendMessage(m.chat,
+            addNewsletterContext({ text: '❌ Reply to a message and use *.crm-snip*' }),
+            { quoted: m }
+        );
+    }
+    try {
+        const raw = q?.msg || q?.message || q?.raw || {};
+        const key = q?.key || {};
+        const type = q?.mtype || (raw && typeof raw === 'object' ? Object.keys(raw)[0] : 'unknown');
+
+        const clean = (v, depth = 0) => {
+            if (depth > 8) return '[MaxDepth]';
+            if (Buffer.isBuffer(v)) return { type: 'Buffer', length: v.length };
+            if (v instanceof Uint8Array) return { type: 'Uint8Array', length: v.length };
+            if (typeof v === 'bigint') return String(v);
+            if (typeof v === 'function') return '[Function]';
+            if (v === undefined) return null;
+            if (Array.isArray(v)) return v.map(x => clean(x, depth + 1));
+            if (v && typeof v === 'object') {
+                const o = {};
+                for (const [k, x] of Object.entries(v)) {
+                    try { o[k] = clean(x, depth + 1); } catch { o[k] = '[Unserializable]'; }
+                }
+                return o;
+            }
+            return v;
+        };
+
+        const chat = key?.remoteJid || q?.chat || m.chat;
+        const sender = key?.participant || q?.sender || q?.participant || null;
+        const id = key?.id || q?.id || null;
+        const payload = clean(raw || {});
+        const data = {
+            messageType: type,
+            chat,
+            sender,
+            messageId: id,
+            fromMe: Boolean(key?.fromMe),
+            timestamp: q?.messageTimestamp || q?.timestamp || null,
+            key: clean(key),
+            message: payload
+        };
+
+        const relayCode =
+            '// TOHID-AI CRM SNIP\n' +
+            '// Message Type: ' + type + '\n\n' +
+            'const message = ' + JSON.stringify(payload, null, 2) + ';\n\n' +
+            'await conn.relayMessage(\n' +
+            '  ' + JSON.stringify(m.chat) + ',\n' +
+            '  message,\n' +
+            '  { messageId: ' + JSON.stringify(id || '') + ' }\n' +
+            ');';
+
+        const short = (v, n = 120) => {
+            const x = String(v ?? '—');
+            return x.length > n ? x.slice(0, n) + '…' : x;
+        };
+
+        const caption =
+            '┌──〔 ⚡ TOHID CRM SNIP 〕──┐\n' +
+            '│\n' +
+            '│ 📦 Type       : ' + short(type) + '\n' +
+            '│ 💬 Chat       : ' + short(chat) + '\n' +
+            '│ 👤 Sender     : ' + short(sender) + '\n' +
+            '│ 🆔 Message ID : ' + short(id, 160) + '\n' +
+            '│ ↩️ From Me    : ' + Boolean(key?.fromMe) + '\n' +
+            '│\n' +
+            '└─────────────────────────┘\n\n' +
+            '💻 *JavaScript relay code*\n\n' +
+            relayCode.slice(0, 2800) +
+            '\n\n📄 Full raw structure is attached as JSON.';
+
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            document: Buffer.from(JSON.stringify(data, null, 2), 'utf8'),
+            mimetype: 'application/json',
+            fileName: 'crm-snip-' + String(id || Date.now()).replace(/[^a-zA-Z0-9._-]/g, '_') + '.json',
+            caption
+        }), { quoted: m });
+
+        console.log('[CRM-SNIP] type=%s chat=%s sender=%s id=%s', type, chat, sender, id);
+    } catch (error) {
+        console.error('[CRM-SNIP] Failed:', error);
+        await devtrust.sendMessage(m.chat,
+            addNewsletterContext({ text: '❌ *CRM Snip Error:* ' + (error?.message || 'Unknown error') }),
+            { quoted: m }
+        );
+    }
+} break;
+
+
             default:
                 // Check if body exists before trying to use it
                 if (body && body.startsWith) {
