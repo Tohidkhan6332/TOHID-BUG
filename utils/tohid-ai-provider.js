@@ -144,45 +144,111 @@ function buildProviders() {
 }
 
 async function keylessFallback(prompt, system) {
-  try {
-    const response = await axios.get('https://apis.prexzyvilla.site/ai/gpt4', {
-      params: { text: prompt },
-      timeout: TIMEOUT_MS,
-    });
-    const answer =
-      response.data?.data ??
-      response.data?.result ??
-      response.data?.response ??
-      response.data?.answer ??
-      response.data?.message ??
-      (typeof response.data === 'string' ? response.data : null);
+  const providers = [
+    {
+      name: 'prexzy-chatex',
+      run: async () => {
+        const r = await axios.get('https://prexzyapis.com/ai/chatex', {
+          params: { text: prompt },
+          timeout: TIMEOUT_MS,
+        });
+        return r.data;
+      },
+    },
+    {
+      name: 'prexzy-ai4chat',
+      run: async () => {
+        const r = await axios.get('https://prexzyapis.com/ai/ai4chat', {
+          params: { prompt },
+          timeout: TIMEOUT_MS,
+        });
+        return r.data;
+      },
+    },
+    {
+      name: 'prexzy-gemini',
+      run: async () => {
+        const r = await axios.get('https://prexzyapis.com/ai/gemini', {
+          params: { prompt },
+          timeout: TIMEOUT_MS,
+        });
+        return r.data;
+      },
+    },
+  ];
 
-    if (answer) return typeof answer === 'string' ? answer.trim() : JSON.stringify(answer);
-  } catch {}
+  const extract = (data) => {
+    if (typeof data === 'string') return data.trim();
+    const candidates = [
+      data?.response,
+      data?.answer,
+      data?.message,
+      data?.result,
+      data?.text,
+      data?.data,
+      data?.content,
+      data?.output,
+      data?.choices?.[0]?.message?.content,
+      data?.choices?.[0]?.text,
+      data?.candidates?.[0]?.content?.parts?.[0]?.text,
+      data?.data?.response,
+      data?.data?.answer,
+      data?.data?.result,
+      data?.data?.text,
+      data?.data?.content,
+    ];
+    for (const value of candidates) {
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return null;
+  };
 
-  const messages = [];
-  if (system) messages.push({ role: 'system', content: system });
-  messages.push({ role: 'user', content: prompt });
-
-  const response = await axios.post('https://text.pollinations.ai/openai', {
-    model: 'openai',
-    messages,
-  }, {
-    timeout: TIMEOUT_MS,
-    headers: { 'Content-Type': 'application/json' },
-    validateStatus: () => true,
-  });
-
-  if (response.status < 200 || response.status >= 300) {
-    throw new Error('All keyless AI providers failed');
+  let lastError = null;
+  for (const provider of providers) {
+    try {
+      const answer = extract(await provider.run());
+      if (answer) {
+        console.log('[TOHID-AI] Keyless provider:', provider.name);
+        return answer;
+      }
+      lastError = new Error(provider.name + ' returned empty response');
+    } catch (error) {
+      lastError = error;
+      console.error('[TOHID-AI] Keyless provider failed:', provider.name, error?.message || error);
+    }
   }
 
-  const answer = typeof response.data === 'string'
-    ? response.data
-    : response.data?.choices?.[0]?.message?.content;
+  // Pollinations now requires authentication for generation. Only use it
+  // when a key is explicitly configured; never assume a keyless endpoint.
+  if (process.env.POLLINATIONS_API_KEY) {
+    const messages = [];
+    if (system) messages.push({ role: 'system', content: system });
+    messages.push({ role: 'user', content: prompt });
 
-  if (!answer) throw new Error('All AI providers returned empty responses');
-  return String(answer).trim();
+    try {
+      const response = await axios.post('https://gen.pollinations.ai/v1/chat/completions', {
+        model: 'openai',
+        messages,
+      }, {
+        timeout: TIMEOUT_MS,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + process.env.POLLINATIONS_API_KEY,
+        },
+        validateStatus: () => true,
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        const answer = extract(response.data);
+        if (answer) return answer;
+      }
+    } catch (error) {
+      lastError = error;
+      console.error('[TOHID-AI] Pollinations failed:', error?.message || error);
+    }
+  }
+
+  throw lastError || new Error('All keyless AI providers failed');
 }
 
 async function tohidAI(prompt, system = '') {
