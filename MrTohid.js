@@ -15373,12 +15373,23 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                     await new Promise(resolve => setTimeout(resolve, 700));
 
+                    // Use the fork's own newsletterMsg wrapper when available.
+                    // It returns the raw query response, unlike this Baileys
+                    // build's newsletterReactMessage(), which resolves undefined
+                    // after awaiting the query. The wrapper now sends the same
+                    // native newsletter reaction stanza.
                     const reactionResult = await Promise.race([
-                        devtrust.newsletterReactMessage(
-                            newsletterJid,
-                            serverId,
-                            reaction
-                        ),
+                        typeof devtrust.newsletterMsg === 'function'
+                            ? devtrust.newsletterMsg(
+                                newsletterJid,
+                                { react: reaction, id: serverId, newsletter_id: newsletterJid },
+                                10000
+                            )
+                            : devtrust.newsletterReactMessage(
+                                newsletterJid,
+                                serverId,
+                                reaction
+                            ),
                         new Promise((_, reject) =>
                             setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 10000)
                         )
@@ -15399,13 +15410,45 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         console.log('[REACT-CH] native-result=<unserializable>');
                     }
 
-                    const reactionMeta = meta?.reaction_codes || meta?.reactionCodes || null;
-                    const viewerMeta = meta?.viewer_metadata || meta?.viewerMetadata || null;
+                    // Fetch metadata by JID as well. Invite metadata does not
+                    // expose all viewer/reaction fields on every Baileys fork.
+                    let jidMeta = null;
+                    try {
+                        if (typeof devtrust.newsletterMetadata === 'function') {
+                            jidMeta = await Promise.race([
+                                devtrust.newsletterMetadata('jid', newsletterJid),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => reject(new Error('META_TIMEOUT')), 8000)
+                                )
+                            ]);
+                        }
+                    } catch (metaErr) {
+                        console.warn(
+                            '[REACT-CH] JID metadata unavailable: ' +
+                            (metaErr?.message || metaErr)
+                        );
+                    }
+
+                    const reactionMeta =
+                        jidMeta?.reaction_codes ||
+                        jidMeta?.reactionCodes ||
+                        meta?.reaction_codes ||
+                        meta?.reactionCodes ||
+                        null;
+                    const viewerMeta =
+                        jidMeta?.viewer_metadata ||
+                        jidMeta?.viewerMetadata ||
+                        meta?.viewer_metadata ||
+                        meta?.viewerMetadata ||
+                        null;
+
                     console.log(
                         '[REACT-CH] channel-reaction-metadata codes=' +
                         JSON.stringify(reactionMeta) +
                         ' viewer=' +
-                        JSON.stringify(viewerMeta)
+                        JSON.stringify(viewerMeta) +
+                        ' jidMetaKeys=' +
+                        JSON.stringify(jidMeta ? Object.keys(jidMeta) : [])
                     );
 
                     // Verify against the newsletter API actually exposed by the
