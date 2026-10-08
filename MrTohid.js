@@ -15464,7 +15464,8 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         return;
                     }
                 }
-                            break;
+            }
+                break;
 
             case "gpt":
             case "gpt4": {
