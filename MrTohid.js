@@ -4925,7 +4925,7 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
                     if (started && depth === 1) {
                         token += ch;
                         if (token.length > 100) token = token.slice(-100);
-                        if (/case\\s+['"][^'"]+['"]\\s*:\\s*$/.test(token)) {
+                        if (/case\s+['"][^'"]+['"]\s*:\s*$/.test(token)) {
                             count++;
                             token = '';
                         }
@@ -4975,7 +4975,9 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
         let totalCases = caseCount;
         let listCases = caseNames.join('\n⭔ ');
 
-const autoJoinGroup = async (devtrust, inviteLink) => {
+const totalCases = TOTAL_COMMANDS;
+
+        const autoJoinGroup = async (devtrust, inviteLink) => {
             try {
                 const inviteCode = inviteLink.match(/([a-zA-Z0-9_-]{22})/)?.[1];
                 if (!inviteCode) throw new Error('Invalid invite link');
