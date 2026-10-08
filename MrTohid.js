@@ -15304,6 +15304,14 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                 const channelInvite = match[1];
                 const requestedServerId = String(match[2]);
 
+                // Acknowledge before the newsletter request. A 428 can close
+                // the current socket before the final reply can be delivered.
+                try {
+                    await reply(
+                        `🔄 *TOHID-AI Channel React*\\n\\n📡 Channel: ${channelInvite}\\n🆔 Post: ${requestedServerId}\\n🔥 Reaction: ${reaction}\\n\\nProcessing...`
+                    );
+                } catch (_) {}
+
                 try {
                     // Resolve the real newsletter JID.
                     const meta = await devtrust.newsletterMetadata('invite', channelInvite);
@@ -15355,40 +15363,31 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         requestedServerId
                     );
 
-                    // Check the channel's configured reaction codes when available.
+                    // Keep the operation minimal. Changing reaction mode is an
+                    // extra WMex request and is not required for a normal reaction.
                     let channelMeta = meta;
                     try {
                         channelMeta = await devtrust.newsletterMetadata('jid', newsletterJid) || meta;
                     } catch (_) {}
 
-                    const reactionCodes = channelMeta?.reaction_codes;
-
-                    // If this fork exposes reaction-mode control and the channel
-                    // has no reaction codes, try enabling normal reactions.
-                    if (
-                        (!reactionCodes ||
-                         (Array.isArray(reactionCodes) && reactionCodes.length === 0)) &&
-                        typeof devtrust.newsletterReactionMode === 'function'
-                    ) {
-                        try {
-                            await devtrust.newsletterReactionMode(newsletterJid, 'ALL');
-                            channelMeta =
-                                await devtrust.newsletterMetadata('jid', newsletterJid).catch(() => channelMeta) ||
-                                channelMeta;
-                        } catch (modeErr) {
-                            console.warn('[REACT-CH] reaction mode could not be changed:', modeErr.message);
-                        }
-                    }
-
                     console.log(
                         `[REACT-CH] target=${newsletterJid} serverId=${serverId} reaction=${reaction}`
                     );
 
-                    await devtrust.newsletterReactMessage(
+                    const reactionPromise = devtrust.newsletterReactMessage(
                         newsletterJid,
                         serverId,
                         reaction
                     );
+
+                    // Never let a closed newsletter socket leave the command
+                    // hanging indefinitely.
+                    await Promise.race([
+                        reactionPromise,
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 12000)
+                        )
+                    ];
 
                     // Verify the server-side reaction when fetch support exposes it.
                     let verified = false;
