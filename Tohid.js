@@ -4692,8 +4692,11 @@ const shutdown = async (signal) => {
   process.exit(0);
 };
 
-process.once('SIGINT', () => shutdown('SIGINT'));
-process.once('SIGTERM', () => shutdown('SIGTERM'));
+if (!global.__TOHID_TELEGRAM_SHUTDOWN_HANDLERS__) {
+  global.__TOHID_TELEGRAM_SHUTDOWN_HANDLERS__ = true;
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+}
 process.on('message', (msg) => {
   if (msg === 'shutdown') shutdown('PM2_SHUTDOWN');
 });
