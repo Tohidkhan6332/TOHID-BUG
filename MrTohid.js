@@ -15308,7 +15308,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                 // the current socket before the final reply can be delivered.
                 try {
                     await reply(
-                        `🔄 *TOHID-AI Channel React*\\n\\n📡 Channel: ${channelInvite}\\n🆔 Post: ${requestedServerId}\\n🔥 Reaction: ${reaction}\\n\\nProcessing...`
+                        `🔄 *TOHID-AI Channel React*\n\n📡 Channel: ${channelInvite}\n🆔 Post: ${requestedServerId}\n🔥 Reaction: ${reaction}\n\nProcessing...`
                     );
                 } catch (_) {}
 
