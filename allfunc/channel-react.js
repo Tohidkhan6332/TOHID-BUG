@@ -70,23 +70,38 @@ function attach(devtrust) {
       const msgId = msg.key.id;
       const emoji = pickEmoji(job.emojis);
 
+      // Newsletter/channel posts must use the native newsletter reaction API.
+      // sendMessage({ react }) is a chat-message reaction path and can leave
+      // channel reactions stuck or silently rejected on newsletter JIDs.
+      const serverId = String(
+        msg?.newsletterServerId ??
+        msg?.serverMsgId ??
+        msg?.message?.newsletterServerId ??
+        ''
+      );
+      if (!serverId) {
+        console.warn(`[CR] ⚠️ No newsletter server message ID for ${jid}`);
+        continue;
+      }
+
       setTimeout(async () => {
         try {
-          await devtrust.sendMessage(jid, {
-            react: {
-              text: emoji,
-              key: {
-                remoteJid: jid,
-                id: msgId,
-                fromMe: false
-              }
-            }
-          });
-          console.log(`[CR] ✅ Reacted ${emoji} → ${jid} | ${msgId}`);
+          if (typeof devtrust.newsletterReactMessage !== 'function') {
+            throw new Error('newsletterReactMessage() is not available in this Baileys build');
+          }
+
+          await Promise.race([
+            devtrust.newsletterReactMessage(jid, serverId, emoji),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 8000)
+            )
+          ]);
+
+          console.log(`[CR] ✅ Reacted ${emoji} → ${jid} | serverId=${serverId}`);
         } catch (e) {
           console.error(`[CR] ❌ Failed: ${e.message}`);
         }
-      }, 1000 + Math.random() * 1500);
+      }, 500);
     }
   });
 
