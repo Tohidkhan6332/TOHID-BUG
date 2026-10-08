@@ -963,6 +963,7 @@ creds: state.creds,
             tracker.lastActivity = Date.now();
             tracker.lastConnectedAt = Date.now();
             tracker.lastError = null;
+            tracker.badSessionRetries = 0;
             // Pairing mode is no longer needed once WhatsApp is registered.
             // This also makes later manual/health restarts use normal session auth.
             tracker.enablePairingCode = false;
