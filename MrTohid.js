@@ -15333,10 +15333,25 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         return reply('❌ *Could not resolve the channel JID.*');
                     }
 
-                    // The URL already contains the canonical WhatsApp newsletter
-                    // server message ID. Do not fetch the channel history here: on some
-                    // Baileys/WhatsApp sessions that WMex request can hang and leave the
-                    // command permanently on "Processing...".
+                    // Make sure this account is subscribed before reacting.
+                    // WhatsApp may accept the stanza without surfacing an error when
+                    // the newsletter session has no active subscription.
+                    if (typeof devtrust.newsletterFollow === 'function') {
+                        try {
+                            await Promise.race([
+                                devtrust.newsletterFollow(newsletterJid),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => reject(new Error('FOLLOW_TIMEOUT')), 10000)
+                                )
+                            ]);
+                        } catch (followErr) {
+                            console.warn(
+                                `[REACT-CH] follow skipped/failed: ${followErr?.message || followErr}`
+                            );
+                        }
+                    }
+
+                    // The URL contains the canonical WhatsApp newsletter server ID.
                     const serverId = String(requestedServerId);
 
                     console.log(
@@ -15356,8 +15371,6 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         ]);
                     }
 
-                    // Short delay prevents a just-completed metadata request from
-                    // racing the newsletter reaction stanza.
                     await new Promise(resolve => setTimeout(resolve, 700));
 
                     await Promise.race([
@@ -15367,9 +15380,57 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                             reaction
                         ),
                         new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 8000)
+                            setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 10000)
                         )
                     ]);
+
+                    // Do not claim success merely because the local API promise
+                    // resolved. Ask WhatsApp for the post update and verify that
+                    // the requested emoji is actually present.
+                    let verified = false;
+                    if (typeof devtrust.newsletterFetchUpdates === 'function') {
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+
+                        try {
+                            const updates = await Promise.race([
+                                devtrust.newsletterFetchUpdates(
+                                    newsletterJid,
+                                    20,
+                                    0,
+                                    0
+                                ),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => reject(new Error('VERIFY_TIMEOUT')), 8000)
+                                )
+                            ]);
+
+                            const target = Array.isArray(updates)
+                                ? updates.find(item =>
+                                    String(
+                                        item?.server_id ??
+                                        item?.serverMsgId ??
+                                        item?.serverId ??
+                                        ''
+                                    ) === serverId
+                                )
+                                : null;
+
+                            const reactions = target?.reactions;
+                            verified = Array.isArray(reactions) &&
+                                reactions.some(item =>
+                                    String(item?.code || item?.emoji || '') === reaction &&
+                                    Number(item?.count || 0) > 0
+                                );
+
+                            console.log(
+                                `[REACT-CH] verification serverId=${serverId} verified=${verified}`
+                            );
+                        } catch (verifyErr) {
+                            console.warn(
+                                `[REACT-CH] verification unavailable: ${verifyErr?.message || verifyErr}`
+                            );
+                        }
+                    }
 
                     const channelName =
                         meta?.name ||
@@ -15377,14 +15438,26 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         meta?.subject ||
                         channelInvite;
 
-                    return reply(
-                        `✅ *Reaction sent successfully!*
+                    if (verified) {
+                        return reply(
+                            `✅ *Reaction verified successfully!*
 
 • *Channel:* ${channelName}
 • *Post ID:* ${serverId}
 • *Reaction:* ${reaction}
 
-🔥 Check the channel post to confirm the reaction.`
+🔥 Reaction is confirmed on WhatsApp.`
+                        );
+                    }
+
+                    return reply(
+                        `⚠️ *Reaction request was sent, but WhatsApp did not confirm it.*
+
+• *Channel:* ${channelName}
+• *Post ID:* ${serverId}
+• *Reaction:* ${reaction}
+
+Possible cause: channel reactions are disabled/restricted, or this Baileys session was rejected by WhatsApp.`
                     );
 
                 } catch (e) {
