@@ -4551,8 +4551,15 @@ function flushDeleteSessionNow() {
         _deleteSessionCacheDirty = false;
     }
 }
-process.on('SIGINT', () => { flushDeleteSessionNow(); process.exit(0); });
-process.on('SIGTERM', () => { flushDeleteSessionNow(); process.exit(0); });
+// Register process shutdown handlers only once per Node.js process.
+// MrTohid.js can be initialized more than once during WhatsApp reconnects;
+// re-registering SIGTERM/SIGINT on every initialization causes
+// MaxListenersExceededWarning and unnecessary shutdown-handler duplication.
+if (!global.__TOHID_PROCESS_SHUTDOWN_HANDLERS__) {
+    global.__TOHID_PROCESS_SHUTDOWN_HANDLERS__ = true;
+    process.on('SIGINT', () => { flushDeleteSessionNow(); process.exit(0); });
+    process.on('SIGTERM', () => { flushDeleteSessionNow(); process.exit(0); });
+}
 
 // Helper cari original message (reusable, tidak duplikat kode)
 function findOriginalMsg(db, jid, msgId) {
@@ -4855,19 +4862,27 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
             return `${used.toFixed(1)}GB / ${totalGb.toFixed(1)}GB (${percent}%)`;
         }
 
+        // Command count is static for the lifetime of this loaded bot file.
+        // Cache it so every incoming WhatsApp notification/menu build does not
+        // re-read and regex-scan the entire 700KB source file.
+        let __TOHID_COMMAND_COUNT_CACHE = null;
+
         function countCommands() {
+            if (__TOHID_COMMAND_COUNT_CACHE !== null) {
+                return __TOHID_COMMAND_COUNT_CACHE;
+            }
+
             try {
                 const caseFileContent = fs.readFileSync(__filename).toString();
-                // Count all unique case statements
                 const commandRegex = /case ['"]([^'"]+)['"]:/g;
                 const matches = [...caseFileContent.matchAll(commandRegex)];
                 const uniqueCommands = new Set(matches.map(match => match[1]));
-                const count = uniqueCommands.size;
-                console.log(`📊 Total commands detected: ${count}`);
-                return count;
+                __TOHID_COMMAND_COUNT_CACHE = uniqueCommands.size;
+                return __TOHID_COMMAND_COUNT_CACHE;
             } catch (e) {
                 console.error('Error counting commands:', e);
-                return 4; // Your actual command count
+                __TOHID_COMMAND_COUNT_CACHE = 4;
+                return __TOHID_COMMAND_COUNT_CACHE;
             }
         }
 
