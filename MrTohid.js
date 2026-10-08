@@ -15262,53 +15262,177 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
             case 'react-ch':
             case 'reactbcnch': {
-                if (!isCreator) return reply(`🔒 *Owner only*`);
+                if (!isCreator) return reply('🔒 *Owner only*');
 
                 if (!args[0]) {
-                    return reply("📌 *Usage:* reactch https://whatsapp.com/channel/... Tohid");
+                    return reply(
+                        `📌 *Usage:* ${prefix}react-ch <channel_link/message_id> <emoji>\n\nExample:\n${prefix}react-ch https://whatsapp.com/channel/XXXXXXXX/138 🔥`
+                    );
                 }
 
-                if (!args[0].startsWith("https://whatsapp.com/channel/")) {
-                    return reply("❌ *Invalid channel link*");
+                const link = String(args[0]).trim();
+                const reaction = args.slice(1).join('').trim();
+
+                // Channel reactions must be real WhatsApp emoji codes.
+                // Do not convert normal text such as "TOHID" into fake reaction characters.
+                const hasEmoji = /[\\p{Extended_Pictographic}]/u.test(reaction);
+                if (!reaction || !hasEmoji) {
+                    return reply(
+                        '❌ *Invalid reaction.*\\n\\nUse a real emoji, for example: ❤️ 🔥 👍 😂 🎉'
+                    );
                 }
 
-                const hurufGaya = {
-                    a: '🅐', b: '🅑', c: '🅒', d: '🅓', e: '🅔', f: '🅕', g: '🅖',
-                    h: '🅗', i: '🅘', j: '🅙', k: '🅚', l: '🅛', m: '🅜', n: '🅝',
-                    o: '🅞', p: '🅟', q: '🅠', r: '🅡', s: '🅢', t: '🅣', u: '🅤',
-                    v: '🅥', w: '🅦', x: '🅧', y: '🅨', z: '🅩',
-                    '0': '⓿', '1': '➊', '2': '➋', '3': '➌', '4': '➍',
-                    '5': '➎', '6': '➏', '7': '➐', '8': '➑', '9': '➒'
-                };
+                const match = link.match(
+                    /^https?:\\/\\/whatsapp\\.com\\/channel\\/([A-Za-z0-9_-]+)\\/(\\d+)(?:[/?#].*)?$/i
+                );
 
-                const emojiInput = args.slice(1).join(' ');
-                const emoji = emojiInput.split('').map(c => {
-                    if (c === ' ') return '―';
-                    const lower = c.toLowerCase();
-                    return hurufGaya[lower] || c;
-                }).join('');
+                if (!match) {
+                    return reply(
+                        '❌ *Invalid channel post link.*\\n\\nUse:\\nhttps://whatsapp.com/channel/CHANNEL_ID/MESSAGE_ID'
+                    );
+                }
+
+                const channelInvite = match[1];
+                const requestedServerId = String(match[2]);
 
                 try {
-                    const link = args[0];
-                    const channelId = link.split('/')[4];
-                    const messageId = link.split('/')[5];
+                    // Resolve the real newsletter JID.
+                    const meta = await devtrust.newsletterMetadata('invite', channelInvite);
+                    const newsletterJid = meta?.id;
 
-                    const res = await devtrust.newsletterMetadata("invite", channelId);
-                    await devtrust.newsletterReactMessage(res.id, messageId, emoji);
+                    if (!newsletterJid || !newsletterJid.endsWith('@newsletter')) {
+                        return reply('❌ *Could not resolve the channel JID.*');
+                    }
 
-                    // WhatsApp metadata can omit "name" for newsletter channels.
-                    // Use safe fallbacks so the success message never shows "undefined".
+                    // Make sure the session is subscribed before reacting.
+                    try {
+                        await devtrust.newsletterFollow(newsletterJid);
+                    } catch (_) {
+                        // Already following is fine.
+                    }
+
+                    // Fetch recent posts and verify that the requested URL ID is
+                    // actually the server message ID WhatsApp expects.
+                    let posts = [];
+                    try {
+                        posts = await devtrust.newsletterFetchMessages(
+                            newsletterJid,
+                            50,
+                            0,
+                            0
+                        );
+                    } catch (fetchErr) {
+                        console.error('[REACT-CH] fetch error:', fetchErr);
+                    }
+
+                    const targetPost = Array.isArray(posts)
+                        ? posts.find(p =>
+                            String(
+                                p?.serverMsgId ??
+                                p?.server_id ??
+                                p?.serverId ??
+                                p?.message?.serverMsgId ??
+                                p?.message?.key?.id ??
+                                ''
+                            ) === requestedServerId
+                        )
+                        : null;
+
+                    // If the post was fetched, prefer its canonical server ID.
+                    const serverId = String(
+                        targetPost?.serverMsgId ??
+                        targetPost?.server_id ??
+                        targetPost?.serverId ??
+                        requestedServerId
+                    );
+
+                    // Check the channel's configured reaction codes when available.
+                    let channelMeta = meta;
+                    try {
+                        channelMeta = await devtrust.newsletterMetadata('jid', newsletterJid) || meta;
+                    } catch (_) {}
+
+                    const reactionCodes = channelMeta?.reaction_codes;
+
+                    // If this fork exposes reaction-mode control and the channel
+                    // has no reaction codes, try enabling normal reactions.
+                    if (
+                        (!reactionCodes ||
+                         (Array.isArray(reactionCodes) && reactionCodes.length === 0)) &&
+                        typeof devtrust.newsletterReactionMode === 'function'
+                    ) {
+                        try {
+                            await devtrust.newsletterReactionMode(newsletterJid, 'ALL');
+                            channelMeta =
+                                await devtrust.newsletterMetadata('jid', newsletterJid).catch(() => channelMeta) ||
+                                channelMeta;
+                        } catch (modeErr) {
+                            console.warn('[REACT-CH] reaction mode could not be changed:', modeErr.message);
+                        }
+                    }
+
+                    console.log(
+                        `[REACT-CH] target=${newsletterJid} serverId=${serverId} reaction=${reaction}`
+                    );
+
+                    await devtrust.newsletterReactMessage(
+                        newsletterJid,
+                        serverId,
+                        reaction
+                    );
+
+                    // Verify the server-side reaction when fetch support exposes it.
+                    let verified = false;
+                    try {
+                        const verifyPosts = await devtrust.newsletterFetchMessages(
+                            newsletterJid,
+                            50,
+                            0,
+                            0
+                        );
+
+                        const verifyPost = Array.isArray(verifyPosts)
+                            ? verifyPosts.find(p =>
+                                String(
+                                    p?.serverMsgId ??
+                                    p?.server_id ??
+                                    p?.serverId ??
+                                    ''
+                                ) === serverId
+                            )
+                            : null;
+
+                        const reactions = verifyPost?.reactions;
+                        if (Array.isArray(reactions)) {
+                            verified = reactions.some(r =>
+                                String(r?.code || r?.emoji || '') === reaction &&
+                                Number(r?.count || 0) > 0
+                            );
+                        }
+                    } catch (verifyErr) {
+                        console.warn('[REACT-CH] verification unavailable:', verifyErr.message);
+                    }
+
                     const channelName =
-                        res?.name ||
-                        res?.title ||
-                        res?.subject ||
-                        res?.newsletterMetadata?.name ||
-                        channelId;
+                        channelMeta?.name ||
+                        channelMeta?.title ||
+                        channelMeta?.subject ||
+                        channelInvite;
 
-                    reply(`✅ *Reacted* ${emoji} in channel ${channelName}`);
+                    if (verified) {
+                        return reply(
+                            `✅ *Reaction verified!*\\n\\n• *Channel:* ${channelName}\\n• *Post ID:* ${serverId}\\n• *Reaction:* ${reaction}`
+                        );
+                    }
+
+                    return reply(
+                        `⚠️ *Reaction request sent, but WhatsApp did not return the reaction in verification.*\\n\\n• *Channel:* ${channelName}\\n• *Post ID:* ${serverId}\\n• *Reaction:* ${reaction}\\n\\nCheck the channel's reaction setting or try another emoji.`
+                    );
                 } catch (e) {
-                    console.error(e);
-                    reply("❌ *Failed to send reaction*");
+                    console.error('[REACT-CH] Failed:', e);
+                    return reply(
+                        `❌ *Failed to react to channel post.*\\n\\n${e?.message || 'Unknown WhatsApp error'}`
+                    );
                 }
             }
                 break;
