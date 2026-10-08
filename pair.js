@@ -486,7 +486,7 @@ creds: state.creds,
     return msg?.message || undefined;
 },
     connectTimeoutMs: 60000,
-    defaultQueryTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 0,
     keepAliveIntervalMs: 30000,
     emitOwnEvents: true,
     fireInitQueries: true,
