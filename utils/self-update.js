@@ -330,22 +330,27 @@ function restartProcess() {
         return;
     }
 
-    // Termux/plain Node: start the replacement in the same process group.
-    // Android can kill detached orphan processes when the old process exits,
-    // which made .update report SUCCESSFUL while WhatsApp stayed offline.
+    // Termux/plain Node: detach the replacement into a new process
+    // group/session. The old implementation used detached:false, which
+    // could kill the replacement together with the old foreground process.
+    // Keep stdout/stderr in a persistent log so a failed handoff is visible.
     const restartLog = path.join(process.cwd(), 'database', 'update-restart.log');
+
     try {
         fs.mkdirSync(path.dirname(restartLog), { recursive: true });
-        fs.appendFileSync(
-            restartLog,
-            `\\n[${new Date().toISOString()}] Starting replacement process: ${entryPoint}\\n`
-        );
     } catch (_) {}
 
-    let child;
+    let logFd = null;
+
     try {
-        const logFd = fs.openSync(restartLog, 'a');
-        child = spawn(
+        logFd = fs.openSync(restartLog, 'a');
+
+        fs.writeSync(
+            logFd,
+            `\\n[${new Date().toISOString()}] Starting detached replacement: ${entryPoint}\\n`
+        );
+
+        const child = spawn(
             process.execPath,
             [entryPoint, ...process.argv.slice(2)],
             {
@@ -355,32 +360,52 @@ function restartProcess() {
                     TOHID_UPDATE_RESTART: '1',
                     TOHID_WAIT_FOR_PARENT_PID: String(process.pid)
                 },
-                detached: false,
+                detached: true,
                 stdio: ['ignore', logFd, logFd]
             }
         );
-        child.unref();
-        try { fs.closeSync(logFd); } catch (_) {}
 
-        fs.appendFileSync(
-            restartLog,
-            `[${new Date().toISOString()}] Replacement spawned, pid=${child.pid}; waiting for old process to exit.\\n`
+        child.unref();
+
+        fs.writeSync(
+            logFd,
+            `[${new Date().toISOString()}] Detached replacement spawned, pid=${child.pid}. Waiting for old process to exit.\\n`
         );
 
-        // The replacement waits for this PID to disappear before taking the
-        // runtime lock, so WhatsApp/Telegram are never started twice.
-        setTimeout(() => process.exit(0), 2000);
+        child.once('error', (error) => {
+            try {
+                fs.appendFileSync(
+                    restartLog,
+                    `[${new Date().toISOString()}] REPLACEMENT SPAWN ERROR: ${error.stack || error.message}\\n`
+                );
+            } catch (_) {}
+        });
+
+        // Closing the parent's copy is safe; the detached child owns its
+        // inherited stdout/stderr descriptors now.
+        try { fs.closeSync(logFd); } catch (_) {}
+        logFd = null;
+
+        // Give WhatsApp/Telegram a moment to finish the final update reply.
+        setTimeout(() => process.exit(0), 2500);
     } catch (error) {
+        try {
+            if (logFd !== null) fs.closeSync(logFd);
+        } catch (_) {}
+
         console.error('[UPDATE] Replacement process could not be spawned:', error);
+
         try {
             fs.appendFileSync(
                 restartLog,
                 `[${new Date().toISOString()}] SPAWN FAILED: ${error.stack || error.message}\\n`
             );
         } catch (_) {}
-        // Keep the current bot alive if the replacement could not be created.
+
+        // Do NOT terminate the current bot if the replacement was not created.
     }
 }
+
 module.exports = {
     updateFromGitHub,
     restartProcess,
