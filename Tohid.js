@@ -2275,6 +2275,12 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
           );
 
           if (health?.state === 'online') {
+            // Pairing is complete once the WhatsApp socket is online.
+            // Remove the temporary pairing lock immediately; otherwise a
+            // second /pair for the same number can incorrectly return
+            // "PAIRING ALREADY IN PROGRESS" for the full code-expiry window.
+            database.activeSessions.delete(cleanNumber);
+
             await bot.sendMessage(
               chatId,
               `┌ ❏ ◆ *⌜𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗⌟* ◆
@@ -2298,6 +2304,9 @@ bot.onText(/^\/pair(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
           }
 
           if (health?.state === 'logged_out' || health?.state === 'invalid_session') {
+            // Do not leave a stale Telegram-side pairing lock behind when
+            // WhatsApp rejects or invalidates the session.
+            database.activeSessions.delete(cleanNumber);
             return;
           }
         } catch (watchError) {
