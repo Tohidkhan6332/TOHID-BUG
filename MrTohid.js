@@ -15296,7 +15296,16 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                     const res = await devtrust.newsletterMetadata("invite", channelId);
                     await devtrust.newsletterReactMessage(res.id, messageId, emoji);
 
-                    reply(`✅ *Reacted* ${emoji} in channel ${res.name}`);
+                    // WhatsApp metadata can omit "name" for newsletter channels.
+                    // Use safe fallbacks so the success message never shows "undefined".
+                    const channelName =
+                        res?.name ||
+                        res?.title ||
+                        res?.subject ||
+                        res?.newsletterMetadata?.name ||
+                        channelId;
+
+                    reply(`✅ *Reacted* ${emoji} in channel ${channelName}`);
                 } catch (e) {
                     console.error(e);
                     reply("❌ *Failed to send reaction*");
