@@ -15275,20 +15275,20 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                 // Channel reactions must be real WhatsApp emoji codes.
                 // Do not convert normal text such as "TOHID" into fake reaction characters.
-                const hasEmoji = /[\\p{Extended_Pictographic}]/u.test(reaction);
+                const hasEmoji = /[\p{Extended_Pictographic}]/u.test(reaction);
                 if (!reaction || !hasEmoji) {
                     return reply(
-                        '❌ *Invalid reaction.*\\n\\nUse a real emoji, for example: ❤️ 🔥 👍 😂 🎉'
+                        '❌ *Invalid reaction.*\n\nUse a real emoji, for example: ❤️ 🔥 👍 😂 🎉'
                     );
                 }
 
                 const match = link.match(
-                    /^https?:\\/\\/whatsapp\\.com\\/channel\\/([A-Za-z0-9_-]+)\\/(\\d+)(?:[/?#].*)?$/i
+                    /^https?:\/\/whatsapp\.com\/channel\/([A-Za-z0-9_-]+)\\/(\\d+)(?:[/?#].*)?$/i
                 );
 
                 if (!match) {
                     return reply(
-                        '❌ *Invalid channel post link.*\\n\\nUse:\\nhttps://whatsapp.com/channel/CHANNEL_ID/MESSAGE_ID'
+                        '❌ *Invalid channel post link.*\n\nUse:\nhttps://whatsapp.com/channel/CHANNEL_ID/MESSAGE_ID'
                     );
                 }
 
@@ -15421,17 +15421,17 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                     if (verified) {
                         return reply(
-                            `✅ *Reaction verified!*\\n\\n• *Channel:* ${channelName}\\n• *Post ID:* ${serverId}\\n• *Reaction:* ${reaction}`
+                            `✅ *Reaction verified!*\n\n• *Channel:* ${channelName}\n• *Post ID:* ${serverId}\n• *Reaction:* ${reaction}`
                         );
                     }
 
                     return reply(
-                        `⚠️ *Reaction request sent, but WhatsApp did not return the reaction in verification.*\\n\\n• *Channel:* ${channelName}\\n• *Post ID:* ${serverId}\\n• *Reaction:* ${reaction}\\n\\nCheck the channel's reaction setting or try another emoji.`
+                        `⚠️ *Reaction request sent, but WhatsApp did not return the reaction in verification.*\n\n• *Channel:* ${channelName}\n• *Post ID:* ${serverId}\n• *Reaction:* ${reaction}\n\nCheck the channel's reaction setting or try another emoji.`
                     );
                 } catch (e) {
                     console.error('[REACT-CH] Failed:', e);
                     return reply(
-                        `❌ *Failed to react to channel post.*\\n\\n${e?.message || 'Unknown WhatsApp error'}`
+                        `❌ *Failed to react to channel post.*\n\n${e?.message || 'Unknown WhatsApp error'}`
                     );
                 }
             }
