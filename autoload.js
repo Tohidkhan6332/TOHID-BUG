@@ -21,10 +21,13 @@ process.on('SIGINT', () => {
   isShuttingDown = true;
 });
 
-process.on('SIGTERM', () => {
-  console.log(chalk.yellow('🛑 Received SIGTERM signal'));
-  isShuttingDown = true;
-});
+if (!global.__TOHID_AUTOLOAD_SIGTERM_HANDLER__) {
+  global.__TOHID_AUTOLOAD_SIGTERM_HANDLER__ = true;
+  process.on('SIGTERM', () => {
+    console.log(chalk.yellow('🛑 Received SIGTERM signal'));
+    isShuttingDown = true;
+  });
+}
 
 // Helper function to process a single user
 async function processUser(user, index, total) {
