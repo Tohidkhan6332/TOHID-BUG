@@ -168,6 +168,7 @@ async function tohidImageGen(prompt) {
     throw new Error('Image generation failed on all providers');
 }
 
+const { facebook: tohidFacebook, instagram: tohidInstagram, tiktok: tohidTikTok, youtube: tohidYouTube, play: tohidPlay } = require('./utils/tohid-downloaders');
 const { tohidAI } = require('./utils/tohid-ai-provider');
 
 async function tohidGpt4(prompt, system = '') {
@@ -10953,233 +10954,41 @@ break;
 case 'tt':
 case 'tiktok': {
     const ttUrl = args[0];
-
-    // 1. Validasi input URL TikTok
-    if (!ttUrl || !/tiktok\.com/.test(ttUrl)) {
-        return devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: '❌ *Invalid TikTok link*\n\nExample:\n*.tiktok* https://vt.tiktok.com/xxxxxx'
-        }), { quoted: m });
-    }
-
-    // Berikan reaksi loading
+    if (!ttUrl || !/tiktok\.com/i.test(ttUrl)) return reply('❌ *Invalid TikTok link*');
     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
     try {
-        // 2. Request ke API TikTok AlwaysCodex
-        const response = await axios.post("https://api.alwayscodex.eu.cc/api/downloader/tiktokv2", {
-            "url": ttUrl
-        });
-
-        const json = response.data;
-
-        // Validasi respons struktur data API
-        if (!json.status || !json.result) {
-            throw new Error('API returned no result atau server down.');
-        }
-
-        const result = json.result;
-        const title  = result.title || 'TikTok Video';
-        const duration = result.duration ? `${result.duration}s` : '0s';
-        
-        // Ekstraksi data statistik dari struktur JSON baru
-        const views = Number(result.play_count || 0).toLocaleString();
-        const likes = Number(result.digg_count || 0).toLocaleString();
-
-        // 3. Ekstraksi link media dari struktur objek baru
-        const noWmUrl = result.downloads?.nowm?.[0]?.url || result.play || null;
-        const wmUrl   = result.downloads?.wm?.[0]?.url || result.wmplay || null;
-        const hdUrl   = result.downloads?.hd?.[0]?.url || result.hdplay || null;
-        const mp3Url  = result.audio?.[0]?.url || result.music || null;
-
-        // Video utama diutamakan tanpa watermark / HD
-        const mainVideoUrl = noWmUrl || hdUrl || wmUrl;
-        if (!mainVideoUrl) {
-            throw new Error('Video link was not found in the API response.');
-        }
-
-        // 4. Menyusun caption informasi
-        const caption =
-            `╭─❍「 𝗧𝗜𝗞𝗧𝗢𝗞 𝗗𝗟 」\n` +
-            `│ 📝 *Title* : ${title}\n` +
-            `│ ⏱️ *Duration* : ${duration}\n` +
-            `│ 👀 *Views* : ${views}\n` +
-            `│ ❤️ *Likes* : ${likes}\n` +
-            `│ ✓ *Status* : Success\n` +
-            `╰───────────────`;
-
-        // 5. Menyusun CTA Button untuk link download alternatif
-        const buttons = [
-            {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: '🔗 Open TikTok', url: ttUrl })
-            },
-            noWmUrl && {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: '🔥 Video No WM', url: noWmUrl })
-            },
-            wmUrl && {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: '⬇️ Video With WM', url: wmUrl })
-            },
-            mp3Url && {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: '🎵 Download MP3', url: mp3Url })
-            }
-        ].filter(Boolean);
-
-        // Media header untuk pesan interaktif
-        const mediaContent = await prepareWAMessageMedia(
-            { video: { url: mainVideoUrl } }, 
-            { upload: devtrust.waUploadToServer }
-        );
-
-        // Generate pesan interaktif menggunakan proto WhatsApp
-        const msg = generateWAMessageFromContent(m.chat, {
-            viewOnceMessage: {
-                message: {
-                    interactiveMessage: proto.Message.InteractiveMessage.create({
-                        body: { text: caption },
-                        footer: { text: '© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈' },
-                        header: {
-                            hasMediaAttachment: true,
-                            ...mediaContent
-                        },
-                        nativeFlowMessage: {
-                            buttons: buttons.map(b =>
-                                proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create(b)
-                            )
-                        },
-                        contextInfo: {
-                            forwardingScore: 999,
-                            isForwarded: true,
-                            forwardedNewsletterMessageInfo: {
-                                newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: '© 👑 ＴＯＨＩＤ ＴＥＣＨ',
-                                serverMessageId: -1
-                            },
-                            externalAdReply: {
-                                title: '👑 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈',
-                                body: 'TikTok Downloader',
-                                sourceUrl: ttUrl,
-                                mediaType: 2,
-                                renderLargerThumbnail: true
-                            }
-                        }
-                    })
-                }
-            }
-        }, { quoted: m, userJid: devtrust.user.jid });
-
-        // Kirim pesan interaktif tombol (Button)
-        await devtrust.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+        const out = await tohidTikTok(ttUrl);
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            video: { url: out.media },
+            mimetype: 'video/mp4',
+            caption: '🎵 *TOHID-AI TIKTOK DOWNLOADER*\n\n🚀 Engine: ' + out.provider
+        }), { quoted: m });
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-        // 6. Mengirimkan file Video utama
-        await devtrust.sendMessage(m.chat,
-            addNewsletterContext({
-                video: { url: mainVideoUrl }, 
-                caption: `🎬 *TikTok Downloader*\n© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈`,
-                mimetype: 'video/mp4',
-                fileName: `tiktok_tohidai.mp4`
-            }),
-            { quoted: m }
-        );
-
-    } catch (err) {
-        console.error('[TIKTOK WA AXIOS ERROR]', err.message);
+    } catch (e) {
         await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await devtrust.sendMessage(m.chat,
-            addNewsletterContext({ text: `❌ *Download Failed*\n${err.message || 'Unknown error'}` }),
-            { quoted: m }
-        );
-    }
-
-    break;
-}
-
-
-
-// Helper: decode media url yang di-obfuscate API (base64 + salt 9 karakter di depan)
-// Salt "atHsRx0cc" konsisten muncul di field thumbnail & medias[].url pada response test.
-// Kalau suatu saat API ganti panjang salt-nya, fungsi ini akan throw biar ketahuan,
-// bukan diem-diem ngirim link rusak.
-function decodeMediaUrl(encoded) {
-    if (!encoded || typeof encoded !== 'string') return '';
-    const stripped = encoded.slice(9); // buang 9 karakter salt
-    const decoded = Buffer.from(stripped, 'base64').toString('utf-8');
-    const url = 'htt' + decoded; // 3 huruf depan ("htt") ikut kepotong salt, disambung manual
-    if (!url.startsWith('http')) {
-        throw new Error('The API salt format changed, so the media URL could not be decoded.');
-    }
-    return url;
-}
-
-case 'ig':
-case 'igdl':
-case 'instagram': {
-    try {
-        const igMatch = (text || '').match(/https?:\/\/(?:www\.)?instagram\.com\/\S+/i);
-        const urlInput = igMatch ? igMatch[0] : null;
-
-        if (!urlInput) {
-            return reply('✨ *Instagram Downloader*\n\n❌ *Usage:* `.ig <instagram_url>`\n📌 *Example:* `.ig https://www.instagram.com/reel/DY9FnldB4vE/`');
-        }
-
-        await reply('⏳ *Fetching media from Instagram...*');
-
-        // Request ke API AlwaysCodex All-In-One dengan custom Headers
-        const response = await axios.post(
-            "https://api.alwayscodex.eu.cc/api/downloader/allinone",
-            { "url": urlInput },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'application/json, text/plain, */*'
-                }
-            }
-        );
-
-        const data = response.data;
-
-        if (!data || !data.status || !data.result) {
-            return reply('❌ *Download Failed!* Unable to fetch media from the provided URL.');
-        }
-
-        const result = data.result;
-
-        // Cari URL video dari daftar downloads (prioritas link mp4/video)
-        const downloads = result.downloads || [];
-        const videoItem = downloads.find(d => d.url && !d.label?.toLowerCase().includes('mp3')) || downloads[0];
-
-        if (!videoItem || !videoItem.url) {
-            return reply('❌ *Download Failed!* The API could not find a video download link.');
-        }
-
-        const formattedCaption = [
-            `📸 *INSTAGRAM DOWNLOADER*`,
-            `───────────────────`,
-            `✨ *Downloaded via Bot*`
-        ].join('\n');
-
-        await devtrust.sendMessage(m.chat,
-            addNewsletterContext({
-                video: { url: videoItem.url },
-                caption: formattedCaption,
-                mimetype: 'video/mp4'
-            }),
-            { quoted: m }
-        );
-
-    } catch (err) {
-        console.error('Error in Instagram command:', err);
-        reply(`❌ *An unexpected error occurred:* ${err.response?.data?.message || err.message || 'Unknown error'}`);
+        return reply('❌ *TikTok download failed*\n' + (e.message || 'All providers unavailable'));
     }
 }
 break;
 
+case 'instagram': {
+    const igMatch = (text || '').match(/https?:\/\/(?:www\.)?instagram\.com\/\S+/i);
+    const urlInput = igMatch?.[0];
+    if (!urlInput) return reply('❌ *Usage:* .ig <instagram_url>');
+    await reply('⏳ *Fetching Instagram media...*');
+    try {
+        const out = await tohidInstagram(urlInput);
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            video: { url: out.media },
+            mimetype: 'video/mp4',
+            caption: '📸 *TOHID-AI INSTAGRAM DOWNLOADER*\n\n🚀 Engine: ' + out.provider
+        }), { quoted: m });
+    } catch (e) {
+        return reply('❌ *Instagram download failed*\n' + (e.message || 'All providers unavailable'));
+    }
+}
+break;
 
-    
 case 'sim':
 case 'simdata':
 case 'cnic': {
@@ -14618,126 +14427,49 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                 break;
 
             case 'ytmp4': {
-                if (!text) return reply(`🎬 *Usage:* ${command} <YouTube URL>`);
-                let youtubeUrl = text.trim();
-                try {
-                    const u = new URL(youtubeUrl);
-                    if (!/(^|\\.)youtube\\.com$|(^|\\.)youtu\\.be$/i.test(u.hostname)) {
-                        return reply("❌ *Please provide a valid YouTube URL*");
-                    }
+    if (!text) return reply('🎬 *Usage:* .ytmp4 <YouTube URL>');
+    const youtubeUrl = text.trim();
+    if (!/^https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(youtubeUrl)) return reply('❌ *Please provide a valid YouTube URL*');
+    await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+    try {
+        const out = await tohidYouTube(youtubeUrl);
+        const video = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            video: Buffer.from(video.data),
+            mimetype: 'video/mp4',
+            caption: '🎬 *TOHID-AI YOUTUBE DOWNLOADER*\n\n🚀 Engine: ' + out.provider
+        }), { quoted: m });
+        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+    } catch (e) {
+        await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return reply('❌ *YouTube download failed*\n' + (e.message || 'All providers unavailable'));
+    }
+}
+break;
 
-                    await devtrust.sendMessage(m.chat, { react: { text: "⏳", key: m.key } });
+case 'play':
+case 'ytmp3': {
+    if (!text) return reply('🎵 *Usage:* .play <song name>');
+    await devtrust.sendMessage(m.chat, { react: { text: '🎧', key: m.key } });
+    try {
+        const out = await tohidPlay(text);
+        const audio = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
+        const title = out.data?.title || text;
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            audio: Buffer.from(audio.data),
+            mimetype: 'audio/mpeg',
+            fileName: title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 100) + '.mp3',
+            caption: '🎵 *TOHID-AI PLAY*\n\n' + title + '\n🚀 Engine: ' + out.provider
+        }), { quoted: m });
+        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+    } catch (e) {
+        await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return reply('❌ *Music download failed*\n' + (e.message || 'All providers unavailable'));
+    }
+}
+break;
 
-                    const ytdl = require("@distube/ytdl-core");
-                    const info = await ytdl.getBasicInfo(youtubeUrl);
-                    const title = info.videoDetails?.title || "YouTube Video";
-                    const stream = ytdl(youtubeUrl, { quality: "18" });
-
-                    const chunks = [];
-                    let size = 0;
-                    await new Promise((resolve, reject) => {
-                        stream.on("data", chunk => {
-                            size += chunk.length;
-                            if (size > 45 * 1024 * 1024) {
-                                stream.destroy(new Error("Video too large"));
-                                return;
-                            }
-                            chunks.push(chunk);
-                        });
-                        stream.once("end", resolve);
-                        stream.once("error", reject);
-                    });
-
-                    await devtrust.sendMessage(
-                        m.chat,
-                        addNewsletterContext({
-                            video: Buffer.concat(chunks),
-                            mimetype: "video/mp4",
-                            fileName: `${title.replace(/[\\/:*?"<>|]/g, "_").slice(0, 100)}.mp4`,
-                            caption: `🎬 *${title}*`
-                        }),
-                        { quoted: m }
-                    );
-
-                    await devtrust.sendMessage(m.chat, { react: { text: "✅", key: m.key } });
-                } catch (error) {
-                    console.error("YTMP4 ERROR:", error);
-                    await devtrust.sendMessage(m.chat, { react: { text: "❌", key: m.key } }).catch(() => {});
-                    reply("❌ *YouTube video download failed* • Video may be restricted or too large");
-                }
-            }
-                break;
-
-            case 'play':
-            case 'ytmp3': {
-                if (!text) {
-                    return reply(`🎵 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play*\n\nUsage: ${prefix}play [song name]\nExample: ${prefix}play faded`);
-                }
-
-                try {
-                    // Use the correct socket variable (devtrust instead of bad)
-                    await devtrust.sendMessage(m.chat, { react: { text: '🎧', key: m.key } });
-
-                    reply(`⏳ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play*\n\nSearching: ${text}\nGive me a moment...`);
-
-                    const response = await axios.get(`https://apis.davidcyril.name.ng/play?query=${encodeURIComponent(text)}&apikey=`, {
-                        timeout: 60000
-                    });
-
-                    console.log('David Cyril API Response:', JSON.stringify(response.data, null, 2));
-
-                    const data = response.data;
-
-                    if (data.status && data.result?.download_url) {
-                        reply(`🎵 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play*\n\nTitle: ${data.result.title || 'N/A'}\nDuration: ${data.result.duration || 'N/A'}\nViews: ${data.result.views?.toLocaleString() || 'N/A'}\n\nDownloading audio...`);
-
-                        const audioResponse = await axios.get(data.result.download_url, {
-                            responseType: 'arraybuffer',
-                            timeout: 120000
-                        });
-
-                        const audioBuffer = Buffer.from(audioResponse.data);
-
-                        // Use devtrust here too
-                        await devtrust.sendMessage(m.chat, addNewsletterContext({
-                            audio: audioBuffer,
-                            mimetype: "audio/mpeg",
-                            fileName: `${data.result.title}.mp3`,
-                            contextInfo: {
-                                externalAdReply: {
-                                    thumbnailUrl: data.result.thumbnail,
-                                    title: data.result.title,
-                                    body: `👁️ ${data.result.views.toLocaleString()} views • ⏱️ ${data.result.duration}`,
-                                    sourceUrl: data.result.video_url,
-                                    renderLargerThumbnail: true,
-                                    mediaType: 1
-                                }
-                            }
-                        }), { quoted: m });
-
-                        // Use devtrust here too
-                        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-                    } else {
-                        throw new Error('No audio download link received from API');
-                    }
-
-                } catch (error) {
-                    console.error('Play Error:', error.response?.data || error.message);
-
-                    // Use devtrust here too
-                    await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-                    if (error.response?.status === 404) {
-                        return reply(`❌ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play*\n\nTrack "${text}" not found. Try a different song or check spelling.`);
-                    }
-
-                    return reply(`⚠️ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play*\n\nMusic service is napping. Try again in a moment.`);
-                }
-            }
-                break;
-
-            case 'bomb':
+case 'bomb':
             case 'spam': {
                 const q = m.message?.conversation ||
                     m.message?.extendedTextMessage?.text || '';
@@ -17453,139 +17185,26 @@ case 'xnxx': {
                 break;
 
 case 'facebook':
-            case 'fbdl':
-            case 'fb': {
+case 'fbdl':
+case 'fb': {
     const fbUrl = args[0];
-
-    if (!fbUrl || !/facebook\.com|fb\.watch/.test(fbUrl)) {
-        return devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: '❌ *Invalid Facebook link*\n\nExample:\n*.fb* https://fb.watch/xxx'
-        }), { quoted: m });
-    }
-
+    if (!fbUrl || !/facebook\.com|fb\.watch/i.test(fbUrl)) return reply('❌ *Invalid Facebook link*');
     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
     try {
-        const res  = await fetch(`https://api.theresav.biz.id/download/fb?url=${encodeURIComponent(fbUrl)}&apikey=${encodeURIComponent(process.env.THRESAV_API_KEY || '')}`);
-        const json = await res.json();
-
-        if (!json.status || !json.result || !json.result.links?.length) throw new Error('API returned no links');
-
-        const result    = json.result;
-        const title     = result.title || 'Facebook Video';
-        const thumbnail = result.thumbnail || '';
-
-        const hdLink   = result.links.find(l => l.type === 'mp4' && l.quality === 'HD');
-        const sdLink   = result.links.find(l => l.type === 'mp4' && l.quality === 'SD');
-        const audioLink = result.links.find(l => l.type === 'm4a');
-        const videoLink = hdLink || sdLink;
-
-        if (!videoLink) throw new Error('No MP4 link found');
-
-        const hdUrl    = hdLink?.url    || null;
-        const sdUrl    = sdLink?.url    || null;
-        const hdSize   = hdLink?.size   || '-';
-        const sdSize   = sdLink?.size   || '-';
-        const audioUrl = audioLink?.url || null;
-
-        const caption =
-            `╭─❍「 𝗙𝗔𝗖𝗘𝗕𝗢𝗢𝗞 𝗗𝗟 」\n` +
-            `│ 🎬 *Title* : ${title}\n` +
-            `│ 📦 *Quality* : ${hdUrl && sdUrl ? 'HD & SD 🔥' : hdUrl ? 'HD Only' : 'SD Only'}\n` +
-            `│ 🔥 *HD Size* : ${hdSize}\n` +
-            `│ 💾 *SD Size* : ${sdSize}\n` +
-            `│ ✓ *Status* : Success\n` +
-            `╰───────────────`;
-
-        const buttons = [
-            {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: '🔗 Open Facebook', url: fbUrl })
-            },
-            hdUrl && {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: `⬇️ Download HD (${hdSize})`, url: hdUrl })
-            },
-            sdUrl && {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: `⬇️ Download SD (${sdSize})`, url: sdUrl })
-            },
-            audioUrl && {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({ display_text: '🎵 Download Audio (M4A)', url: audioUrl })
-            }
-        ].filter(Boolean);
-
-        const mediaContent = thumbnail
-            ? await prepareWAMessageMedia({ image: { url: thumbnail } }, { upload: devtrust.waUploadToServer })
-            : await prepareWAMessageMedia({ video: { url: videoLink.url } }, { upload: devtrust.waUploadToServer });
-
-        const msg = generateWAMessageFromContent(m.chat, {
-            viewOnceMessage: {
-                message: {
-                    interactiveMessage: proto.Message.InteractiveMessage.create({
-                        body: { text: caption },
-                        footer: { text: '© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈' },
-                        header: {
-                            hasMediaAttachment: true,
-                            ...mediaContent
-                        },
-                        nativeFlowMessage: {
-                            buttons: buttons.map(b =>
-                                proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create(b)
-                            )
-                        },
-                        contextInfo: {
-                            forwardingScore: 999,
-                            isForwarded: true,
-                            forwardedNewsletterMessageInfo: {
-                                newsletterJid: '120363207624903731@newsletter',
-                                newsletterName: 'ＴＯＨＩＤ ＴＥＣＨ',
-                                serverMessageId: -1
-                            },
-                            externalAdReply: {
-                                title: '𝐓𝐎𝐇𝐈𝐃 𝐀𝐈',
-                                body: 'Facebook Downloader',
-                                thumbnailUrl: thumbnail || '',
-                                sourceUrl: fbUrl,
-                                mediaType: 1,
-                                renderLargerThumbnail: true
-                            }
-                        }
-                    })
-                }
-            }
-        }, { quoted: m, userJid: devtrust.user.jid });
-
-        await devtrust.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+        const out = await tohidFacebook(fbUrl);
+        const video = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            video: Buffer.from(video.data),
+            mimetype: 'video/mp4',
+            caption: '📘 *TOHID-AI FACEBOOK DOWNLOADER*\n\n🚀 Engine: ' + out.provider
+        }), { quoted: m });
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-        const videoFetch  = await fetch(videoLink.url);
-        if (!videoFetch.ok) throw new Error('Video fetch failed');
-        const videoBuffer = Buffer.from(await videoFetch.arrayBuffer());
-
-        await devtrust.sendMessage(m.chat,
-            addNewsletterContext({
-                video: videoBuffer,
-                caption: `🎬 *${title}*\n© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈`,
-                mimetype: 'video/mp4',
-                fileName: `facebook_tohidai.mp4`
-            }),
-            { quoted: m }
-        );
-
-    } catch (err) {
-        console.error('[FB DL]', err);
+    } catch (e) {
         await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await devtrust.sendMessage(m.chat,
-            addNewsletterContext({ text: `❌ *Download Failed*\n${err.message || 'Unknown error'}` }),
-            { quoted: m }
-        );
+        return reply('❌ *Facebook download failed*\n' + (e.message || 'All providers unavailable'));
     }
-
-    break;
 }
-
+break;
 
 // ======================[ ANTI-DELETE COMMAND ]======================
 
