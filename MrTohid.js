@@ -15377,6 +15377,18 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                     // Use the standard reaction transport first. This fork's
                     // newsletterReactMessage() can close the socket with 428,
                     // while sendMessage({ react }) uses the normal message path.
+                    // Wait for the socket when this Baileys fork exposes
+                    // waitForSocketOpen(). This prevents a reaction request from
+                    // starting while the WebSocket is still reconnecting.
+                    if (typeof devtrust.waitForSocketOpen === 'function') {
+                        await Promise.race([
+                            devtrust.waitForSocketOpen(),
+                            new Promise((_, reject) =>
+                                setTimeout(() => reject(new Error('SOCKET_OPEN_TIMEOUT')), 8000)
+                            )
+                        ]);
+                    }
+
                     const reactionPromise = devtrust.sendMessage(newsletterJid, {
                         react: {
                             text: reaction,
@@ -15388,12 +15400,12 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         }
                     });
 
-                    // Never let a closed newsletter socket leave the command
-                    // hanging indefinitely.
+                    // Do not leave the user stuck on "Processing..." if the
+                    // newsletter transport is unsupported/hung in this fork.
                     await Promise.race([
                         reactionPromise,
                         new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 12000)
+                            setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 8000)
                         )
                     ]);
 
