@@ -4905,23 +4905,39 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
         // the message-processing scope and would otherwise be recreated for
         // every incoming WhatsApp event.
         function countCommands() {
-            if (Number.isInteger(global.__TOHID_COMMAND_COUNT_CACHE)) {
-                return global.__TOHID_COMMAND_COUNT_CACHE;
-            }
-
+            if (Number.isInteger(global.__TOHID_COMMAND_COUNT_CACHE)) return global.__TOHID_COMMAND_COUNT_CACHE;
             try {
-                const caseFileContent = fs.readFileSync(__filename, 'utf8');
-                const commandRegex = /case ['"]([^'"]+)['"]:/g;
-                const matches = [...caseFileContent.matchAll(commandRegex)];
-                global.__TOHID_COMMAND_COUNT_CACHE =
-                    new Set(matches.map(match => match[1])).size;
+                const source = fs.readFileSync(__filename, 'utf8');
+                const start = source.indexOf('switch (command)');
+                if (start < 0) return 0;
+                let depth = 0, started = false, quote = null, escaped = false, count = 0, token = '';
+                for (let i = start; i < source.length; i++) {
+                    const ch = source[i];
+                    if (quote) {
+                        if (escaped) escaped = false;
+                        else if (ch === '\\') escaped = true;
+                        else if (ch === quote) quote = null;
+                        continue;
+                    }
+                    if (ch === "'" || ch === '"' || ch === '`') { quote = ch; continue; }
+                    if (ch === '{') { depth++; started = true; continue; }
+                    if (ch === '}') { depth--; if (started && depth === 0) break; continue; }
+                    if (started && depth === 1) {
+                        token += ch;
+                        if (token.length > 100) token = token.slice(-100);
+                        if (/case\\s+['"][^'"]+['"]\\s*:\\s*$/.test(token)) {
+                            count++;
+                            token = '';
+                        }
+                    }
+                }
+                global.__TOHID_COMMAND_COUNT_CACHE = count;
             } catch (e) {
+                console.error('[COMMAND COUNT]', e.message);
                 global.__TOHID_COMMAND_COUNT_CACHE = 0;
             }
-
             return global.__TOHID_COMMAND_COUNT_CACHE;
         }
-
         function getMoodEmoji() {
             const hour = getLagosTime().getHours();
             if (hour < 12) return '🌅';
@@ -14501,63 +14517,39 @@ case 'bomb':
             
 
             case 'play2': {
-                if (!text) {
-                    return reply(`🎵 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play2*\n\nUsage: ${prefix}play2 [song name]\nExample: ${prefix}play2 faded`);
-                }
-
+                if (!text) return reply(`🎵 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 Play2*\\n\\nUsage: ${prefix}play2 [song name]\\nExample: ${prefix}play2 faded`);
                 try {
                     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
-                    reply(`🔍 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈Play2*\n\nSearching: ${text}`);
-
-                    const response = await axios.get(`https://apis.davidcyril.name.ng/play?query=${encodeURIComponent(text)}&apikey=`, {
-                        timeout: 30000
+                    const result = await tohidPlay(text);
+                    if (!result?.media) throw new Error('No music download URL received');
+                    const meta = result?.data || {};
+                    const title = meta?.title || meta?.name || text;
+                    const thumbnail = meta?.thumbnail || meta?.thumb || meta?.image;
+                    if (thumbnail) {
+                        await devtrust.sendMessage(m.chat, addNewsletterContext({
+                            image: { url: thumbnail },
+                            caption: `🎵 *${title}*\\n🤖 Provider: ${result.provider || 'TOHID-AI'}`
+                        }), { quoted: m }).catch(() => {});
+                    }
+                    const audioResponse = await axios.get(result.media, {
+                        responseType: 'arraybuffer',
+                        timeout: 120000,
+                        maxContentLength: 50 * 1024 * 1024,
+                        maxBodyLength: 50 * 1024 * 1024
                     });
-
-                    const data = response.data;
-
-                    if (data.status && data.result?.download_url) {
-                        // Send thumbnail first
-                        await devtrust.sendMessage(m.chat,
-                            addNewsletterContext({
-                                image: { url: data.result.thumbnail },
-                                caption: `🎵 *${data.result.title}*\n⏱️ ${data.result.duration} • 👁️ ${data.result.views?.toLocaleString() || 'N/A'}`
-                            }),
-                            { quoted: m }
-                        );
-
-                        // Download and send audio
-                        const audioResponse = await axios.get(data.result.download_url, {
-                            responseType: 'arraybuffer',
-                            timeout: 120000
-                        });
-
-                        const audioBuffer = Buffer.from(audioResponse.data);
-
-                        await devtrust.sendMessage(m.chat,
-                            addNewsletterContext({
-                                audio: audioBuffer,
-                                mimetype: 'audio/mpeg',
-                                fileName: `${data.result.title}.mp3`
-                            }),
-                            { quoted: m }
-                        );
-
-                        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-                    } else {
-                        throw new Error('No download link received');
-                    }
-
+                    const audioBuffer = Buffer.from(audioResponse.data || []);
+                    if (audioBuffer.length < 1024) throw new Error('Downloaded audio is empty');
+                    const safeTitle = String(title).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 100);
+                    await devtrust.sendMessage(m.chat, addNewsletterContext({
+                        audio: audioBuffer,
+                        mimetype: 'audio/mpeg',
+                        fileName: safeTitle + '.mp3'
+                    }), { quoted: m });
+                    await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
                 } catch (error) {
-                    console.error('Play2 Error:', error.message);
-                    await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-                    if (error.response?.status === 404) {
-                        return reply(`❌ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play2*\n\nTrack "${text}" not found. Try a different song.`);
-                    }
-
-                    reply(`⚠️ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Play2*\n\nMusic service is busy. Try again in a moment.`);
+                    console.error('[TOHID-AI PLAY2]', error.stack || error.message);
+                    await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => {});
+                    return reply('⚠️ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 Play2*\\n\\nMusic service is currently unavailable. Try again in a moment.');
                 }
             }
                 break;
