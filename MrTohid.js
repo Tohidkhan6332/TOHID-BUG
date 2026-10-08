@@ -4881,7 +4881,6 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
             }
 
             return global.__TOHID_COMMAND_COUNT_CACHE;
-            }
         }
 
         function getMoodEmoji() {
