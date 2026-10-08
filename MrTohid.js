@@ -15372,20 +15372,21 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                     ]);
 
                     const channelName =
-                        channelMeta?.name ||
-                        channelMeta?.title ||
-                        channelMeta?.subject ||
+                        meta?.name ||
+                        meta?.title ||
+                        meta?.subject ||
                         channelInvite;
 
-                    if (verified) {
-                        return reply(
-                            `✅ *Reaction verified!*\n\n• *Channel:* ${channelName}\n• *Post ID:* ${serverId}\n• *Reaction:* ${reaction}`
-                        );
-                    }
-
                     return reply(
-                        `⚠️ *Reaction request sent, but WhatsApp did not return the reaction in verification.*\n\n• *Channel:* ${channelName}\n• *Post ID:* ${serverId}\n• *Reaction:* ${reaction}\n\nCheck the channel's reaction setting or try another emoji.`
+                        `✅ *Reaction sent successfully!*
+
+• *Channel:* ${channelName}
+• *Post ID:* ${serverId}
+• *Reaction:* ${reaction}
+
+🔥 Check the channel post to confirm the reaction.`
                     );
+
                 } catch (e) {
                     const statusCode =
                         e?.output?.statusCode ||
