@@ -15810,8 +15810,6 @@ Possible cause: channel reactions are disabled/restricted, or this Baileys sessi
             }
                 break;
 
-            case 'mode':                break;
-
             case 'mode': {
                 reply(`🔹 *Mode:* ${devtrust.public ? 'Public' : 'Private'}`);
             }
@@ -17142,7 +17140,7 @@ case 'xnxx': {
             }
                 break;
 
-            // ============ MOVIE COMMANDS ============            // ============ MOVIE COMMANDS ============
+            // ============ MOVIE COMMANDS ============
             case 'movie2': {
                 if (!text) return reply(`🎬 *Usage:* ${prefix + command} movie name`);
 
@@ -17315,7 +17313,7 @@ case 'xnxx': {
                 break;
             }
 
-            case "grok":            case "grok":
+            case "grok":
             case "grovnnk-ai": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
@@ -17419,7 +17417,7 @@ case 'xnxx': {
             }
                 break;
 
-            case "qwen":            case "qwen":
+            case "qwen":
             case "qwenxj": {
                 const chatId = m.key.remoteJid;
                 let query = args.join(" ").trim();
@@ -17447,7 +17445,7 @@ case 'xnxx': {
             }
                 break;
 
-case 'facebook':case 'facebook':
+case 'facebook':
             case 'fbdl':
             case 'fb': {
     const fbUrl = args[0];
