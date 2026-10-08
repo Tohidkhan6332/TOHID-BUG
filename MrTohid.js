@@ -15384,38 +15384,49 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         )
                     ]);
 
-                    // Do not claim success merely because the local API promise
-                    // resolved. Ask WhatsApp for the post update and verify that
-                    // the requested emoji is actually present.
+                    // Verify against the newsletter API actually exposed by the
+                    // installed @pasqua-baileys/baileys build. This fork exposes
+                    // newsletterFetchMessages(), not newsletterFetchUpdates().
                     let verified = false;
-                    if (typeof devtrust.newsletterFetchUpdates === 'function') {
-                        await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    if (typeof devtrust.newsletterFetchMessages === 'function') {
+                        await new Promise(resolve => setTimeout(resolve, 1200));
 
                         try {
-                            const updates = await Promise.race([
-                                devtrust.newsletterFetchUpdates(
+                            const messages = await Promise.race([
+                                devtrust.newsletterFetchMessages(
+                                    'jid',
                                     newsletterJid,
-                                    20,
+                                    50,
                                     0,
                                     0
                                 ),
                                 new Promise((_, reject) =>
-                                    setTimeout(() => reject(new Error('VERIFY_TIMEOUT')), 8000)
+                                    setTimeout(() => reject(new Error('VERIFY_TIMEOUT')), 10000)
                                 )
                             ]);
 
-                            const target = Array.isArray(updates)
-                                ? updates.find(item =>
-                                    String(
-                                        item?.server_id ??
-                                        item?.serverMsgId ??
-                                        item?.serverId ??
-                                        ''
-                                    ) === serverId
-                                )
-                                : null;
+                            const list = Array.isArray(messages)
+                                ? messages
+                                : (Array.isArray(messages?.messages)
+                                    ? messages.messages
+                                    : []);
 
-                            const reactions = target?.reactions;
+                            const target = list.find(item =>
+                                String(
+                                    item?.server_id ??
+                                    item?.serverMsgId ??
+                                    item?.serverId ??
+                                    item?.message?.server_id ??
+                                    ''
+                                ) === serverId
+                            );
+
+                            const reactions =
+                                target?.reactions ||
+                                target?.message?.reactions ||
+                                [];
+
                             verified = Array.isArray(reactions) &&
                                 reactions.some(item =>
                                     String(item?.code || item?.emoji || '') === reaction &&
@@ -15423,13 +15434,17 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                                 );
 
                             console.log(
-                                `[REACT-CH] verification serverId=${serverId} verified=${verified}`
+                                `[REACT-CH] verification source=messages serverId=${serverId} verified=${verified} messages=${list.length}`
                             );
                         } catch (verifyErr) {
                             console.warn(
-                                `[REACT-CH] verification unavailable: ${verifyErr?.message || verifyErr}`
+                                `[REACT-CH] message verification unavailable: ${verifyErr?.message || verifyErr}`
                             );
                         }
+                    } else {
+                        console.warn(
+                            '[REACT-CH] newsletterFetchMessages() is not available in this Baileys build'
+                        );
                     }
 
                     const channelName =
