@@ -15454,6 +15454,129 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                     // newsletter builds resolve the query promise even when the
                     // server returns an error node, so promise resolution alone is
                     // not proof that the reaction was accepted.
+
+                    // PouCode exposes newsletterFetchUpdates(), which is a better
+                    // confirmation source for reaction state than fetching/decrypting
+                    // the whole post. Check the target post immediately after sending.
+                    let reactionConfirmed = false;
+                    try {
+                        if (typeof devtrust.newsletterFetchUpdates === 'function') {
+                            await new Promise(resolve => setTimeout(resolve, 900));
+                            const afterId = Math.max(0, Number(serverId) - 1);
+                            const updates = await Promise.race([
+                                devtrust.newsletterFetchUpdates(
+                                    newsletterJid,
+                                    50,
+                                    afterId,
+                                    0
+                                ),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => reject(new Error('REACTION_UPDATE_TIMEOUT')), 8000)
+                                )
+                            ]);
+                            const updateList = Array.isArray(updates)
+                                ? updates
+                                : (Array.isArray(updates?.messages) ? updates.messages : []);
+
+                            const targetUpdate = updateList.find(item =>
+                                String(item?.server_id ?? item?.serverMsgId ?? item?.serverId ?? '') === serverId
+                            );
+
+                            const updateReactions = targetUpdate?.reactions || [];
+                            reactionConfirmed = updateReactions.some(
+                                r => String(r?.code || '') === reaction
+                            );
+
+                            console.log(
+                                '[REACT-CH] update-verification serverId=' +
+                                serverId +
+                                ' confirmed=' +
+                                reactionConfirmed +
+                                ' updates=' +
+                                updateList.length +
+                                ' reactions=' +
+                                JSON.stringify(updateReactions)
+                            );
+                        }
+                    } catch (updateErr) {
+                        console.warn(
+                            '[REACT-CH] update verification unavailable: ' +
+                            (updateErr?.message || updateErr)
+                        );
+                    }
+
+                    // If the first reaction is not reflected and this account has
+                    // channel-admin rights, enable ALL reactions and retry once.
+                    // Non-admin accounts simply skip this step.
+                    if (!reactionConfirmed && typeof devtrust.newsletterReactionMode === 'function') {
+                        try {
+                            await Promise.race([
+                                devtrust.newsletterReactionMode(newsletterJid, 'ALL'),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => reject(new Error('REACTION_MODE_TIMEOUT')), 8000)
+                                )
+                            ]);
+
+                            console.log(
+                                '[REACT-CH] reaction-mode=ALL applied; retrying reaction'
+                            );
+
+                            await new Promise(resolve => setTimeout(resolve, 700));
+
+                            await Promise.race([
+                                devtrust.newsletterReactMessage(
+                                    newsletterJid,
+                                    serverId,
+                                    reaction
+                                ),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => reject(new Error('REACTION_RETRY_TIMEOUT')), 10000)
+                                )
+                            ]);
+
+                            await new Promise(resolve => setTimeout(resolve, 900));
+
+                            if (typeof devtrust.newsletterFetchUpdates === 'function') {
+                                const afterId = Math.max(0, Number(serverId) - 1);
+                                const retryUpdates = await Promise.race([
+                                    devtrust.newsletterFetchUpdates(
+                                        newsletterJid,
+                                        50,
+                                        afterId,
+                                        0
+                                    ),
+                                    new Promise((_, reject) =>
+                                        setTimeout(() => reject(new Error('REACTION_RETRY_VERIFY_TIMEOUT')), 8000)
+                                    )
+                                ]);
+
+                                const retryList = Array.isArray(retryUpdates)
+                                    ? retryUpdates
+                                    : (Array.isArray(retryUpdates?.messages) ? retryUpdates.messages : []);
+                                const retryTarget = retryList.find(item =>
+                                    String(item?.server_id ?? item?.serverMsgId ?? item?.serverId ?? '') === serverId
+                                );
+                                const retryReactions = retryTarget?.reactions || [];
+                                reactionConfirmed = retryReactions.some(
+                                    r => String(r?.code || '') === reaction
+                                );
+
+                                console.log(
+                                    '[REACT-CH] retry-verification serverId=' +
+                                    serverId +
+                                    ' confirmed=' +
+                                    reactionConfirmed +
+                                    ' reactions=' +
+                                    JSON.stringify(retryReactions)
+                                );
+                            }
+                        } catch (retryErr) {
+                            console.warn(
+                                '[REACT-CH] reaction retry skipped/failed: ' +
+                                (retryErr?.message || retryErr)
+                            );
+                        }
+                    }
                     try {
                         const resultText = JSON.stringify(reactionResult, (key, value) =>
                             Buffer.isBuffer(value) ? '<Buffer ' + value.length + '>' : value
