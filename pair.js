@@ -603,7 +603,8 @@ creds: state.creds,
                     to: key,
                     type: 'reaction',
                     'server_id': id,
-                    id: generateMessageTag()
+                    id: generateMessageTag(),
+                    edit: '7'
                 },
                 content: [{
                     tag: 'reaction',
