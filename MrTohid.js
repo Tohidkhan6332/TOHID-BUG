@@ -119,6 +119,55 @@ const axios = require('axios');
  * Uses the same Prexzyvilla AI service already used by the newer AI commands.
  * Normalizes common response shapes so commands never print [object Object].
  */
+async function tohidImageGen(prompt) {
+    const cleanPrompt = String(prompt || '').trim();
+    if (!cleanPrompt) throw new Error('Image prompt is empty');
+
+    const providers = [
+        { url: 'https://apis.prexzyvilla.site/ai/dalle', model: 'DALL·E 3 XL' },
+        { url: 'https://apis.prexzyvilla.site/ai/realistic', model: 'Realistic' }
+    ];
+
+    for (const provider of providers) {
+        try {
+            const response = await axios.get(provider.url, {
+                params: { prompt: cleanPrompt },
+                timeout: 60000
+            });
+            const data = response?.data;
+            if (!data || data.status !== true) continue;
+
+            const arr = data.image_url || data.images || data.result;
+            let url = null;
+
+            if (Array.isArray(arr) && arr.length) {
+                const first = arr[0];
+                url = first?.image?.url || first?.url ||
+                    (typeof first === 'string' ? first : null);
+            } else if (typeof data.result === 'string') {
+                url = data.result;
+            } else if (typeof data.url === 'string') {
+                url = data.url;
+            }
+
+            if (!url) continue;
+
+            const image = await axios.get(url, {
+                responseType: 'arraybuffer',
+                timeout: 60000
+            });
+            const buffer = Buffer.from(image.data);
+            if (buffer.length >= 1024) {
+                return { buffer, model: provider.model };
+            }
+        } catch (error) {
+            console.error('[AI:IMAGE]', provider.model, error?.message || error);
+        }
+    }
+
+    throw new Error('Image generation failed on all providers');
+}
+
 async function tohidGpt4(prompt, system = '') {
     const textPrompt = String(prompt || '').trim();
     if (!textPrompt) throw new Error('Empty AI prompt');
@@ -10195,18 +10244,17 @@ ${meals}
                 if (!text) return reply(`🖼️ *Usage:* ${prefix + command} a cat wearing sunglasses`);
 
                 try {
-                    let url = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}`;
-
+                    const out = await tohidImageGen(text);
                     await devtrust.sendMessage(m.chat,
                         addNewsletterContext({
-                            image: { url },
-                            caption: `🎨 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 AI Art*\n\nPrompt: ${text}`
+                            image: out.buffer,
+                            caption: `🎨 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 AI Art*\\n\\n🤖 Model: ${out.model}\\n📝 Prompt: ${text}`
                         }),
                         { quoted: m }
                     );
                 } catch (e) {
-                    console.error(e);
-                    reply("❌ *AI art generator failed* • Try again later");
+                    console.error('[photoai]', e);
+                    reply('❌ *AI art generator failed* • Try again later');
                 }
             }
                 break;
@@ -14857,31 +14905,32 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                 break;
 
             case 'ibsbmg': {
-                if (!q) return reply(`🎨 *Use:* img prompt,ratio\nExample: img robin,3:4`);
+                if (!q) return reply(`🎨 *Use:* img prompt,ratio\\nExample: img robin,3:4`);
 
-                let parts = q.split(',');
-                let prompt = parts[0]?.trim();
-                let ratio = parts[1]?.trim() || "1:1";
+                const parts = q.split(',');
+                const prompt = parts[0]?.trim();
+                const ratio = parts[1]?.trim() || '1:1';
+
+                if (!prompt) return reply('❌ *Image prompt is required*');
 
                 try {
-                    let apiUrl = `https://apis.prexzyvilla.site/ai/imagen?prompt=${encodeURIComponent(prompt)}&ratio=${encodeURIComponent(ratio)}`;
-                    let res = await fetch(apiUrl);
-                    let data = await res.json();
+                    // The SUKUNA image API accepts prompt directly. Ratio is
+                    // retained for command compatibility; the provider may
+                    // choose its own output dimensions.
+                    const out = await tohidImageGen(
+                        ratio === '1:1' ? prompt : `${prompt}, aspect ratio ${ratio}`
+                    );
 
-                    if (data.status && data.result) {
-                        await devtrust.sendMessage(m.chat,
-                            addNewsletterContext({
-                                image: { url: data.result },
-                                caption: `🎨 *${prompt}* (${ratio})`
-                            }),
-                            { quoted: m }
-                        );
-                    } else {
-                        reply("❌ *Failed to generate image*");
-                    }
+                    await devtrust.sendMessage(m.chat,
+                        addNewsletterContext({
+                            image: out.buffer,
+                            caption: `🎨 *${prompt}*\\n📐 Ratio: ${ratio}\\n🤖 Model: ${out.model}`
+                        }),
+                        { quoted: m }
+                    );
                 } catch (e) {
-                    console.error(e);
-                    reply("⚠️ *Error fetching from API*");
+                    console.error('[ibsbmg]', e);
+                    reply('⚠️ *Image generation failed* • Try again later');
                 }
             }
                 break;
