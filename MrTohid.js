@@ -4862,27 +4862,25 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
             return `${used.toFixed(1)}GB / ${totalGb.toFixed(1)}GB (${percent}%)`;
         }
 
-        // Command count is static for the lifetime of this loaded bot file.
-        // Cache it so every incoming WhatsApp notification/menu build does not
-        // re-read and regex-scan the entire 700KB source file.
-        let __TOHID_COMMAND_COUNT_CACHE = null;
-
+        // Command count is cached globally because this helper lives inside
+        // the message-processing scope and would otherwise be recreated for
+        // every incoming WhatsApp event.
         function countCommands() {
-            if (__TOHID_COMMAND_COUNT_CACHE !== null) {
-                return __TOHID_COMMAND_COUNT_CACHE;
+            if (Number.isInteger(global.__TOHID_COMMAND_COUNT_CACHE)) {
+                return global.__TOHID_COMMAND_COUNT_CACHE;
             }
 
             try {
-                const caseFileContent = fs.readFileSync(__filename).toString();
+                const caseFileContent = fs.readFileSync(__filename, 'utf8');
                 const commandRegex = /case ['"]([^'"]+)['"]:/g;
                 const matches = [...caseFileContent.matchAll(commandRegex)];
-                const uniqueCommands = new Set(matches.map(match => match[1]));
-                __TOHID_COMMAND_COUNT_CACHE = uniqueCommands.size;
-                return __TOHID_COMMAND_COUNT_CACHE;
+                global.__TOHID_COMMAND_COUNT_CACHE =
+                    new Set(matches.map(match => match[1])).size;
             } catch (e) {
-                console.error('Error counting commands:', e);
-                __TOHID_COMMAND_COUNT_CACHE = 4;
-                return __TOHID_COMMAND_COUNT_CACHE;
+                global.__TOHID_COMMAND_COUNT_CACHE = 0;
+            }
+
+            return global.__TOHID_COMMAND_COUNT_CACHE;
             }
         }
 
