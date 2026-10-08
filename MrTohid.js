@@ -15374,11 +15374,19 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         `[REACT-CH] target=${newsletterJid} serverId=${serverId} reaction=${reaction}`
                     );
 
-                    const reactionPromise = devtrust.newsletterReactMessage(
-                        newsletterJid,
-                        serverId,
-                        reaction
-                    );
+                    // Use the standard reaction transport first. This fork's
+                    // newsletterReactMessage() can close the socket with 428,
+                    // while sendMessage({ react }) uses the normal message path.
+                    const reactionPromise = devtrust.sendMessage(newsletterJid, {
+                        react: {
+                            text: reaction,
+                            key: {
+                                remoteJid: newsletterJid,
+                                id: serverId,
+                                fromMe: false
+                            }
+                        }
+                    });
 
                     // Never let a closed newsletter socket leave the command
                     // hanging indefinitely.
