@@ -15283,7 +15283,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                 }
 
                 const match = link.match(
-                    /^https?:\/\/whatsapp\.com\/channel\/([A-Za-z0-9_-]+)\\/(\\d+)(?:[/?#].*)?$/i
+                    /^https?:\/\/whatsapp\.com\/channel\/([A-Za-z0-9_-]+)\/(\d+)(?:[/?#].*)?$/i
                 );
 
                 if (!match) {
