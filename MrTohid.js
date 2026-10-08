@@ -168,84 +168,10 @@ async function tohidImageGen(prompt) {
     throw new Error('Image generation failed on all providers');
 }
 
+const { tohidAI } = require('./utils/tohid-ai-provider');
+
 async function tohidGpt4(prompt, system = '') {
-    const textPrompt = String(prompt || '').trim();
-    if (!textPrompt) throw new Error('Empty AI prompt');
-
-    // Primary provider: Agnes Smart AI.
-    // IMPORTANT: keep the API key in the hosting environment, never in source.
-    const key = String(process.env.AGNES_API_KEY || '').trim();
-    const model = String(process.env.AGNES_MODEL || 'agnes-2.5-flash').trim();
-
-    if (key) {
-        const messages = [];
-        if (system) messages.push({ role: 'system', content: String(system) });
-        messages.push({ role: 'user', content: textPrompt });
-
-        try {
-            const response = await axios.post(
-                'https://apihub.agnes-ai.com/v1/chat/completions',
-                {
-                    model,
-                    messages,
-                    temperature: 0.8,
-                    max_tokens: 1200
-                },
-                {
-                    timeout: 30000,
-                    headers: {
-                        Authorization: 'Bearer ' + key,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'User-Agent': 'Mozilla/5.0 TOHID-AI'
-                    },
-                    validateStatus: () => true
-                }
-            );
-
-            const data = response?.data;
-            if (response.status >= 200 && response.status < 300) {
-                const answer =
-                    data?.choices?.[0]?.message?.content ??
-                    data?.choices?.[0]?.text ??
-                    data?.response ??
-                    data?.result ??
-                    data?.data;
-
-                if (answer) {
-                    return typeof answer === 'string'
-                        ? answer.trim()
-                        : JSON.stringify(answer);
-                }
-            }
-
-            console.error(
-                '[AI] Agnes failed:',
-                data?.error?.message || data?.message || ('HTTP ' + response.status)
-            );
-        } catch (error) {
-            console.error('[AI] Agnes request failed:', error?.message || error);
-        }
-    }
-
-    // Compatibility fallback: keeps existing AI commands working if Agnes
-    // is not configured or temporarily unavailable.
-    const fallback = await axios.get(
-        `https://apis.prexzyvilla.site/ai/gpt4?text=${encodeURIComponent(textPrompt)}`,
-        { timeout: 30000 }
-    );
-
-    const data = fallback?.data;
-    const answer =
-        (typeof data === 'string' && data) ||
-        data?.data ||
-        data?.result ||
-        data?.response ||
-        data?.answer ||
-        data?.message;
-
-    if (!answer) throw new Error('No usable response from Agnes or fallback AI');
-    return typeof answer === 'string' ? answer.trim() : JSON.stringify(answer);
+    return tohidAI(prompt, system);
 }
 
 const fsx = require('fs-extra')
