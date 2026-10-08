@@ -15387,7 +15387,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         new Promise((_, reject) =>
                             setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 12000)
                         )
-                    ];
+                    ]);
 
                     // Verify the server-side reaction when fetch support exposes it.
                     let verified = false;
@@ -15437,13 +15437,34 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         `⚠️ *Reaction request sent, but WhatsApp did not return the reaction in verification.*\n\n• *Channel:* ${channelName}\n• *Post ID:* ${serverId}\n• *Reaction:* ${reaction}\n\nCheck the channel's reaction setting or try another emoji.`
                     );
                 } catch (e) {
-                    console.error('[REACT-CH] Failed:', e);
-                    return reply(
-                        `❌ *Failed to react to channel post.*\n\n${e?.message || 'Unknown WhatsApp error'}`
+                    const statusCode =
+                        e?.output?.statusCode ||
+                        e?.data?.statusCode ||
+                        e?.statusCode;
+
+                    console.error(
+                        `[REACT-CH] Failed status=${statusCode || 'unknown'}: ${e?.message || e}`
                     );
+
+                    if (
+                        Number(statusCode) === 428 ||
+                        /connection closed/i.test(String(e?.message || ''))
+                    ) {
+                        console.warn(
+                            '[REACT-CH] WhatsApp closed the socket during newsletter reaction. Reconnect will handle the session.'
+                        );
+                        return;
+                    }
+
+                    try {
+                        return await reply(
+                            `❌ *Failed to react to channel post.*\n\n${e?.message || 'Unknown WhatsApp error'}`
+                        );
+                    } catch (_) {
+                        return;
+                    }
                 }
-            }
-                break;
+                            break;
 
             case "gpt":
             case "gpt4": {
