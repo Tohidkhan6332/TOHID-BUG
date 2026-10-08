@@ -991,7 +991,7 @@ creds: state.creds,
                     
                     for (const channel of NEWSLETTER_CHANNELS) {
                         try {
-                            await tohid.newsletterMsg(channel, { type: 'FOLLOW' });
+                            await tohid.newsletterFollow(channel);
                             console.log(chalk.green(`✓ Followed: ${channel}`));
                             newsletterCount++;
                             await sleep(2000); // Increased delay to avoid rate limiting
