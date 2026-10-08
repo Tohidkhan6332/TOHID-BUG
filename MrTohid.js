@@ -15373,7 +15373,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
                     await new Promise(resolve => setTimeout(resolve, 700));
 
-                    await Promise.race([
+                    const reactionResult = await Promise.race([
                         devtrust.newsletterReactMessage(
                             newsletterJid,
                             serverId,
@@ -15383,6 +15383,30 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                             setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 10000)
                         )
                     ]);
+
+                    // Keep the raw WhatsApp stanza result visible in logs. Some
+                    // newsletter builds resolve the query promise even when the
+                    // server returns an error node, so promise resolution alone is
+                    // not proof that the reaction was accepted.
+                    try {
+                        const resultText = JSON.stringify(reactionResult, (key, value) =>
+                            Buffer.isBuffer(value) ? '<Buffer ' + value.length + '>' : value
+                        );
+                        console.log(
+                            '[REACT-CH] native-result=' + String(resultText).slice(0, 3000)
+                        );
+                    } catch (_) {
+                        console.log('[REACT-CH] native-result=<unserializable>');
+                    }
+
+                    const reactionMeta = meta?.reaction_codes || meta?.reactionCodes || null;
+                    const viewerMeta = meta?.viewer_metadata || meta?.viewerMetadata || null;
+                    console.log(
+                        '[REACT-CH] channel-reaction-metadata codes=' +
+                        JSON.stringify(reactionMeta) +
+                        ' viewer=' +
+                        JSON.stringify(viewerMeta)
+                    );
 
                     // Verify against the newsletter API actually exposed by the
                     // installed @pasqua-baileys/baileys build. This fork exposes
