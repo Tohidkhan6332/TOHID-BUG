@@ -3,9 +3,9 @@ const path = require('path');
 const https = require('https');
 const { execFile, spawn } = require('child_process');
 
-const GITHUB_OWNER = process.env.UPDATE_GITHUB_OWNER || 'Tohidkhan6332';
-const GITHUB_REPO = process.env.UPDATE_GITHUB_REPO || 'TOHID-BUG';
-const GITHUB_BRANCH = process.env.UPDATE_GITHUB_BRANCH || 'main';
+const GITHUB_OWNER = 'Tohidkhan6332';
+const GITHUB_REPO = 'TOHID-BUG';
+const GITHUB_BRANCH = 'main';
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
