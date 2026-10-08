@@ -4961,8 +4961,6 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
         let totalCases = caseCount;
         let listCases = caseNames.join('\n⭔ ');
 
-const totalCases = TOTAL_COMMANDS;
-
         const autoJoinGroup = async (devtrust, inviteLink) => {
             try {
                 const inviteCode = inviteLink.match(/([a-zA-Z0-9_-]{22})/)?.[1];
