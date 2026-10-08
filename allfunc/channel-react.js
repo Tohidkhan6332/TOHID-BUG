@@ -41,11 +41,11 @@ async function resolveChannelJid(devtrust, input) {
 }
 
 let _jobs = load();
-let _attached = false;
+const _attachedSockets = new WeakSet();
 
 // ✅ FIX: Tambah guard + retry kalau ev belum siap
 function attach(devtrust) {
-  if (_attached) return;
+  if (_attachedSockets.has(devtrust)) return;
 
   // Guard: pastikan devtrust dan ev-nya ada
   if (!devtrust || !devtrust.ev || typeof devtrust.ev.on !== 'function') {
@@ -54,7 +54,7 @@ function attach(devtrust) {
     return;
   }
 
-  _attached = true;
+  _attachedSockets.add(devtrust);
 
   devtrust.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
