@@ -15334,13 +15334,9 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         return reply('❌ *Could not resolve the channel JID.*');
                     }
 
-                    // Make sure the session is subscribed before reacting.
-                    try {
-                        await devtrust.newsletterFollow(newsletterJid);
-                    } catch (_) {
-                        // Already following is fine.
-                    }
-
+                    // Do not call newsletterFollow() here. Metadata/fetch already
+                    // proves the channel is reachable, and forcing a follow immediately
+                    // before a reaction can race the newsletter WMex transport.
                     // Fetch recent posts and verify that the requested URL ID is
                     // actually the server message ID WhatsApp expects.
                     let posts = [];
@@ -15376,12 +15372,9 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         requestedServerId
                     );
 
-                    // Keep the operation minimal. Changing reaction mode is an
-                    // extra WMex request and is not required for a normal reaction.
-                    let channelMeta = meta;
-                    try {
-                        channelMeta = await devtrust.newsletterMetadata('jid', newsletterJid) || meta;
-                    } catch (_) {}
+                    // Keep the reaction path minimal: avoid a second metadata WMex
+                    // query immediately before the reaction stanza.
+                    const channelMeta = meta;
 
                     console.log(
                         `[REACT-CH] target=${newsletterJid} serverId=${serverId} reaction=${reaction}`
@@ -15394,10 +15387,14 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         await Promise.race([
                             devtrust.waitForSocketOpen(),
                             new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error('SOCKET_OPEN_TIMEOUT')), 8000)
+                                setTimeout(() => reject(new Error('SOCKET_OPEN_TIMEOUT')), 10000)
                             )
                         ]);
                     }
+
+                    // Give the newsletter query a short quiet window before the
+                    // message stanza. This avoids racing a just-completed WMex query.
+                    await new Promise(resolve => setTimeout(resolve, 1200));
 
                     await Promise.race([
                         devtrust.newsletterReactMessage(
