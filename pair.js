@@ -904,9 +904,27 @@ creds: state.creds,
                     tracker.disconnected = true;
                 }
             } else if (reason === DisconnectReason.badSession) {
-                console.log(chalk.red(`❌ Invalid Session for ${tohidDevNumber}`));
-                forceCleanupSession(tohidDevNumber);
-                tracker.disconnected = true;
+                // A 500/badSession close can be transient. Do not immediately
+                // delete valid auth state: channel/newsletter operations can
+                // race with a socket close and otherwise destroy a good session.
+                tracker.badSessionRetries = Number(tracker.badSessionRetries || 0);
+
+                const isValid = await validateSession(tohidDevNumber);
+                if (isValid && tracker.badSessionRetries < 2) {
+                    tracker.badSessionRetries++;
+                    tracker.disconnected = false;
+                    console.log(
+                        chalk.yellow(
+                            `⚠️ 500/badSession for ${tohidDevNumber}; preserving auth and reconnecting (${tracker.badSessionRetries}/2)...`
+                        )
+                    );
+                    await sleep(3000);
+                    await requeueCurrentSession();
+                } else {
+                    console.log(chalk.red(`❌ Invalid Session for ${tohidDevNumber} after retry limit`));
+                    forceCleanupSession(tohidDevNumber);
+                    tracker.disconnected = true;
+                }
             } else if (reason === DisconnectReason.loggedOut) {
                 console.log(chalk.bgRed(`❌ ${tohidDevNumber} logged out`));
                 forceCleanupSession(tohidDevNumber);
