@@ -15334,55 +15334,20 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         return reply('❌ *Could not resolve the channel JID.*');
                     }
 
-                    // Do not call newsletterFollow() here. Metadata/fetch already
-                    // proves the channel is reachable, and forcing a follow immediately
-                    // before a reaction can race the newsletter WMex transport.
-                    // Fetch recent posts and verify that the requested URL ID is
-                    // actually the server message ID WhatsApp expects.
-                    let posts = [];
-                    try {
-                        posts = await devtrust.newsletterFetchMessages(
-                            newsletterJid,
-                            50,
-                            0,
-                            0
-                        );
-                    } catch (fetchErr) {
-                        console.error('[REACT-CH] fetch error:', fetchErr);
-                    }
-
-                    const targetPost = Array.isArray(posts)
-                        ? posts.find(p =>
-                            String(
-                                p?.serverMsgId ??
-                                p?.server_id ??
-                                p?.serverId ??
-                                p?.message?.serverMsgId ??
-                                p?.message?.key?.id ??
-                                ''
-                            ) === requestedServerId
-                        )
-                        : null;
-
-                    // If the post was fetched, prefer its canonical server ID.
-                    const serverId = String(
-                        targetPost?.serverMsgId ??
-                        targetPost?.server_id ??
-                        targetPost?.serverId ??
-                        requestedServerId
-                    );
-
-                    // Keep the reaction path minimal: avoid a second metadata WMex
-                    // query immediately before the reaction stanza.
-                    const channelMeta = meta;
+                    // The URL already contains the canonical WhatsApp newsletter
+                    // server message ID. Do not fetch the channel history here: on some
+                    // Baileys/WhatsApp sessions that WMex request can hang and leave the
+                    // command permanently on "Processing...".
+                    const serverId = String(requestedServerId);
 
                     console.log(
                         `[REACT-CH] target=${newsletterJid} serverId=${serverId} reaction=${reaction}`
                     );
 
-                    // Use the newsletter-native reaction API. The standard
-                    // sendMessage({ react }) path is not a reliable newsletter
-                    // transport in all Baileys forks.
+                    if (typeof devtrust.newsletterReactMessage !== 'function') {
+                        throw new Error('newsletterReactMessage() is not available in this Baileys build');
+                    }
+
                     if (typeof devtrust.waitForSocketOpen === 'function') {
                         await Promise.race([
                             devtrust.waitForSocketOpen(),
@@ -15392,9 +15357,9 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                         ]);
                     }
 
-                    // Give the newsletter query a short quiet window before the
-                    // message stanza. This avoids racing a just-completed WMex query.
-                    await new Promise(resolve => setTimeout(resolve, 1200));
+                    // Short delay prevents a just-completed metadata request from
+                    // racing the newsletter reaction stanza.
+                    await new Promise(resolve => setTimeout(resolve, 700));
 
                     await Promise.race([
                         devtrust.newsletterReactMessage(
@@ -15406,38 +15371,6 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
                             setTimeout(() => reject(new Error('REACTION_TIMEOUT')), 8000)
                         )
                     ]);
-
-                    // Verify the server-side reaction when fetch support exposes it.
-                    let verified = false;
-                    try {
-                        const verifyPosts = await devtrust.newsletterFetchMessages(
-                            newsletterJid,
-                            50,
-                            0,
-                            0
-                        );
-
-                        const verifyPost = Array.isArray(verifyPosts)
-                            ? verifyPosts.find(p =>
-                                String(
-                                    p?.serverMsgId ??
-                                    p?.server_id ??
-                                    p?.serverId ??
-                                    ''
-                                ) === serverId
-                            )
-                            : null;
-
-                        const reactions = verifyPost?.reactions;
-                        if (Array.isArray(reactions)) {
-                            verified = reactions.some(r =>
-                                String(r?.code || r?.emoji || '') === reaction &&
-                                Number(r?.count || 0) > 0
-                            );
-                        }
-                    } catch (verifyErr) {
-                        console.warn('[REACT-CH] verification unavailable:', verifyErr.message);
-                    }
 
                     const channelName =
                         channelMeta?.name ||
