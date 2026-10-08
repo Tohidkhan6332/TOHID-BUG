@@ -4587,7 +4587,11 @@ function isAntiDeleteActive(db, jid) {
     return session?.Aktif === 'yes';
 }
 
-devtrust.ev.on('messages.upsert', async (chatUpdate) => {
+global.__TOHID_DELETE_EVENT_SOCKETS ||= new WeakSet();
+if (!global.__TOHID_DELETE_EVENT_SOCKETS.has(devtrust)) {
+    global.__TOHID_DELETE_EVENT_SOCKETS.add(devtrust);
+
+    devtrust.ev.on('messages.upsert', async (chatUpdate) => {
     try {
         const messages = chatUpdate.messages;
         if (!messages?.length) return;
@@ -4791,7 +4795,8 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
     } catch (err) {
         console.error('❌ [messages.update] Fatal error:', err.message);
     }
-});
+    });
+}
         // ======================[ ⚠️ WARN SYSTEM HELPER ]======================
         async function handleWarn(chatId, userId, reason, mode) {
             if (!global.warns[chatId]) global.warns[chatId] = {};
