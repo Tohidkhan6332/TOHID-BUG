@@ -124,48 +124,66 @@ async function tohidImageGen(prompt) {
     if (!cleanPrompt) throw new Error('Image prompt is empty');
 
     const providers = [
-        { url: 'https://apis.prexzyvilla.site/ai/dalle', model: 'DALL·E 3 XL' },
-        { url: 'https://apis.prexzyvilla.site/ai/realistic', model: 'Realistic' }
-    ];
-
-    for (const provider of providers) {
-        try {
-            const response = await axios.get(provider.url, {
+        {
+            name: 'prexzy-genimage',
+            model: 'Prexzy GenImage',
+            run: async () => axios.get('https://prexzyapis.com/ai/genimage', {
+                params: { prompt: cleanPrompt, width: 768, height: 768, steps: 20 },
+                timeout: 60000
+            })
+        },
+        {
+            name: 'prexzy-dalle',
+            model: 'DALL·E 3 XL',
+            run: async () => axios.get('https://prexzyapis.com/ai/dalle', {
                 params: { prompt: cleanPrompt },
                 timeout: 60000
-            });
-            const data = response?.data;
-            if (!data || data.status !== true) continue;
+            })
+        }
+    ];
 
-            const arr = data.image_url || data.images || data.result;
-            let url = null;
-
-            if (Array.isArray(arr) && arr.length) {
-                const first = arr[0];
-                url = first?.image?.url || first?.url ||
-                    (typeof first === 'string' ? first : null);
-            } else if (typeof data.result === 'string') {
-                url = data.result;
-            } else if (typeof data.url === 'string') {
-                url = data.url;
+    const extractUrl = (data) => {
+        if (typeof data === 'string' && /^https?:\\/\\//i.test(data)) return data.trim();
+        const values = [
+            data?.image_url, data?.imageUrl, data?.url, data?.image,
+            data?.result, data?.data?.image_url, data?.data?.imageUrl,
+            data?.data?.url, data?.data?.image, data?.data?.result,
+            data?.images?.[0], data?.data?.images?.[0],
+            data?.result?.image_url, data?.result?.url,
+            data?.result?.image?.url
+        ];
+        for (const value of values) {
+            if (typeof value === 'string' && /^https?:\\/\\//i.test(value)) return value;
+            if (value && typeof value === 'object') {
+                const nested = value.url || value.image_url || value.imageUrl;
+                if (typeof nested === 'string' && /^https?:\\/\\//i.test(nested)) return nested;
             }
+        }
+        return null;
+    };
 
-            if (!url) continue;
+    let lastError;
+    for (const provider of providers) {
+        try {
+            const response = await provider.run();
+            const url = extractUrl(response?.data);
+            if (!url) throw new Error(provider.name + ' returned no image URL');
 
             const image = await axios.get(url, {
                 responseType: 'arraybuffer',
-                timeout: 60000
+                timeout: 60000,
+                headers: { 'User-Agent': 'TOHID-AI' }
             });
             const buffer = Buffer.from(image.data);
-            if (buffer.length >= 1024) {
-                return { buffer, model: provider.model };
-            }
+            if (buffer.length >= 1024) return { buffer, model: provider.model };
+            throw new Error('Image response was empty');
         } catch (error) {
-            console.error('[AI:IMAGE]', provider.model, error?.message || error);
+            lastError = error;
+            console.error('[AI:IMAGE]', provider.name, error?.message || error);
         }
     }
 
-    throw new Error('Image generation failed on all providers');
+    throw lastError || new Error('Image generation failed on all providers');
 }
 
 const { facebook: tohidFacebook, instagram: tohidInstagram, tiktok: tohidTikTok, youtube: tohidYouTube, play: tohidPlay } = require('./utils/tohid-downloaders');
@@ -16702,19 +16720,33 @@ case 'xnxx': {
             case 'rize': case 'rose': case 'ryujin': case 'sagiri': case 'sakura':
             case 'sasuke': case 'satanic': case 'shina': case 'shinka': case 'shinomiya':
             case 'shizuka': case 'shota': case 'space': case 'technology': case 'tejina': {
-                const baseUrl = 'https://apis.prexzyvilla.site/random/anime/';
-                const endpoint = command; // command name matches API endpoint
-
                 try {
-                    await devtrust.sendMessage(m.chat,
-                        addNewsletterContext({
-                            image: { url: baseUrl + endpoint },
-                            caption: `🎌 *${command.charAt(0).toUpperCase() + command.slice(1)}*`
-                        }),
-                        { quoted: m }
-                    );
+                    if (command === 'tohidai') {
+                        const prompt = text
+                            ? `Anime illustration: ${text}, high quality, clean detailed artwork`
+                            : 'Anime illustration, beautiful character, high quality, clean detailed artwork';
+                        const out = await tohidImageGen(prompt);
+                        await devtrust.sendMessage(m.chat,
+                            addNewsletterContext({
+                                image: out.buffer,
+                                caption: `🎌 *TOHID-AI*\\n\\n🤖 ${out.model}`
+                            }),
+                            { quoted: m }
+                        );
+                    } else {
+                        const baseUrl = 'https://prexzyapis.com/random/anime/';
+                        const endpoint = command;
+                        await devtrust.sendMessage(m.chat,
+                            addNewsletterContext({
+                                image: { url: baseUrl + endpoint },
+                                caption: `🎌 *${command.charAt(0).toUpperCase() + command.slice(1)}*`
+                            }),
+                            { quoted: m }
+                        );
+                    }
                 } catch (err) {
-                    reply(`❌ *Failed to fetch ${command} image*`);
+                    console.error(`[ANIME:${command}]`, err?.message || err);
+                    reply(`❌ *Failed to fetch ${command} image* • Try again later`);
                 }
             }
                 break;
