@@ -4909,35 +4909,21 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
             try {
                 const source = fs.readFileSync(__filename, 'utf8');
                 const start = source.indexOf('switch (command)');
+                const end = source.indexOf('\\n        }', start);
                 if (start < 0) return 0;
-                let depth = 0, started = false, quote = null, escaped = false, count = 0, token = '';
-                for (let i = start; i < source.length; i++) {
-                    const ch = source[i];
-                    if (quote) {
-                        if (escaped) escaped = false;
-                        else if (ch === '\\') escaped = true;
-                        else if (ch === quote) quote = null;
-                        continue;
-                    }
-                    if (ch === "'" || ch === '"' || ch === '`') { quote = ch; continue; }
-                    if (ch === '{') { depth++; started = true; continue; }
-                    if (ch === '}') { depth--; if (started && depth === 0) break; continue; }
-                    if (started && depth === 1) {
-                        token += ch;
-                        if (token.length > 100) token = token.slice(-100);
-                        if (/case\s+['"][^'"]+['"]\s*:\s*$/.test(token)) {
-                            count++;
-                            token = '';
-                        }
-                    }
-                }
-                global.__TOHID_COMMAND_COUNT_CACHE = count;
+
+                // Main command cases use exactly 12 spaces of indentation.
+                // Nested switch/case blocks use deeper indentation and are ignored.
+                const body = end > start ? source.slice(start, end) : source.slice(start);
+                const matches = body.match(/^            case\\s+['"][^'"]+['"]\\s*:/gm) || [];
+                global.__TOHID_COMMAND_COUNT_CACHE = new Set(matches.map(x => x.trim())).size;
             } catch (e) {
                 console.error('[COMMAND COUNT]', e.message);
                 global.__TOHID_COMMAND_COUNT_CACHE = 0;
             }
             return global.__TOHID_COMMAND_COUNT_CACHE;
         }
+
         function getMoodEmoji() {
             const hour = getLagosTime().getHours();
             if (hour < 12) return '🌅';
