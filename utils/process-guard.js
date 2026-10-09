@@ -5,9 +5,11 @@ function install(options = {}) {
   if (installed) return;
   installed = true;
   const intervalMs = Number(options.intervalMs || process.env.PROCESS_GUARD_INTERVAL_MS || 30000);
-  const cpuLimit = Number(options.cpuPercent || process.env.PROCESS_GUARD_CPU_PERCENT || 90);
+  // Allow brief/heavy command workloads on low-power Android devices; only
+  // restart after sustained high CPU use, not a short burst.
+  const cpuLimit = Number(options.cpuPercent || process.env.PROCESS_GUARD_CPU_PERCENT || 180);
   const memoryLimitBytes = Number(options.memoryBytes || process.env.PROCESS_GUARD_MEMORY_BYTES || (10 * 1024 ** 3));
-  const sustainedChecks = Math.max(1, Number(options.sustainedChecks || process.env.PROCESS_GUARD_SUSTAINED_CHECKS || 3));
+  const sustainedChecks = Math.max(1, Number(options.sustainedChecks || process.env.PROCESS_GUARD_SUSTAINED_CHECKS || 5));
   let highCpuChecks = 0;
   // Measure this Node process, not total host CPU usage. The previous
   // implementation could restart the bot simply because another process
