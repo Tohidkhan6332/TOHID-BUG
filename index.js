@@ -31,7 +31,7 @@ function runtimePidIsThisProject(pid) {
     // Android/Termux can reuse PIDs. A live PID alone does not prove that
     // the process holding an old lock belongs to this bot.
     try {
-        const commandLine = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replace(/\\0/g, ' ');
+        const commandLine = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').split(String.fromCharCode(0)).join(' ');
         return commandLine.includes(path.join(__dirname, 'index.js')) ||
             commandLine.includes(__dirname);
     } catch (_) {
