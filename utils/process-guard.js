@@ -33,9 +33,18 @@ function install(options = {}) {
 
     const rss = process.memoryUsage().rss;
     if (cpuPercent >= cpuLimit) highCpuChecks += 1; else highCpuChecks = 0;
-    if (rss >= memoryLimitBytes || highCpuChecks >= sustainedChecks) {
-      console.warn("[process-guard] resource threshold reached; restarting process.");
-      clearInterval(timer); process.exit(1);
+    // CPU spikes must not terminate the bot: WhatsApp message bursts and
+    // metadata refreshes can keep a multi-core Node process above this limit.
+    // Keep CPU monitoring for diagnostics, but restart only on the configured
+    // memory ceiling, which is the hard resource limit.
+    if (highCpuChecks >= sustainedChecks) {
+      console.warn("[process-guard] sustained CPU usage detected; keeping bot alive.");
+      highCpuChecks = 0;
+    }
+    if (rss >= memoryLimitBytes) {
+      console.warn("[process-guard] memory threshold reached; restarting process.");
+      clearInterval(timer);
+      process.exit(1);
     }
   }, intervalMs);
   timer.unref?.();
