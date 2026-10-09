@@ -25,6 +25,22 @@ function readRuntimeLock() {
     }
 }
 
+function runtimePidIsThisProject(pid) {
+    if (!pidIsAlive(pid)) return false;
+
+    // Android/Termux can reuse PIDs. A live PID alone does not prove that
+    // the process holding an old lock belongs to this bot.
+    try {
+        const commandLine = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replace(/\\0/g, ' ');
+        return commandLine.includes(path.join(__dirname, 'index.js')) ||
+            commandLine.includes(__dirname);
+    } catch (_) {
+        // If process details are unavailable, fail safely rather than
+        // starting a second Telegram/WhatsApp instance.
+        return true;
+    }
+}
+
 function removeRuntimeLock() {
     try {
         const lock = readRuntimeLock();
@@ -57,7 +73,7 @@ async function acquireRuntimeLock() {
 
         const existing = readRuntimeLock();
         const existingPid = Number(existing?.pid || 0);
-        if (existingPid && existingPid !== process.pid && pidIsAlive(existingPid)) {
+        if (existingPid && existingPid !== process.pid && runtimePidIsThisProject(existingPid)) {
             throw new Error(`Another TOHID-AI instance is already running (PID ${existingPid}). Stopping this duplicate instance to prevent Telegram 409 / WhatsApp 440 conflicts.`);
         }
 
