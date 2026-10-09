@@ -10,7 +10,6 @@ const errorLog = [];
 const MAX_ERROR_LOG = 200;
 
 const CRITICAL_FILES = [
-  { path: './auth.json', name: 'auth.json' },
   { path: './setting/config.js', name: 'config.js' },
   { path: './setting/setting.json', name: 'setting.json' },
   { path: './tohidstore/token.js', name: 'token.js' },
@@ -20,7 +19,6 @@ const CRITICAL_FILES = [
   { path: './database/users.json', name: 'users.json' },
   { path: './database/banned.json', name: 'banned.json' },
   { path: './database/settings.json', name: 'settings.json' },
-  { path: './database/auth.json', name: 'database/auth.json' },
 ];
 
 const CRITICAL_DIRS = [
