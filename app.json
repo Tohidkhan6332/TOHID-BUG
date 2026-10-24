@@ -1,0 +1,52 @@
+{
+  "name": "TOHID-AI",
+  "description": "TOHID-AI WhatsApp multi-session bot by MR TOHID",
+  "repository": "https://github.com/Tohidkhan6332/TOHID-BUG",
+  "keywords": [
+    "whatsapp-bot",
+    "baileys",
+    "telegram-bot",
+    "tohid-ai"
+  ],
+  "stack": "heroku-24",
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "env": {
+    "TELEGRAM_BOT_TOKEN": {
+      "description": "Telegram bot token used by TOHID-AI.",
+      "required": true
+    },
+    "HEROKU_API_KEY": {
+      "description": "Heroku API key used by the Telegram /update command to trigger a new Heroku build.",
+      "required": false
+    },
+    "HEROKU_APP_NAME": {
+      "description": "Heroku app name used by the Telegram /update command.",
+      "required": false
+    },
+    "UPDATE_GITHUB_OWNER": {
+      "description": "GitHub repository owner used by /update.",
+      "value": "Tohidkhan6332",
+      "required": false
+    },
+    "UPDATE_GITHUB_REPO": {
+      "description": "GitHub repository used by /update.",
+      "value": "TOHID-BUG",
+      "required": false
+    },
+    "UPDATE_GITHUB_BRANCH": {
+      "description": "GitHub branch used by /update.",
+      "value": "main",
+      "required": false
+    }
+  }
+}

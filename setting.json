@@ -1,0 +1,10 @@
+{
+  "bot": {
+    "mode": "self"
+  },
+  "917849917350@s.whatsapp.net": {
+    "feature.autoreply": true,
+    "autoViewStatus": true,
+    "autobio": true
+  }
+}
