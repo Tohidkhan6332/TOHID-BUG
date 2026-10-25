@@ -9,7 +9,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const SETTINGS_FILE = path.join(process.cwd(), 'database', 'antistatus_settings.json');
+// Keep moderation settings beside the project database even when the process
+// is started from a hosting panel or another working directory.
+const SETTINGS_FILE = path.join(__dirname, '..', 'database', 'antistatus_settings.json');
 const VALID_ACTIONS = new Set(['delete', 'warn', 'kick']);
 
 function ensureFile() {

@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# WhatsApp/Telegram authentication and pairing state
+tohidstore/pairing/
+database/pairing/
+database/sessions/
+axis_storage/
+
+# Runtime data and logs
+logs/
+tmp/
+*.log
+.tohid-runtime.lock
+
+# Local package metadata (the project uses a GitHub dependency and intentionally
+# installs without committing a lockfile; see README.md)
+package-lock.json
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

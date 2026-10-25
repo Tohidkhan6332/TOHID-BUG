@@ -1,5 +1,8 @@
 const fs = require('fs');
-const SETTINGS_PATH = './setting.json';
+const path = require('path');
+// Resolve from the project root so PM2, hosting panels, and direct absolute
+// launches all read/write the same settings file regardless of cwd.
+const SETTINGS_PATH = path.join(__dirname, '..', 'setting.json');
 
 let settings = {};
 try {
@@ -42,4 +45,3 @@ function setSetting(jid, key, value) {
 }
 
 module.exports = { getSetting, setSetting };
-
