@@ -14521,18 +14521,104 @@ case 'ytmp3': {
     await devtrust.sendMessage(m.chat, { react: { text: '🎧', key: m.key } });
     try {
         const out = await tohidPlay(text);
-        const audio = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
         const title = out.data?.title || text;
+        const thumbnail = out.data?.thumbnail || out.data?.thumb || out.data?.image;
+        if (thumbnail) {
+            await devtrust.sendMessage(m.chat, addNewsletterContext({
+                image: { url: thumbnail },
+                caption: `🎬 *${title}*\n\n🎵 YouTube Download\n🚀 Engine: ${out.provider || 'TOHID-AI'}`
+            }), { quoted: m }).catch(() => {});
+        }
+        const formatMessage = generateWAMessageFromContent(m.chat, {
+            viewOnceMessage: {
+                message: {
+                    interactiveMessage: proto.Message.InteractiveMessage.create({
+                        body: proto.Message.InteractiveMessage.Body.create({
+                            text: `🎬 *${title}*\n\nChoose a format to download:`
+                        }),
+                        nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                            buttons: [
+                                proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
+                                    name: 'quick_reply',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: 'MP3',
+                                        id: `.playmp3 ${text}`
+                                    })
+                                }),
+                                proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
+                                    name: 'quick_reply',
+                                    buttonParamsJson: JSON.stringify({
+                                        display_text: 'MP4',
+                                        id: `.playmp4 ${text}`
+                                    })
+                                })
+                            ]
+                        })
+                    })
+                }
+            }
+        }, { quoted: m });
+        await devtrust.relayMessage(m.chat, formatMessage.message, { messageId: formatMessage.key.id });
+        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+    } catch (e) {
+        await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return reply('❌ *Music search failed*\n' + (e.message || 'All providers unavailable'));
+    }
+}
+break;
+
+case 'playmp3': {
+    if (!text) return reply('🎵 *Usage:* .playmp3 <song name>');
+    await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+    try {
+        const out = await tohidPlay(text);
+        const audio = await axios.get(out.media, {
+            responseType: 'arraybuffer',
+            timeout: 120000,
+            maxContentLength: 50 * 1024 * 1024,
+            maxBodyLength: 50 * 1024 * 1024
+        });
+        const title = out.data?.title || text;
+        const safeTitle = String(title).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 100);
         await devtrust.sendMessage(m.chat, addNewsletterContext({
             audio: Buffer.from(audio.data),
             mimetype: 'audio/mpeg',
-            fileName: title.replace(/[\\/:*?"<>|]/g, '_').slice(0, 100) + '.mp3',
-            caption: '🎵 *TOHID-AI PLAY*\n\n' + title + '\n🚀 Engine: ' + out.provider
+            fileName: safeTitle + '.mp3',
+            caption: `🎵 *${title}*\n\nFormat: MP3\n🚀 Engine: ${out.provider || 'TOHID-AI'}`
         }), { quoted: m });
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
         await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return reply('❌ *Music download failed*\n' + (e.message || 'All providers unavailable'));
+        return reply('❌ *MP3 download failed*\n' + (e.message || 'All providers unavailable'));
+    }
+}
+break;
+
+case 'playmp4': {
+    if (!text) return reply('🎬 *Usage:* .playmp4 <song name>');
+    await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+    try {
+        const search = await yts(text);
+        const firstVideo = search?.videos?.[0];
+        if (!firstVideo?.url) throw new Error('No matching YouTube video found');
+        const out = await tohidYouTube(firstVideo.url);
+        const video = await axios.get(out.media, {
+            responseType: 'arraybuffer',
+            timeout: 120000,
+            maxContentLength: 100 * 1024 * 1024,
+            maxBodyLength: 100 * 1024 * 1024
+        });
+        const safeTitle = String(firstVideo.title || text).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 100);
+        await devtrust.sendMessage(m.chat, addNewsletterContext({
+            video: Buffer.from(video.data),
+            mimetype: 'video/mp4',
+            fileName: safeTitle + '.mp4',
+            caption: `🎬 *${firstVideo.title || text}*\n\nFormat: MP4\n🚀 Engine: ${out.provider || 'TOHID-AI'}`
+        }), { quoted: m });
+        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+    } catch (e) {
+        await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return reply('❌ *MP4 download failed*\n' + (e.message || 'All providers unavailable'));
     }
 }
 break;
