@@ -16,6 +16,7 @@ const https = require('https');
 
 const UPDATE_REPO = 'https://github.com/Tohidkhan6332/TOHID-BUG.git';
 const UPDATE_BRANCH = 'main';
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 function run(command, args, options = {}) {
     const env = {
@@ -26,7 +27,7 @@ function run(command, args, options = {}) {
     };
 
     return execFileSync(command, args, {
-        cwd: process.cwd(),
+        cwd: options.cwd || PROJECT_ROOT,
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
         timeout: options.timeout || 90000,
@@ -41,7 +42,7 @@ function git(args) {
 }
 
 function isGitRepository() {
-    return fs.existsSync(path.join(process.cwd(), '.git'));
+    return fs.existsSync(path.join(PROJECT_ROOT, '.git'));
 }
 
 function hasTrackedChanges() {
@@ -206,17 +207,25 @@ async function updateFromGitHub() {
         };
     }
 
-    // Only allow a fast-forward update when the commit itself changed. This
-    // prevents .update from silently destroying local history or merging
-    // unexpected changes.
-    // silently destroying local history or merging unexpected changes.
+    // GitHub main is the source of truth for deployments. A previous local
+    // update, hosting-panel commit, or rebuilt image can leave the checkout
+    // divergent rather than behind main. Preserve that SHA in a local backup
+    // ref, then continue with the deterministic reset below instead of making
+    // the user perform manual SSH intervention.
     try {
         git(['merge-base', '--is-ancestor', currentSha, latestSha]);
     } catch {
-        restoreStash();
-        throw new Error(
-            'The local branch cannot be fast-forwarded to GitHub main. Manual intervention is required.'
-        );
+        const backupBranch = `tohid-update-backup-${Date.now()}`;
+        try {
+            git(['branch', backupBranch, currentSha]);
+            console.warn(`[UPDATE] Local history diverged; preserved at ${backupBranch}`);
+        } catch (backupError) {
+            restoreStash();
+            throw new Error(
+                'The local branch diverged from GitHub main and could not be backed up: ' +
+                (backupError.message || backupError)
+            );
+        }
     }
 
     let dependenciesChanged;
@@ -309,13 +318,13 @@ async function updateFromGitHub() {
 function entryPointForValidation() {
     return process.argv[1]
         ? path.resolve(process.argv[1])
-        : path.join(process.cwd(), 'index.js');
+        : path.join(PROJECT_ROOT, 'index.js');
 }
 
 function restartProcess() {
     const entryPoint = process.argv[1]
         ? path.resolve(process.argv[1])
-        : path.join(process.cwd(), 'index.js');
+        : path.join(PROJECT_ROOT, 'index.js');
 
     const supervised = Boolean(
         process.env.pm_id ||
@@ -334,7 +343,7 @@ function restartProcess() {
     // group/session. The old implementation used detached:false, which
     // could kill the replacement together with the old foreground process.
     // Keep stdout/stderr in a persistent log so a failed handoff is visible.
-    const restartLog = path.join(process.cwd(), 'database', 'update-restart.log');
+    const restartLog = path.join(PROJECT_ROOT, 'database', 'update-restart.log');
 
     try {
         fs.mkdirSync(path.dirname(restartLog), { recursive: true });
@@ -354,7 +363,7 @@ function restartProcess() {
             process.execPath,
             [entryPoint, ...process.argv.slice(2)],
             {
-                cwd: process.cwd(),
+                cwd: PROJECT_ROOT,
                 env: {
                     ...process.env,
                     TOHID_UPDATE_RESTART: '1',

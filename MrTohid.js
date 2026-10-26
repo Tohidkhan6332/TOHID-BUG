@@ -2208,15 +2208,24 @@ const Premium = getPremium();
         let nativeFlowCommand = '';
         try {
             const rawParams = messageContent?.interactiveResponseMessage
-                ?.nativeFlowResponseMessage?.paramsJson;
+                ?.nativeFlowResponseMessage?.paramsJson ||
+                messageContent?.nativeFlowResponseMessage?.paramsJson;
             if (rawParams) {
-                const params = typeof rawParams === 'string'
+                let params = typeof rawParams === 'string'
                     ? JSON.parse(rawParams)
                     : rawParams;
+                // Some WhatsApp clients serialize paramsJson twice. Decode
+                // that shape as well so quick-reply IDs are never lost.
+                if (typeof params === 'string') params = JSON.parse(params);
                 nativeFlowCommand =
                     params?.id ||
+                    params?.button_id ||
+                    params?.buttonId ||
                     params?.selected_row_id ||
                     params?.selectedRowId ||
+                    params?.selected_id ||
+                    params?.selectedId ||
+                    params?.rowId ||
                     params?.command ||
                     params?.cmd ||
                     '';
