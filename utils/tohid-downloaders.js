@@ -1,6 +1,7 @@
 'use strict';
 
 const axios = require('axios');
+const yts = require('yt-search');
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36';
 
@@ -103,6 +104,12 @@ function youtubeId(url) {
   try { const u = new URL(url); return u.hostname === 'youtu.be' ? u.pathname.slice(1) : u.searchParams.get('v') || u.pathname.match(/\/(?:shorts|embed|live)\/([^/]+)/)?.[1]; }
   catch { return null; }
 }
+async function resolveYouTubeUrl(query) {
+  const value = String(query || '').trim();
+  if (/^https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(value)) return value;
+  const result = await yts(value);
+  return result?.videos?.[0]?.url || null;
+}
 
 async function youtube(url) {
   const providers = [
@@ -114,14 +121,48 @@ async function youtube(url) {
   ];
   let last;
   for (const [name, fn] of providers) {
-    try { const d = await fn(); const media = firstMedia(d); if (media) return { media, provider: name }; }
+    try {
+      const d = await fn();
+      const media = d?.videos?.['720'] || d?.videos?.['480'] || d?.videos?.['360'] ||
+        d?.video || d?.video_url || firstMedia(d);
+      if (media && /^https?:\/\//i.test(media)) return { media, provider: name, data: d };
+      throw new Error('Provider returned no valid video URL');
+    }
     catch (e) { last = e; console.error('[TOHID-AI YT]', name, e.message); }
   }
   throw last || new Error('All YouTube providers failed');
 }
 
-async function play(query) {
+async function play(query, options = {}) {
+  const validate = typeof options.validate === 'function' ? options.validate : null;
+  const princeKey = process.env.PRINCE_API_KEY || process.env.PRINCE_KEY || process.env.PRINCETECH_API_KEY;
   const providers = [
+    ['prexzy-ytmp3', async () => {
+      const videoUrl = await resolveYouTubeUrl(query);
+      if (!videoUrl) throw new Error('No matching YouTube video found');
+      return jsonGet('https://prexzyapis.com/download/ytmp3', { url: videoUrl });
+    }],
+    ['prince-ytmp3', async () => {
+      if (!princeKey) throw new Error('PRINCE_API_KEY is not configured');
+      const videoUrl = await resolveYouTubeUrl(query);
+      if (!videoUrl) throw new Error('No matching YouTube video found');
+      return jsonGet('https://api.princetechn.com/api/download/ytmp3', {
+        url: videoUrl,
+        apikey: princeKey
+      });
+    }],
+    ['official-hector', async () => {
+      const videoUrl = await resolveYouTubeUrl(query);
+      if (!videoUrl) throw new Error('No matching YouTube video found');
+      const data = await jsonGet('https://yt-dl.officialhectormanuel.workers.dev/', { url: videoUrl });
+      if (!data?.audio) throw new Error('Official provider returned no audio stream');
+      return {
+        ...data,
+        download_url: data.audio,
+        thumbnail: data.thumbnail,
+        title: data.title
+      };
+    }],
     ['david-cyril', () => jsonGet('https://apis.davidcyril.name.ng/play', { query })],
     ['prexzy', () => jsonGet('https://prexzyapis.com/download/youtube-music', { query })],
   ];
@@ -130,8 +171,11 @@ async function play(query) {
     try {
       const d = await fn();
       const result = d?.result || d?.data || d;
-      const media = result?.download_url || result?.downloadUrl || firstMedia(result);
-      if (media) return { media, provider: name, data: result };
+      const media = result?.download_url || result?.downloadUrl || result?.audio || result?.url || firstMedia(result);
+      if (!media || !/^https?:\/\//i.test(media)) throw new Error('Provider returned no valid media URL');
+      const candidate = { media, provider: name, data: result };
+      if (validate) candidate.audio = await validate(candidate);
+      return candidate;
     } catch (e) { last = e; console.error('[TOHID-AI PLAY]', name, e.message); }
   }
   throw last || new Error('All music providers failed');

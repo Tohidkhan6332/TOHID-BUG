@@ -187,6 +187,7 @@ async function tohidImageGen(prompt) {
 }
 
 const { facebook: tohidFacebook, instagram: tohidInstagram, tiktok: tohidTikTok, youtube: tohidYouTube, play: tohidPlay } = require('./utils/tohid-downloaders');
+const { downloadAudioAsMp3 } = require('./utils/audio-normalizer');
 const { tohidAI } = require('./utils/tohid-ai-provider');
 
 async function tohidGpt4(prompt, system = '') {
@@ -14580,20 +14581,19 @@ case 'playmp3': {
     if (!text) return reply('🎵 *Usage:* .playmp3 <song name>');
     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
-        const out = await tohidPlay(text);
-        const audio = await axios.get(out.media, {
-            responseType: 'arraybuffer',
-            timeout: 120000,
-            maxContentLength: 50 * 1024 * 1024,
-            maxBodyLength: 50 * 1024 * 1024
+        const out = await tohidPlay(text, {
+            validate: ({ media }) => downloadAudioAsMp3(media)
         });
+        const audio = out.audio;
+        if (!audio?.buffer || audio.buffer.length < 4096) throw new Error('Validated audio is empty');
         const title = out.data?.title || text;
         const safeTitle = String(title).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 100);
         await devtrust.sendMessage(m.chat, addNewsletterContext({
-            audio: Buffer.from(audio.data),
+            audio: audio.buffer,
             mimetype: 'audio/mpeg',
             fileName: safeTitle + '.mp3',
-            caption: `🎵 *${title}*\n\nFormat: MP3\n🚀 Engine: ${out.provider || 'TOHID-AI'}`
+            ptt: false,
+            caption: `🎵 *${title}*\n\nFormat: MP3\n📦 ${audio.bytes} bytes\n🚀 Engine: ${out.provider || 'TOHID-AI'}`
         }), { quoted: m });
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
@@ -14667,7 +14667,9 @@ case 'bomb':
                 if (!text) return reply(`🎵 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 Play2*\\n\\nUsage: ${prefix}play2 [song name]\\nExample: ${prefix}play2 faded`);
                 try {
                     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-                    const result = await tohidPlay(text);
+                    const result = await tohidPlay(text, {
+                        validate: ({ media }) => downloadAudioAsMp3(media)
+                    });
                     if (!result?.media) throw new Error('No music download URL received');
                     const meta = result?.data || {};
                     const title = meta?.title || meta?.name || text;
@@ -14678,19 +14680,14 @@ case 'bomb':
                             caption: `🎵 *${title}*\\n🤖 Provider: ${result.provider || 'TOHID-AI'}`
                         }), { quoted: m }).catch(() => {});
                     }
-                    const audioResponse = await axios.get(result.media, {
-                        responseType: 'arraybuffer',
-                        timeout: 120000,
-                        maxContentLength: 50 * 1024 * 1024,
-                        maxBodyLength: 50 * 1024 * 1024
-                    });
-                    const audioBuffer = Buffer.from(audioResponse.data || []);
+                    const audioBuffer = result.audio?.buffer;
                     if (audioBuffer.length < 1024) throw new Error('Downloaded audio is empty');
                     const safeTitle = String(title).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 100);
                     await devtrust.sendMessage(m.chat, addNewsletterContext({
                         audio: audioBuffer,
                         mimetype: 'audio/mpeg',
-                        fileName: safeTitle + '.mp3'
+                        fileName: safeTitle + '.mp3',
+                        ptt: false
                     }), { quoted: m });
                     await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
                 } catch (error) {
