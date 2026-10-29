@@ -173,7 +173,13 @@ async function play(query, options = {}) {
       const result = d?.result || d?.data || d;
       const media = result?.download_url || result?.downloadUrl || result?.audio || result?.url || firstMedia(result);
       if (!media || !/^https?:\/\//i.test(media)) throw new Error('Provider returned no valid media URL');
-      const candidate = { media, provider: name, data: result };
+      const meta = result?.info || result?.metadata || result?.video || result;
+      const normalizedData = {
+        ...result,
+        title: result?.title || meta?.title || meta?.name,
+        thumbnail: result?.thumbnail || meta?.thumbnail || meta?.thumb || meta?.image
+      };
+      const candidate = { media, provider: name, data: normalizedData };
       if (validate) candidate.audio = await validate(candidate);
       return candidate;
     } catch (e) { last = e; console.error('[TOHID-AI PLAY]', name, e.message); }

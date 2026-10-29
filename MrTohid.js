@@ -14543,8 +14543,16 @@ case 'ytmp3': {
             viewOnceMessage: {
                 message: {
                     interactiveMessage: proto.Message.InteractiveMessage.create({
+                        header: proto.Message.InteractiveMessage.Header.create({
+                            title: '🎬 YouTube Download',
+                            subtitle: 'TOHID-AI',
+                            hasMediaAttachment: false
+                        }),
                         body: proto.Message.InteractiveMessage.Body.create({
                             text: `🎬 *${title}*\n\nChoose a format to download:`
+                        }),
+                        footer: proto.Message.InteractiveMessage.Footer.create({
+                            text: 'TOHID-AI • Select MP3 or MP4'
                         }),
                         nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
                             buttons: [
@@ -14567,7 +14575,7 @@ case 'ytmp3': {
                     })
                 }
             }
-        }, { quoted: m });
+        }, { quoted: m, userJid: devtrust.user?.id });
         await devtrust.relayMessage(m.chat, formatMessage.message, { messageId: formatMessage.key.id });
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
