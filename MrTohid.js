@@ -11030,17 +11030,66 @@ break;
 
 
 case 'tt':
-case 'tiktok': {
+case 'tiktok':
+case 'tthd':
+case 'ttsd': {
     const ttUrl = args[0];
     if (!ttUrl || !/tiktok\.com/i.test(ttUrl)) return reply('❌ *Invalid TikTok link*');
     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
-        const out = await tohidTikTok(ttUrl);
-        await devtrust.sendMessage(m.chat, addNewsletterContext({
-            video: { url: out.media },
-            mimetype: 'video/mp4',
-            caption: '🎵 *TOHID-AI TIKTOK DOWNLOADER*\n\n🚀 Engine: ' + out.provider
-        }), { quoted: m });
+        const quality = command === 'ttsd' ? 'sd' : 'hd';
+        const out = await tohidTikTok(ttUrl, quality);
+        const title = out.data?.title || 'TikTok video';
+        if (command === 'tt' || command === 'tiktok') {
+            let header = { title: '🎵 TikTok Download', subtitle: 'TOHID-AI', hasMediaAttachment: false };
+            if (out.data?.thumbnail) {
+                try {
+                    const media = await prepareWAMessageMedia(
+                        { image: { url: out.data.thumbnail } },
+                        { upload: devtrust.waUploadToServer }
+                    );
+                    header = { ...header, hasMediaAttachment: true, ...media };
+                } catch (thumbnailError) {
+                    console.warn('[TT] Thumbnail upload failed:', thumbnailError?.message || thumbnailError);
+                }
+            }
+            const qualityMessage = generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: { message: {
+                    messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 },
+                    interactiveMessage: proto.Message.InteractiveMessage.create({
+                        header: proto.Message.InteractiveMessage.Header.create(header),
+                        body: proto.Message.InteractiveMessage.Body.create({ text: `🎵 *${title}*\n\nChoose video quality:` }),
+                        footer: proto.Message.InteractiveMessage.Footer.create({ text: 'TOHID-AI • Select HD or SD' }),
+                        nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({ buttons: [
+                            proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({ title: '📥 SELECT QUALITY', sections: [{
+                                    title: 'TikTok video quality',
+                                    rows: [
+                                        { title: '🎬 HD Quality', description: 'Best available video quality', id: `.tthd ${ttUrl}` },
+                                        { title: '📱 SD Quality', description: 'Smaller file size', id: `.ttsd ${ttUrl}` }
+                                    ]
+                                }] })
+                            })
+                        ] })
+                    })
+                }}
+            }, { quoted: m, userJid: devtrust.user?.id });
+            await devtrust.relayMessage(m.chat, qualityMessage.message, { messageId: qualityMessage.key.id });
+        } else {
+            const video = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
+            const videoBuffer = Buffer.from(video.data);
+            const contentType = String(video.headers?.['content-type'] || '').toLowerCase();
+            const isMp4 = videoBuffer.length > 8 && videoBuffer.subarray(4, 8).toString() === 'ftyp';
+            const isWebm = videoBuffer.length > 4 && videoBuffer.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+            if (videoBuffer.length < 8192 || (!/^video\//.test(contentType) && !isMp4 && !isWebm)) throw new Error('Provider returned an invalid or empty TikTok video');
+            await devtrust.sendMessage(m.chat, addNewsletterContext({
+                video: videoBuffer,
+                mimetype: isWebm ? 'video/webm' : 'video/mp4',
+                fileName: 'tiktok-' + quality + (isWebm ? '.webm' : '.mp4'),
+                caption: `🎵 *TOHID-AI TIKTOK DOWNLOADER*\n\nQuality: ${quality.toUpperCase()}\n${title}\n\n🚀 Engine: ${out.provider}`
+            }), { quoted: m });
+        }
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
         await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
@@ -11049,19 +11098,72 @@ case 'tiktok': {
 }
 break;
 
-case 'instagram': {
+case 'instagram':
+case 'ig':
+case 'igdl':
+case 'ighd':
+case 'igsd': {
     const igMatch = (text || '').match(/https?:\/\/(?:www\.)?instagram\.com\/\S+/i);
     const urlInput = igMatch?.[0];
     if (!urlInput) return reply('❌ *Usage:* .ig <instagram_url>');
-    await reply('⏳ *Fetching Instagram media...*');
+    await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
-        const out = await tohidInstagram(urlInput);
-        await devtrust.sendMessage(m.chat, addNewsletterContext({
-            video: { url: out.media },
-            mimetype: 'video/mp4',
-            caption: '📸 *TOHID-AI INSTAGRAM DOWNLOADER*\n\n🚀 Engine: ' + out.provider
-        }), { quoted: m });
+        const quality = command === 'igsd' ? 'sd' : 'hd';
+        const out = await tohidInstagram(urlInput, quality);
+        const title = out.data?.title || 'Instagram video';
+        if (command === 'instagram' || command === 'ig' || command === 'igdl') {
+            let header = { title: '📸 Instagram Download', subtitle: 'TOHID-AI', hasMediaAttachment: false };
+            if (out.data?.thumbnail) {
+                try {
+                    const media = await prepareWAMessageMedia(
+                        { image: { url: out.data.thumbnail } },
+                        { upload: devtrust.waUploadToServer }
+                    );
+                    header = { ...header, hasMediaAttachment: true, ...media };
+                } catch (thumbnailError) {
+                    console.warn('[IG] Thumbnail upload failed:', thumbnailError?.message || thumbnailError);
+                }
+            }
+            const qualityMessage = generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: { message: {
+                    messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 },
+                    interactiveMessage: proto.Message.InteractiveMessage.create({
+                        header: proto.Message.InteractiveMessage.Header.create(header),
+                        body: proto.Message.InteractiveMessage.Body.create({ text: `📸 *${title}*\n\nChoose video quality:` }),
+                        footer: proto.Message.InteractiveMessage.Footer.create({ text: 'TOHID-AI • Select HD or SD' }),
+                        nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({ buttons: [
+                            proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({ title: '📥 SELECT QUALITY', sections: [{
+                                    title: 'Instagram video quality',
+                                    rows: [
+                                        { title: '🎬 HD Quality', description: 'Best available video quality', id: `.ighd ${urlInput}` },
+                                        { title: '📱 SD Quality', description: 'Smaller file size', id: `.igsd ${urlInput}` }
+                                    ]
+                                }] })
+                            })
+                        ] })
+                    })
+                }}
+            }, { quoted: m, userJid: devtrust.user?.id });
+            await devtrust.relayMessage(m.chat, qualityMessage.message, { messageId: qualityMessage.key.id });
+        } else {
+            const video = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
+            const videoBuffer = Buffer.from(video.data);
+            const contentType = String(video.headers?.['content-type'] || '').toLowerCase();
+            const isMp4 = videoBuffer.length > 8 && videoBuffer.subarray(4, 8).toString() === 'ftyp';
+            const isWebm = videoBuffer.length > 4 && videoBuffer.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+            if (videoBuffer.length < 8192 || (!/^video\//.test(contentType) && !isMp4 && !isWebm)) throw new Error('Provider returned an invalid or empty Instagram video');
+            await devtrust.sendMessage(m.chat, addNewsletterContext({
+                video: videoBuffer,
+                mimetype: isWebm ? 'video/webm' : 'video/mp4',
+                fileName: 'instagram-' + quality + (isWebm ? '.webm' : '.mp4'),
+                caption: `📸 *TOHID-AI INSTAGRAM DOWNLOADER*\n\nQuality: ${quality.toUpperCase()}\n${title}\n\n🚀 Engine: ${out.provider}`
+            }), { quoted: m });
+        }
+        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
+        await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return reply('❌ *Instagram download failed*\n' + (e.message || 'All providers unavailable'));
     }
 }

@@ -61,6 +61,14 @@ function facebookThumbnail(data) {
   return matches[0] || null;
 }
 
+function normalizeSocialMedia(raw, preferredQuality = 'hd') {
+  const variants = facebookVariants(raw);
+  const preferred = variants.find(item => item.quality === preferredQuality)?.url;
+  const media = preferred || variants[0]?.url || (typeof raw === 'string' ? raw : firstMedia(raw));
+  const objectData = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  return { media, variants, data: { ...objectData, thumbnail: facebookThumbnail(raw), variants } };
+}
+
 async function facebook(url, preferredQuality = 'hd') {
   const providers = [
     ['eliteprotech', () => jsonGet('https://eliteprotech-apis.zone.id/download/facebook', { url }, 30000)],
@@ -84,7 +92,7 @@ async function facebook(url, preferredQuality = 'hd') {
   throw last || new Error('All Facebook providers failed');
 }
 
-async function instagram(url) {
+async function instagram(url, preferredQuality = 'hd') {
   const providers = [
     ['instagram-page', async () => {
       const r = await axios.get(url, { timeout: 25000, headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' } });
@@ -92,47 +100,54 @@ async function instagram(url) {
       const m = html.match(/<meta[^>]+(?:property|name)=["']og:video["'][^>]+content=["']([^"']+)/i)
         || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:video/i);
       if (!m) throw new Error('No public video metadata');
-      return m[1].replace(/&amp;/g, '&');
+      const poster = html.match(/<meta[^>]+(?:property|name)=["']og:image["'][^>]+content=["']([^"']+)/i);
+      return { videoUrl: m[1].replace(/&amp;/g, '&'), thumbnail: poster?.[1] || null };
     }],
     ['vercel', async () => {
       const d = await jsonGet('https://instagram-reels-downloader-tau.vercel.app/api/video', { postUrl: url, url, enhanced: 'true' }, 40000);
-      return d?.data?.videoUrl || d?.data?.medias?.find(x => x?.url)?.url;
+      return d;
     }],
     ['reel-api', async () => {
       const d = await jsonGet('https://instagram-reel-api.onrender.com/', { url }, 55000);
-      return d?.download_link;
+      return d;
     }],
     ['alwayscodex', async () => {
       const r = await axios.post('https://api.alwayscodex.eu.cc/api/downloader/allinone', { url }, { timeout: 40000, headers: { 'Content-Type': 'application/json', 'User-Agent': UA } });
-      return firstMedia(r.data);
+      return r.data;
     }],
   ];
   let last;
   for (const [name, fn] of providers) {
-    try { const media = await fn(); if (media) return { media, provider: name }; }
+    try {
+      const normalized = normalizeSocialMedia(await fn(), preferredQuality);
+      if (normalized.media) return { ...normalized, provider: name };
+    }
     catch (e) { last = e; console.error('[TOHID-AI IG]', name, e.message); }
   }
   throw last || new Error('All Instagram providers failed');
 }
 
-async function tiktok(url) {
+async function tiktok(url, preferredQuality = 'hd') {
   const providers = [
     ['alwayscodex', async () => {
       const r = await axios.post('https://api.alwayscodex.eu.cc/api/downloader/tiktokv2', { url }, { timeout: 40000, headers: { 'Content-Type': 'application/json', 'User-Agent': UA } });
-      return firstMedia(r.data);
+      return r.data;
     }],
     ['tiklydown', async () => {
       const d = await jsonGet('https://api.tiklydown.eu.org/api/download', { url }, 40000);
-      return firstMedia(d);
+      return d;
     }],
     ['prexzy', async () => {
       const d = await jsonGet('https://prexzyapis.com/download/tiktok', { url }, 30000);
-      return firstMedia(d);
+      return d;
     }],
   ];
   let last;
   for (const [name, fn] of providers) {
-    try { const media = await fn(); if (media) return { media, provider: name }; }
+    try {
+      const normalized = normalizeSocialMedia(await fn(), preferredQuality);
+      if (normalized.media) return { ...normalized, provider: name };
+    }
     catch (e) { last = e; console.error('[TOHID-AI TT]', name, e.message); }
   }
   throw last || new Error('All TikTok providers failed');
