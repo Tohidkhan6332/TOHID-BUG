@@ -14582,17 +14582,24 @@ case 'ytmp3': {
                         nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
                             buttons: [
                                 proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
-                                    name: 'quick_reply',
+                                    name: 'single_select',
                                     buttonParamsJson: JSON.stringify({
-                                        display_text: 'MP3',
-                                        id: `.playmp3 ${text}`
-                                    })
-                                }),
-                                proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
-                                    name: 'quick_reply',
-                                    buttonParamsJson: JSON.stringify({
-                                        display_text: 'MP4',
-                                        id: `.playmp4 ${text}`
+                                        title: '📥 SELECT FORMAT',
+                                        sections: [{
+                                            title: 'Download format',
+                                            rows: [
+                                                {
+                                                    title: '🎵 MP3',
+                                                    description: 'Download audio',
+                                                    id: `.playmp3 ${text}`
+                                                },
+                                                {
+                                                    title: '🎬 MP4',
+                                                    description: 'Download video',
+                                                    id: `.playmp4 ${text}`
+                                                }
+                                            ]
+                                        }]
                                     })
                                 })
                             ]
