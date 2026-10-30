@@ -41,6 +41,23 @@ function runtimePidIsThisProject(pid) {
     }
 }
 
+async function stopExistingProjectProcess(pid) {
+    if (!pidIsAlive(pid)) return;
+    try {
+        process.kill(pid, 'SIGTERM');
+    } catch (error) {
+        if (error?.code === 'ESRCH') return;
+        throw error;
+    }
+    const deadline = Date.now() + 10000;
+    while (pidIsAlive(pid) && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 250));
+    }
+    if (pidIsAlive(pid)) {
+        throw new Error(`Existing TOHID-AI instance (PID ${pid}) did not stop within 10 seconds.`);
+    }
+}
+
 function removeRuntimeLock() {
     try {
         const lock = readRuntimeLock();
@@ -74,7 +91,8 @@ async function acquireRuntimeLock() {
         const existing = readRuntimeLock();
         const existingPid = Number(existing?.pid || 0);
         if (existingPid && existingPid !== process.pid && runtimePidIsThisProject(existingPid)) {
-            throw new Error(`Another TOHID-AI instance is already running (PID ${existingPid}). Stopping this duplicate instance to prevent Telegram 409 / WhatsApp 440 conflicts.`);
+            console.warn(`[RUNTIME] Existing TOHID-AI instance found (PID ${existingPid}); stopping it before startup.`);
+            await stopExistingProjectProcess(existingPid);
         }
 
         // Stale lock left by a crashed process.
@@ -88,8 +106,8 @@ async function acquireRuntimeLock() {
 }
 
 process.on('exit', removeRuntimeLock);
-process.on('SIGINT', () => { removeRuntimeLock(); });
-process.on('SIGTERM', () => { removeRuntimeLock(); });
+process.on('SIGINT', () => { removeRuntimeLock(); process.exit(0); });
+process.on('SIGTERM', () => { removeRuntimeLock(); process.exit(0); });
 attachGlobalHandlers();
 processGuard.install();
 startSessionMonitor();
