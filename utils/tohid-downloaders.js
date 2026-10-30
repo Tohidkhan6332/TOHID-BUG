@@ -29,7 +29,39 @@ function firstMedia(data) {
   return preferred.find(u => /\.mp4(?:[?&]|$)|video|download|media/i.test(u)) || preferred[0] || null;
 }
 
-async function facebook(url) {
+function facebookVariants(data) {
+  const found = [];
+  const seen = new Set();
+  const visit = (value, key = '') => {
+    if (!value) return;
+    if (typeof value === 'string') {
+      if (/^https?:\/\//i.test(value) && !/thumbnail|thumb|avatar|profile|\.jpg(?:[?&]|$)|\.jpeg(?:[?&]|$)|\.png(?:[?&]|$)/i.test(key) && /hd|high|sd|low|video|download|media|url/i.test(key)) {
+        const quality = /hd|high|720|1080/i.test(key) ? 'hd' : /sd|low|360|480/i.test(key) ? 'sd' : 'video';
+        if (!seen.has(value)) { seen.add(value); found.push({ quality, url: value }); }
+      }
+      return;
+    }
+    if (Array.isArray(value)) return value.forEach(item => visit(item, key));
+    if (typeof value === 'object') {
+      for (const [childKey, childValue] of Object.entries(value)) visit(childValue, childKey);
+    }
+  };
+  visit(data);
+  return found.sort((a, b) => (a.quality === 'hd' ? -1 : b.quality === 'hd' ? 1 : 0));
+}
+
+function facebookThumbnail(data) {
+  const matches = [];
+  const visit = (value, key = '') => {
+    if (typeof value === 'string' && /^https?:\/\//i.test(value) && /thumb|thumbnail|poster|image|cover/i.test(key)) matches.push(value);
+    else if (Array.isArray(value)) value.forEach(item => visit(item, key));
+    else if (value && typeof value === 'object') Object.entries(value).forEach(([k, v]) => visit(v, k));
+  };
+  visit(data);
+  return matches[0] || null;
+}
+
+async function facebook(url, preferredQuality = 'hd') {
   const providers = [
     ['eliteprotech', () => jsonGet('https://eliteprotech-apis.zone.id/download/facebook', { url }, 30000)],
     ['prexzy', () => jsonGet('https://prexzyapis.com/download/facebook', { url }, 30000)],
@@ -40,7 +72,13 @@ async function facebook(url) {
   ];
   let last;
   for (const [name, fn] of providers) {
-    try { const data = await fn(); const media = firstMedia(data); if (media) return { media, provider: name, data }; }
+    try {
+      const data = await fn();
+      const variants = facebookVariants(data);
+      const preferred = variants.find(item => item.quality === preferredQuality)?.url;
+      const media = preferred || variants[0]?.url || firstMedia(data);
+      if (media) return { media, provider: name, data: { ...data, thumbnail: facebookThumbnail(data), variants }, variants };
+    }
     catch (e) { last = e; console.error('[TOHID-AI FB]', name, e.message); }
   }
   throw last || new Error('All Facebook providers failed');

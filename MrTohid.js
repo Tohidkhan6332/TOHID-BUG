@@ -17376,18 +17376,79 @@ case 'xnxx': {
 
 case 'facebook':
 case 'fbdl':
-case 'fb': {
+case 'fb':
+case 'fbhd':
+case 'fbsd': {
     const fbUrl = args[0];
     if (!fbUrl || !/facebook\.com|fb\.watch/i.test(fbUrl)) return reply('❌ *Invalid Facebook link*');
     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
-        const out = await tohidFacebook(fbUrl);
-        const video = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
-        await devtrust.sendMessage(m.chat, addNewsletterContext({
-            video: Buffer.from(video.data),
-            mimetype: 'video/mp4',
-            caption: '📘 *TOHID-AI FACEBOOK DOWNLOADER*\n\n🚀 Engine: ' + out.provider
-        }), { quoted: m });
+        const quality = command === 'fbsd' ? 'sd' : 'hd';
+        const out = await tohidFacebook(fbUrl, quality);
+        const title = out.data?.title || 'Facebook video';
+
+        if (command === 'fb' || command === 'facebook' || command === 'fbdl') {
+            let header = { title: '📘 Facebook Download', subtitle: 'TOHID-AI', hasMediaAttachment: false };
+            if (out.data?.thumbnail) {
+                try {
+                    const media = await prepareWAMessageMedia(
+                        { image: { url: out.data.thumbnail } },
+                        { upload: devtrust.waUploadToServer }
+                    );
+                    header = { ...header, hasMediaAttachment: true, ...media };
+                } catch (thumbnailError) {
+                    console.warn('[FB] Thumbnail upload failed:', thumbnailError?.message || thumbnailError);
+                }
+            }
+            const rows = [
+                { title: '🎬 HD Quality', description: 'Best available video quality', id: `.fbhd ${fbUrl}` },
+                { title: '📱 SD Quality', description: 'Smaller file size', id: `.fbsd ${fbUrl}` }
+            ];
+            const qualityMessage = generateWAMessageFromContent(m.chat, {
+                viewOnceMessage: {
+                    message: {
+                        messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 },
+                        interactiveMessage: proto.Message.InteractiveMessage.create({
+                            header: proto.Message.InteractiveMessage.Header.create(header),
+                            body: proto.Message.InteractiveMessage.Body.create({
+                                text: `📘 *${title}*\n\nChoose video quality:`
+                            }),
+                            footer: proto.Message.InteractiveMessage.Footer.create({
+                                text: 'TOHID-AI • Select HD or SD'
+                            }),
+                            nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                                buttons: [
+                                    proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create({
+                                        name: 'single_select',
+                                        buttonParamsJson: JSON.stringify({
+                                            title: '📥 SELECT QUALITY',
+                                            sections: [{ title: 'Facebook video quality', rows }]
+                                        })
+                                    })
+                                ]
+                            })
+                        })
+                    }
+                }
+            }, { quoted: m, userJid: devtrust.user?.id });
+            await devtrust.relayMessage(m.chat, qualityMessage.message, { messageId: qualityMessage.key.id });
+        } else {
+            const video = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
+            const videoBuffer = Buffer.from(video.data);
+            const contentType = String(video.headers?.['content-type'] || '').toLowerCase();
+            const isMp4 = videoBuffer.length > 8 && videoBuffer.subarray(4, 8).toString() === 'ftyp';
+            const isWebm = videoBuffer.length > 4 && videoBuffer.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+            if (videoBuffer.length < 8192 || (!/^video\//.test(contentType) && !isMp4 && !isWebm)) {
+                throw new Error('Provider returned an invalid or empty Facebook video');
+            }
+            const safeTitle = String(title).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 100);
+            await devtrust.sendMessage(m.chat, addNewsletterContext({
+                video: videoBuffer,
+                mimetype: isWebm ? 'video/webm' : 'video/mp4',
+                fileName: safeTitle + (isWebm ? '.webm' : '.mp4'),
+                caption: `📘 *TOHID-AI FACEBOOK DOWNLOADER*\n\nQuality: ${quality.toUpperCase()}\n${title}\n\n🚀 Engine: ${out.provider}`
+            }), { quoted: m });
+        }
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
         await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
