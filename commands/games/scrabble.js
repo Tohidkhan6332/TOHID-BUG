@@ -32,7 +32,7 @@ function newGame() {
     return { rack, score: 0, words: [], tries: 0, maxTries: 10, validWords: wordsForRack(rack) };
 }
 function textBoard(game) {
-    return 'WORD SCRABBLE\\n\\nRack: ' + game.rack.join(' ').toUpperCase() + '\\nScore: ' + game.score + '\\nWords: ' + game.words.length + '\\nTries: ' + game.tries + '/' + game.maxTries + (game.tries >= game.maxTries ? '\\nGAME OVER\\nValid words: ' + game.validWords.join(', ') : '');
+    return 'WORD SCRABBLE\n\nRack: ' + game.rack.join(' ').toUpperCase() + '\nScore: ' + game.score + '\nWords: ' + game.words.length + '\nTries: ' + game.tries + '/' + game.maxTries + (game.tries >= game.maxTries ? '\nGAME OVER\nValid words: ' + game.validWords.join(', ') : '');
 }
 function scrabbleHtml(game) {
     const rack = JSON.stringify(game.rack);

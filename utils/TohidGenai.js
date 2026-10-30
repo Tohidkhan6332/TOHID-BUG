@@ -312,10 +312,10 @@ async function sendRichHtml({ sock, jid, quoted, html, canvasText, title, captio
     // Never leave a game command silent. The HTML transport is experimental
     // and client-dependent, so always provide a normal WhatsApp fallback.
     const fallbackText =
-        '🎮 TOHID-AI GAME\\n\\n' +
-        '⚠️ HTML game could not be rendered on this WhatsApp client.\\n' +
+        '🎮 TOHID-AI GAME\n\n' +
+        '⚠️ HTML game could not be rendered on this WhatsApp client.\n' +
         'The game command is working, but this device/client rejected the HTML card.' +
-        (lastError?.message ? '\\n\\nDebug: ' + lastError.message : '');
+        (lastError?.message ? '\n\nDebug: ' + lastError.message : '');
 
     try {
         return await sock.sendMessage(
@@ -356,7 +356,7 @@ async function sendRichHtmlMessage({ sock, jid, quoted, title, html, url, truste
 
     try {
         return await sock.sendMessage(jid, {
-            text: '🎮 TOHID-AI GAME\\n\\n⚠️ HTML game could not be rendered on this WhatsApp client.\\nThe command is working, but this device/client rejected the HTML card.',
+            text: '🎮 TOHID-AI GAME\n\n⚠️ HTML game could not be rendered on this WhatsApp client.\nThe command is working, but this device/client rejected the HTML card.',
         }, { quoted });
     } catch (fallbackError) {
         console.error('[HTML GAME] Rich message fallback failed:', fallbackError.stack || fallbackError.message);

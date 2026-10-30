@@ -352,7 +352,7 @@ function restartProcess() {
 
         fs.writeSync(
             logFd,
-            `\\n[${new Date().toISOString()}] Starting detached replacement: ${entryPoint}\\n`
+            `\n[${new Date().toISOString()}] Starting detached replacement: ${entryPoint}\n`
         );
 
         const child = spawn(
@@ -374,14 +374,14 @@ function restartProcess() {
 
         fs.writeSync(
             logFd,
-            `[${new Date().toISOString()}] Detached replacement spawned, pid=${child.pid}. Waiting for old process to exit.\\n`
+            `[${new Date().toISOString()}] Detached replacement spawned, pid=${child.pid}. Waiting for old process to exit.\n`
         );
 
         child.once('error', (error) => {
             try {
                 fs.appendFileSync(
                     restartLog,
-                    `[${new Date().toISOString()}] REPLACEMENT SPAWN ERROR: ${error.stack || error.message}\\n`
+                    `[${new Date().toISOString()}] REPLACEMENT SPAWN ERROR: ${error.stack || error.message}\n`
                 );
             } catch (_) {}
         });
@@ -403,7 +403,7 @@ function restartProcess() {
         try {
             fs.appendFileSync(
                 restartLog,
-                `[${new Date().toISOString()}] SPAWN FAILED: ${error.stack || error.message}\\n`
+                `[${new Date().toISOString()}] SPAWN FAILED: ${error.stack || error.message}\n`
             );
         } catch (_) {}
 

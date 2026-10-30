@@ -152,7 +152,7 @@ const initializeBot = async () => {
 
 function launchBot() {
     console.clear();
-    console.log(chalk.green('ᴛᴏʜɪᴅ ᴀɪ ᴛᴇʟᴇɢʀᴀᴍ ᴄᴏɴᴛʀᴏʟ ʟᴀʏᴇʀ....\\n'));
+    console.log(chalk.green('ᴛᴏʜɪᴅ ᴀɪ ᴛᴇʟᴇɢʀᴀᴍ ᴄᴏɴᴛʀᴏʟ ʟᴀʏᴇʀ....\n'));
 
     // Telegram is the primary service.
     // WhatsApp is NEVER started here. It is started only by Telegram /pair.
@@ -201,12 +201,12 @@ function launchBot() {
         console.log(chalk.yellow('⚠️ Telegram service is NOT active. Fix the error above.'));
     }
 
-    console.log(chalk.cyan('\\n⚄︎════════════════════════════════⚄︎'));
+    console.log(chalk.cyan('\n⚄︎════════════════════════════════⚄︎'));
     console.log(telegramLoaded
         ? chalk.green('  ᴛᴇʟᴇɢʀᴀᴍ: ᴀᴄᴛɪᴠᴇ ✅')
         : chalk.red('  ᴛᴇʟᴇɢʀᴀᴍ: ɪɴᴀᴄᴛɪᴠᴇ ❌'));
     console.log(chalk.yellow('  ᴡʜᴀᴛsᴀᴘᴘ: ᴡᴀɪᴛɪɴɢ ғᴏʀ /ᴘᴀɪʀ'));
-    console.log(chalk.cyan('⚄︎════════════════════════════════⚄︎\\n'));
+    console.log(chalk.cyan('⚄︎════════════════════════════════⚄︎\n'));
 
     startAutoRestart();
     runStartupDebug();
@@ -226,19 +226,19 @@ function launchBot() {
 
     process.on('unhandledRejection', (reason) => {
         if (ignoredErrors.some(e => String(reason).includes(e))) return;
-        console.log(chalk.red('\\n⚠️ Unhandled Promise Rejection:'));
+        console.log(chalk.red('\n⚠️ Unhandled Promise Rejection:'));
         console.log(chalk.yellow('Reason:'), reason);
     });
 
     process.on('uncaughtException', (error) => {
         if (ignoredErrors.some(e => String(error).includes(e))) return;
-        console.log(chalk.red('\\n❌ Uncaught Exception:'));
+        console.log(chalk.red('\n❌ Uncaught Exception:'));
         console.log(chalk.yellow('Error:'), error.message);
         if (error.stack) console.log(chalk.gray(error.stack));
     });
 
     console.log(chalk.blue('📊 Telegram monitoring active...'));
-    console.log(chalk.gray('Press Ctrl+C to stop the bot\\n'));
+    console.log(chalk.gray('Press Ctrl+C to stop the bot\n'));
 }
 
 // Keep terminal output enabled so startup, pairing, and runtime errors remain visible in Termux and VPS logs.
@@ -257,7 +257,7 @@ process.on('SIGTERM', () => {
 acquireRuntimeLock()
     .then(() => initializeBot())
     .catch((error) => {
-        console.log(chalk.red('\\n❌ Fatal error during initialization:'));
+        console.log(chalk.red('\n❌ Fatal error during initialization:'));
         console.log(chalk.yellow('Error:'), error.message);
         if (error.stack) console.log(chalk.gray(error.stack));
         removeRuntimeLock();

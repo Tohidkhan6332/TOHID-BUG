@@ -1568,7 +1568,7 @@ const sendMyBots = async (chatId, userId) => {
   const bots = getUserBots(userId);
   if (!bots.length) {
     return bot.sendMessage(chatId,
-      '┌ ❏ ◆ *⌜𝗠𝗬 𝗕𝗢𝗧𝗦⌟* ◆\\n│\\n├◆ ɴᴏ ʙᴏᴛs ᴀssɪɢɴᴇᴅ ʏᴇᴛ\\n├◆ ᴜsᴇ /pair NUMBER ᴛᴏ ᴀᴅᴅ ᴀ ʙᴏᴛ\\n│\\n└ ❏',
+      '┌ ❏ ◆ *⌜𝗠𝗬 𝗕𝗢𝗧𝗦⌟* ◆\n│\n├◆ ɴᴏ ʙᴏᴛs ᴀssɪɢɴᴇᴅ ʏᴇᴛ\n├◆ ᴜsᴇ /pair NUMBER ᴛᴏ ᴀᴅᴅ ᴀ ʙᴏᴛ\n│\n└ ❏',
       { parse_mode: 'Markdown' }
     );
   }
@@ -1629,7 +1629,7 @@ bot.onText(/^\/coupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   };
   coupon.uses = Number(coupon.uses || 0) + 1;
   await saveData();
-  return bot.sendMessage(msg.chat.id, `✅ Coupon applied.\\n👑 Premium bonus: ${coupon.days} day(s)\\n📅 Expiry: ${formatPlanExpiry(database.premium[id].expiry)}`);
+  return bot.sendMessage(msg.chat.id, `✅ Coupon applied.\n👑 Premium bonus: ${coupon.days} day(s)\n📅 Expiry: ${formatPlanExpiry(database.premium[id].expiry)}`);
 });
 
 bot.onText(/^\/createcoupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
@@ -1643,14 +1643,14 @@ bot.onText(/^\/createcoupon(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   }
   database.coupons[code] = { days, maxUses, uses: 0, createdBy: msg.from.id.toString(), createdAt: Date.now() };
   await saveData();
-  return bot.sendMessage(msg.chat.id, `✅ Coupon created: ${code}\\n🎁 ${days} day(s)\\n🔢 Uses: ${maxUses}`);
+  return bot.sendMessage(msg.chat.id, `✅ Coupon created: ${code}\n🎁 ${days} day(s)\n🔢 Uses: ${maxUses}`);
 });
 
 bot.onText(/^\/coupons(?:@[\w_]+)?$/i, async (msg) => {
   if (!isAdmin(msg.from.id.toString()) && !isOwner(msg.from.id)) return sendOwnerContact(msg.chat.id, 'admin');
   const entries = Object.entries(database.coupons);
   if (!entries.length) return bot.sendMessage(msg.chat.id, '🎟️ No coupons.');
-  return bot.sendMessage(msg.chat.id, '🎟️ *COUPONS*\\n\\n' + entries.map(([code, d]) => `${code} — ${d.days}d — ${d.uses}/${d.maxUses}`).join('\\n'), { parse_mode: 'Markdown' });
+  return bot.sendMessage(msg.chat.id, '🎟️ *COUPONS*\n\n' + entries.map(([code, d]) => `${code} — ${d.days}d — ${d.uses}/${d.maxUses}`).join('\n'), { parse_mode: 'Markdown' });
 });
 
 // // ==================== SERVICE PLAN COMMANDS ====================
@@ -3549,8 +3549,8 @@ bot.onText(/^\/addpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const durationMs = parseDuration(duration);
   if (!durationMs || durationMs <= 0) return bot.sendMessage(chatId, '❌ Invalid duration. Example: 30 days or 1 month.');
   const premium = await grantPremium(targetId, durationMs, adminId);
-  await bot.sendMessage(chatId, '✅ Premium activated for ' + targetId + '\\nExpiry: ' + formatPlanExpiry(premium.expiry));
-  try { await bot.sendMessage(targetId, '👑 TOHID-BUG PREMIUM ACTIVATED\\nExpiry: ' + formatPlanExpiry(premium.expiry)); } catch (e) {}
+  await bot.sendMessage(chatId, '✅ Premium activated for ' + targetId + '\nExpiry: ' + formatPlanExpiry(premium.expiry));
+  try { await bot.sendMessage(targetId, '👑 TOHID-BUG PREMIUM ACTIVATED\nExpiry: ' + formatPlanExpiry(premium.expiry)); } catch (e) {}
 });
 
 bot.onText(/^\/delpremium(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
@@ -3568,7 +3568,7 @@ bot.onText(/^\/(?:premiumusers|premlist)(?:@[\w_]+)?$/i, async (msg) => {
   const entries = Object.entries(database.premium).filter(([, d]) => Number(d?.expiry) > Date.now());
   if (!entries.length) return bot.sendMessage(chatId, '👑 No active Premium users.');
   const lines = entries.slice(0, 50).map(([id, d], i) => (i + 1) + '. ' + id + ' — ' + formatPlanExpiry(d.expiry));
-  return bot.sendMessage(chatId, '👑 *PREMIUM USERS*\\n\\n' + lines.join('\\n'), { parse_mode: 'Markdown' });
+  return bot.sendMessage(chatId, '👑 *PREMIUM USERS*\n\n' + lines.join('\n'), { parse_mode: 'Markdown' });
 });
 
 // Backward-compatible command aliases.
@@ -3583,13 +3583,13 @@ bot.onText(/^\/settutorial(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
   const url = String(match?.[1] || '').trim();
   if (!url) {
     return bot.sendMessage(chatId,
-      '┌ ❏ ◆ *⌜𝗦𝗘𝗧 𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗚𝗨𝗜𝗗𝗘⌟* ◆\\n│\\n' +
-      '├◆ ᴜsᴀɢᴇ: /settutorial <ᴛᴇʟᴇɢʀᴀᴍ ᴘᴏsᴛ ʟɪɴᴋ>\\n│\\n' +
-      '├◆ ᴘᴜʙʟɪᴄ ᴇxᴀᴍᴘʟᴇ:\\n' +
-      '├◆ /settutorial https://t.me/TohidChannel/123\\n│\\n' +
-      '├◆ ᴘʀɪᴠᴀᴛᴇ ᴇxᴀᴍᴘʟᴇ:\\n' +
-      '├◆ /settutorial https://t.me/c/1234567890/123\\n│\\n' +
-      '├◆ ⚠️ ᴜsᴇ ᴛʜᴇ ʟɪɴᴋ ᴏғ ᴛʜᴇ ᴇxᴀᴄᴛ ᴠɪᴅᴇᴏ/ᴘᴏsᴛ\\n│\\n' +
+      '┌ ❏ ◆ *⌜𝗦𝗘𝗧 𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗚𝗨𝗜𝗗𝗘⌟* ◆\n│\n' +
+      '├◆ ᴜsᴀɢᴇ: /settutorial <ᴛᴇʟᴇɢʀᴀᴍ ᴘᴏsᴛ ʟɪɴᴋ>\n│\n' +
+      '├◆ ᴘᴜʙʟɪᴄ ᴇxᴀᴍᴘʟᴇ:\n' +
+      '├◆ /settutorial https://t.me/TohidChannel/123\n│\n' +
+      '├◆ ᴘʀɪᴠᴀᴛᴇ ᴇxᴀᴍᴘʟᴇ:\n' +
+      '├◆ /settutorial https://t.me/c/1234567890/123\n│\n' +
+      '├◆ ⚠️ ᴜsᴇ ᴛʜᴇ ʟɪɴᴋ ᴏғ ᴛʜᴇ ᴇxᴀᴄᴛ ᴠɪᴅᴇᴏ/ᴘᴏsᴛ\n│\n' +
       '└ ❏',
       { parse_mode: 'Markdown' }
     );
@@ -3597,11 +3597,11 @@ bot.onText(/^\/settutorial(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 
   if (!isValidTelegramUrl(url)) {
     return bot.sendMessage(chatId,
-      '❌ *Invalid Telegram post link.*\\n\\n' +
-      'Please use the exact video/post link.\\n\\n' +
-      '✅ Public example:\\n' +
-      'https://t.me/TohidChannel/123\\n\\n' +
-      '✅ Private example:\\n' +
+      '❌ *Invalid Telegram post link.*\n\n' +
+      'Please use the exact video/post link.\n\n' +
+      '✅ Public example:\n' +
+      'https://t.me/TohidChannel/123\n\n' +
+      '✅ Private example:\n' +
       'https://t.me/c/1234567890/123',
       { parse_mode: 'Markdown' }
     );
@@ -3609,8 +3609,8 @@ bot.onText(/^\/settutorial(?:@[\w_]+)?(?:\s+(.+))?$/i, async (msg, match) => {
 
   saveTutorialVideoUrl(url);
   return bot.sendMessage(chatId,
-    '✅ *Tutorial video link updated.*\\n\\n' +
-    '🎬 ' + url + '\\n\\n' +
+    '✅ *Tutorial video link updated.*\n\n' +
+    '🎬 ' + url + '\n\n' +
     'The *WATCH NOW* button will open this exact Telegram post.',
     { parse_mode: 'Markdown' }
   );
@@ -3622,7 +3622,7 @@ bot.onText(/^\/deltutorial(?:@[\w_]+)?$/i, async (msg) => {
   if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
 
   saveTutorialVideoUrl('');
-  return bot.sendMessage(chatId, '🗑️ *Tutorial video link removed.*\\n\\nWATCH NOW will stay unavailable until you add a new link.', { parse_mode: 'Markdown' });
+  return bot.sendMessage(chatId, '🗑️ *Tutorial video link removed.*\n\nWATCH NOW will stay unavailable until you add a new link.', { parse_mode: 'Markdown' });
 });
 
 bot.onText(/^\/tutorialstatus(?:@[\w_]+)?$/i, async (msg) => {
@@ -3633,13 +3633,13 @@ bot.onText(/^\/tutorialstatus(?:@[\w_]+)?$/i, async (msg) => {
   const url = getTutorialVideoUrl();
   if (!url) {
     return bot.sendMessage(chatId,
-      '❌ *No tutorial video link is configured.*\\n\\nUse /settutorial followed by a Telegram video/post link.',
+      '❌ *No tutorial video link is configured.*\n\nUse /settutorial followed by a Telegram video/post link.',
       { parse_mode: 'Markdown' }
     );
   }
 
   return bot.sendMessage(chatId,
-    '🎬 *Current Tutorial Video*\\n\\n' +
+    '🎬 *Current Tutorial Video*\n\n' +
     'The button below opens the exact Telegram video/post.',
     {
       parse_mode: 'Markdown',
@@ -4198,14 +4198,14 @@ ${approvalText}
     if (!tutorialVideo) {
       await bot.answerCallbackQuery(query.id, { text: 'Tutorial link is not configured', show_alert: true });
       return bot.sendMessage(chatId,
-        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\\n│\\n├◆ ❌ ᴠɪᴅᴇᴏ ʟɪɴᴋ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ\\n├◆ 👑 ᴏᴡɴᴇʀ: ᴜsᴇ /settutorial\\n│\\n└ ❏`,
+        `┌ ❏ ◆ *⌜𝗧𝗨𝗧𝗢𝗥𝗜𝗔𝗟 𝗩𝗜𝗗𝗘𝗢⌟* ◆\n│\n├◆ ❌ ᴠɪᴅᴇᴏ ʟɪɴᴋ ɪs ɴᴏᴛ ᴄᴏɴғɪɢᴜʀᴇᴅ\n├◆ 👑 ᴏᴡɴᴇʀ: ᴜsᴇ /settutorial\n│\n└ ❏`,
         { parse_mode: 'Markdown' }
       );
     }
 
     await bot.answerCallbackQuery(query.id, { text: 'Opening tutorial...' });
     return bot.sendMessage(chatId,
-      `🎬 *${SYSTEM.name} SETUP GUIDE*\\n\\n👇 Tap below to watch the tutorial video.`,
+      `🎬 *${SYSTEM.name} SETUP GUIDE*\n\n👇 Tap below to watch the tutorial video.`,
       {
         parse_mode: 'Markdown',
         reply_markup: {
@@ -4361,7 +4361,7 @@ ${lines}
   else if (data === 'show_report') {
     await bot.answerCallbackQuery(query.id, { text: 'ʀᴇᴘᴏʀᴛ' }).catch(() => {});
     return bot.sendMessage(chatId,
-      '┌ ❏ ◆ *⌜𝗥𝗘𝗣𝗢𝗥𝗧 𝗚𝗨𝗜𝗗𝗘⌟* ◆\\n│\\n├◆ ᴜsᴀɢᴇ: /report ʙᴏᴛ ɴᴏᴛ ʀᴇsᴘᴏɴᴅɪɴɢ\\n│\\n└ ❏',
+      '┌ ❏ ◆ *⌜𝗥𝗘𝗣𝗢𝗥𝗧 𝗚𝗨𝗜𝗗𝗘⌟* ◆\n│\n├◆ ᴜsᴀɢᴇ: /report ʙᴏᴛ ɴᴏᴛ ʀᴇsᴘᴏɴᴅɪɴɢ\n│\n└ ❏',
       { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🏠 ᴍᴇɴᴜ', callback_data: 'show_main' }]] } }
     );
   }
@@ -4550,7 +4550,7 @@ bot.on('message', async (msg) => {
     try {
       if (proofType === 'photo') {
         await bot.sendPhoto(adminId, proofFileId, {
-          caption: reviewText + (proofCaption ? '\\n├◆ 📝 Caption: ' + proofCaption : ''),
+          caption: reviewText + (proofCaption ? '\n├◆ 📝 Caption: ' + proofCaption : ''),
           parse_mode: 'Markdown',
           reply_markup: reviewMarkup
         });
@@ -4623,7 +4623,7 @@ setInterval(async () => {
       data.lastWarningDay = warningDay;
       try {
         await bot.sendMessage(userId,
-          `⚠️ *PREMIUM EXPIRY WARNING*\\n\\nYour TOHID-BUG Premium expires in *${warningDay} day(s)*.\\n📅 ${formatPlanExpiry(data.expiry)}\\n\\nContact @Tohidkhan6332 for renewal.`,
+          `⚠️ *PREMIUM EXPIRY WARNING*\n\nYour TOHID-BUG Premium expires in *${warningDay} day(s)*.\n📅 ${formatPlanExpiry(data.expiry)}\n\nContact @Tohidkhan6332 for renewal.`,
           { parse_mode: 'Markdown' }
         );
       } catch (e) {}

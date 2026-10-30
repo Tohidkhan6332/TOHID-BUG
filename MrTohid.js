@@ -5159,7 +5159,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                                 ...media
                             },
                             body: {
-                                text: "✨ *MR TOHID — DEVELOPER*\\n\\n🤖 Building TOHID-AI and WhatsApp automation projects.\\n⚡ Bot Developer • AI Projects • Automation\\n🛠️ Creating and maintaining TOHID-AI."
+                                text: "✨ *MR TOHID — DEVELOPER*\n\n🤖 Building TOHID-AI and WhatsApp automation projects.\n⚡ Bot Developer • AI Projects • Automation\n🛠️ Creating and maintaining TOHID-AI."
                             },
                             nativeFlowMessage: {
                                 buttons: [
@@ -5202,7 +5202,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                 } catch (err) {
                     console.log("❌ ERROR DEVELOPER CONTACT:", err);
                     await devtrust.sendMessage(m.chat, {
-                        text: "👨‍💻 *MR TOHID — DEVELOPER*\\n\\n🤖 TOHID-AI Developer & Bot Creator\\n\\n📸 Instagram: https://instagram.com/Tohidkhan6332\\n✈️ Telegram: https://t.me/Tohidkhan6332\\n💻 GitHub: https://github.com/Tohidkhan6332\\n📱 WhatsApp: https://wa.me/917849917350"
+                        text: "👨‍💻 *MR TOHID — DEVELOPER*\n\n🤖 TOHID-AI Developer & Bot Creator\n\n📸 Instagram: https://instagram.com/Tohidkhan6332\n✈️ Telegram: https://t.me/Tohidkhan6332\n💻 GitHub: https://github.com/Tohidkhan6332\n📱 WhatsApp: https://wa.me/917849917350"
                     }, { quoted: m });
                 }
             }
@@ -10253,7 +10253,7 @@ ${meals}
                     await devtrust.sendMessage(m.chat,
                         addNewsletterContext({
                             image: out.buffer,
-                            caption: `🎨 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 AI Art*\\n\\n🤖 Model: ${out.model}\\n📝 Prompt: ${text}`
+                            caption: `🎨 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 AI Art*\n\n🤖 Model: ${out.model}\n📝 Prompt: ${text}`
                         }),
                         { quoted: m }
                     );
@@ -12066,7 +12066,7 @@ case 'apkdl': {
                         m.chat,
                         addNewsletterContext({
                             image: buffer,
-                            caption: `📱 *TOHID-AI QR Code*\\n\\n${text}`
+                            caption: `📱 *TOHID-AI QR Code*\n\n${text}`
                         }),
                         { quoted: m }
                     );
@@ -14806,7 +14806,7 @@ case 'bomb':
             
 
             case 'play2': {
-                if (!text) return reply(`🎵 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 Play2*\\n\\nUsage: ${prefix}play2 [song name]\\nExample: ${prefix}play2 faded`);
+                if (!text) return reply(`🎵 *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 Play2*\n\nUsage: ${prefix}play2 [song name]\nExample: ${prefix}play2 faded`);
                 try {
                     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
                     const result = await tohidPlay(text, {
@@ -14819,7 +14819,7 @@ case 'bomb':
                     if (thumbnail) {
                         await devtrust.sendMessage(m.chat, addNewsletterContext({
                             image: { url: thumbnail },
-                            caption: `🎵 *${title}*\\n🤖 Provider: ${result.provider || 'TOHID-AI'}`
+                            caption: `🎵 *${title}*\n🤖 Provider: ${result.provider || 'TOHID-AI'}`
                         }), { quoted: m }).catch(() => {});
                     }
                     const audioBuffer = result.audio?.buffer;
@@ -14835,13 +14835,13 @@ case 'bomb':
                 } catch (error) {
                     console.error('[TOHID-AI PLAY2]', error.stack || error.message);
                     await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => {});
-                    return reply('⚠️ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 Play2*\\n\\nMusic service is currently unavailable. Try again in a moment.');
+                    return reply('⚠️ *𝐓𝐎𝐇𝐈𝐃-𝐀𝐈 Play2*\n\nMusic service is currently unavailable. Try again in a moment.');
                 }
             }
                 break;
 
             case 'ibsbmg': {
-                if (!q) return reply(`🎨 *Use:* img prompt,ratio\\nExample: img robin,3:4`);
+                if (!q) return reply(`🎨 *Use:* img prompt,ratio\nExample: img robin,3:4`);
 
                 const parts = q.split(',');
                 const prompt = parts[0]?.trim();
@@ -14860,7 +14860,7 @@ case 'bomb':
                     await devtrust.sendMessage(m.chat,
                         addNewsletterContext({
                             image: out.buffer,
-                            caption: `🎨 *${prompt}*\\n📐 Ratio: ${ratio}\\n🤖 Model: ${out.model}`
+                            caption: `🎨 *${prompt}*\n📐 Ratio: ${ratio}\n🤖 Model: ${out.model}`
                         }),
                         { quoted: m }
                     );
@@ -15439,7 +15439,7 @@ case 'bomb':
 
                     if (!newsletterJid || !newsletterJid.endsWith('@newsletter')) {
                         const detail = metadataResolveError?.message
-                            ? '\\n\\nResolver: ' + metadataResolveError.message
+                            ? '\n\nResolver: ' + metadataResolveError.message
                             : '';
                         return reply('❌ *Could not resolve the channel JID.*' + detail);
                     }
@@ -17011,7 +17011,7 @@ case 'xnxx': {
                         await devtrust.sendMessage(m.chat,
                             addNewsletterContext({
                                 image: out.buffer,
-                                caption: `🎌 *TOHID-AI*\\n\\n🤖 ${out.model}`
+                                caption: `🎌 *TOHID-AI*\n\n🤖 ${out.model}`
                             }),
                             { quoted: m }
                         );
