@@ -316,15 +316,11 @@ async function updateFromGitHub() {
 }
 
 function entryPointForValidation() {
-    return process.argv[1]
-        ? path.resolve(process.argv[1])
-        : path.join(PROJECT_ROOT, 'index.js');
+    return path.join(PROJECT_ROOT, 'index.js');
 }
 
 function restartProcess() {
-    const entryPoint = process.argv[1]
-        ? path.resolve(process.argv[1])
-        : path.join(PROJECT_ROOT, 'index.js');
+    const entryPoint = path.join(PROJECT_ROOT, 'index.js');
 
     const supervised = Boolean(
         process.env.pm_id ||
