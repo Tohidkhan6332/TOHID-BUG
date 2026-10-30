@@ -13,6 +13,11 @@ const WAITING_PARENT_PID = Number(process.env.TOHID_WAIT_FOR_PARENT_PID || 0);
 
 function pidIsAlive(pid) {
     if (!Number.isInteger(pid) || pid <= 0) return false;
+    try {
+        const stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8');
+        const state = stat.slice(stat.lastIndexOf(')') + 2, stat.lastIndexOf(')') + 3);
+        if (state === 'Z') return false;
+    } catch (_) {}
     try { process.kill(pid, 0); return true; }
     catch (error) { return error?.code === 'EPERM'; }
 }
@@ -49,12 +54,22 @@ async function stopExistingProjectProcess(pid) {
         if (error?.code === 'ESRCH') return;
         throw error;
     }
-    const deadline = Date.now() + 10000;
+    const deadline = Date.now() + 4000;
     while (pidIsAlive(pid) && Date.now() < deadline) {
         await new Promise(resolve => setTimeout(resolve, 250));
     }
     if (pidIsAlive(pid)) {
-        throw new Error(`Existing TOHID-AI instance (PID ${pid}) did not stop within 10 seconds.`);
+        console.warn(`[RUNTIME] PID ${pid} did not exit after SIGTERM; forcing shutdown.`);
+        try { process.kill(pid, 'SIGKILL'); } catch (error) {
+            if (error?.code !== 'ESRCH') throw error;
+        }
+        const killDeadline = Date.now() + 3000;
+        while (pidIsAlive(pid) && Date.now() < killDeadline) {
+            await new Promise(resolve => setTimeout(resolve, 250));
+        }
+    }
+    if (pidIsAlive(pid)) {
+        throw new Error(`Existing TOHID-AI instance (PID ${pid}) could not be stopped.`);
     }
 }
 
