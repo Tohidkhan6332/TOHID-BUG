@@ -14548,21 +14548,31 @@ case 'ytmp3': {
         const out = await tohidPlay(text);
         const title = out.data?.title || text;
         const thumbnail = out.data?.thumbnail || out.data?.thumb || out.data?.image;
+        let header = {
+            title: '🎬 YouTube Download',
+            subtitle: 'TOHID-AI',
+            hasMediaAttachment: false
+        };
         if (thumbnail) {
-            await devtrust.sendMessage(m.chat, addNewsletterContext({
-                image: { url: thumbnail },
-                caption: `🎬 *${title}*\n\n🎵 YouTube Download\n🚀 Engine: ${out.provider || 'TOHID-AI'}`
-            }), { quoted: m }).catch(() => {});
+            try {
+                const media = await prepareWAMessageMedia(
+                    { image: { url: thumbnail } },
+                    { upload: devtrust.waUploadToServer }
+                );
+                header = { ...header, hasMediaAttachment: true, ...media };
+            } catch (thumbnailError) {
+                console.warn('[PLAY] Thumbnail upload failed:', thumbnailError?.message || thumbnailError);
+            }
         }
         const formatMessage = generateWAMessageFromContent(m.chat, {
             viewOnceMessage: {
                 message: {
+                    messageContextInfo: {
+                        deviceListMetadata: {},
+                        deviceListMetadataVersion: 2
+                    },
                     interactiveMessage: proto.Message.InteractiveMessage.create({
-                        header: proto.Message.InteractiveMessage.Header.create({
-                            title: '🎬 YouTube Download',
-                            subtitle: 'TOHID-AI',
-                            hasMediaAttachment: false
-                        }),
+                        header: proto.Message.InteractiveMessage.Header.create(header),
                         body: proto.Message.InteractiveMessage.Body.create({
                             text: `🎬 *${title}*\n\nChoose a format to download:`
                         }),
