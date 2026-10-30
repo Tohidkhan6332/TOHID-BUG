@@ -14504,18 +14504,33 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
             }
                 break;
 
+            case 'video':
             case 'ytmp4': {
-    if (!text) return reply('🎬 *Usage:* .ytmp4 <YouTube URL>');
-    const youtubeUrl = text.trim();
-    if (!/^https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(youtubeUrl)) return reply('❌ *Please provide a valid YouTube URL*');
+    if (!text) return reply('🎬 *Usage:* .video <YouTube URL>');
+    let youtubeUrl = text.trim();
+    if (!/^https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\//i.test(youtubeUrl)) {
+        if (command !== 'video') return reply('❌ *Please provide a valid YouTube URL*');
+        const search = await yts(youtubeUrl);
+        youtubeUrl = search?.videos?.[0]?.url || '';
+        if (!youtubeUrl) return reply('❌ *No matching YouTube video found*');
+    }
     await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
         const out = await tohidYouTube(youtubeUrl);
         const video = await axios.get(out.media, { responseType: 'arraybuffer', timeout: 120000 });
+        const videoBuffer = Buffer.from(video.data);
+        const contentType = String(video.headers?.['content-type'] || '').toLowerCase();
+        const isMp4 = videoBuffer.length > 8 && videoBuffer.subarray(4, 8).toString() === 'ftyp';
+        const isWebm = videoBuffer.length > 4 && videoBuffer.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+        if (videoBuffer.length < 8192 || (!/^video\//.test(contentType) && !isMp4 && !isWebm)) {
+            throw new Error('Provider returned an invalid or empty video file');
+        }
+        const title = out.data?.title || youtubeUrl;
         await devtrust.sendMessage(m.chat, addNewsletterContext({
-            video: Buffer.from(video.data),
-            mimetype: 'video/mp4',
-            caption: '🎬 *TOHID-AI YOUTUBE DOWNLOADER*\n\n🚀 Engine: ' + out.provider
+            video: videoBuffer,
+            mimetype: isWebm ? 'video/webm' : 'video/mp4',
+            fileName: String(title).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 100) + (isWebm ? '.webm' : '.mp4'),
+            caption: '🎬 *TOHID-AI YOUTUBE DOWNLOADER*\n\n' + title + '\n\n🚀 Engine: ' + out.provider
         }), { quoted: m });
         await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {

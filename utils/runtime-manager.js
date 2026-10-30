@@ -2,10 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { execFile, spawn } = require('child_process');
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 
-const GITHUB_OWNER = 'Tohidkhan6332';
-const GITHUB_REPO = 'TOHID-BUG';
-const GITHUB_BRANCH = 'main';
+const GITHUB_OWNER = process.env.UPDATE_GITHUB_OWNER || 'Tohidkhan6332';
+const GITHUB_REPO = process.env.UPDATE_GITHUB_REPO || 'TOHID-BUG';
+const GITHUB_BRANCH = process.env.UPDATE_GITHUB_BRANCH || 'main';
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -25,7 +26,7 @@ function detectPlatform() {
 
 function run(command, args = [], options = {}) {
   return new Promise((resolve, reject) => {
-    execFile(command, args, { cwd: process.cwd(), windowsHide: true, maxBuffer: 1024 * 1024 * 8, ...options }, (error, stdout, stderr) => {
+    execFile(command, args, { cwd: options.cwd || PROJECT_ROOT, windowsHide: true, maxBuffer: 1024 * 1024 * 8, ...options }, (error, stdout, stderr) => {
       if (error) { error.stdout = stdout; error.stderr = stderr; reject(error); return; }
       resolve({ stdout, stderr });
     });
@@ -84,7 +85,7 @@ async function restartProcess() {
   }
 
   if (platform === 'termux' || platform === 'generic') {
-    const entryPoint = process.argv[1] ? path.resolve(process.argv[1]) : path.join(process.cwd(), 'index.js');
+    const entryPoint = path.join(PROJECT_ROOT, 'index.js');
 
     // Spawn a completely detached replacement process. Its stdio must NOT
     // inherit the Telegram/Termux process, otherwise the child can be killed
@@ -92,7 +93,7 @@ async function restartProcess() {
     let child;
     try {
       child = spawn(process.execPath, [entryPoint, ...process.argv.slice(2)], {
-        cwd: process.cwd(),
+        cwd: PROJECT_ROOT,
         env: {
           ...process.env,
           TOHID_RESTARTED: '1',
@@ -134,7 +135,7 @@ async function runWithRetry(command, args = [], options = {}, attempts = 3, dela
 }
 
 async function localGitUpdate() {
-  const gitDir = path.join(process.cwd(), '.git');
+  const gitDir = path.join(PROJECT_ROOT, '.git');
   if (!fs.existsSync(gitDir)) {
     throw new Error('No .git directory found. This deployment is not a Git checkout.');
   }
@@ -185,7 +186,7 @@ async function localGitUpdate() {
   }
 
   let install = null;
-  if (fs.existsSync(path.join(process.cwd(), 'package.json'))) {
+  if (fs.existsSync(path.join(PROJECT_ROOT, 'package.json'))) {
     try {
       install = await runWithRetry(
         'npm',
@@ -209,10 +210,10 @@ async function localGitUpdate() {
 
   // Never restart into a broken checkout. Validate the main entry point
   // after Git/npm work and before handing off to the replacement process.
-  const entryPoint = path.join(process.cwd(), 'index.js');
+  const entryPoint = path.join(PROJECT_ROOT, 'index.js');
   if (fs.existsSync(entryPoint)) {
     try {
-      await run(process.execPath, ['--check', entryPoint], { cwd: process.cwd(), env: process.env });
+      await run(process.execPath, ['--check', entryPoint], { cwd: PROJECT_ROOT, env: process.env });
       console.log('[UPDATE] index.js syntax check passed.');
     } catch (error) {
       const details = String(error.stderr || error.stdout || error.message || '').trim();

@@ -3679,9 +3679,9 @@ bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
 
         await bot.sendMessage(
             chatId,
-            '⬆️ *Updating TOHID-AI...*\\n\\n' +
-            '📦 Source: *' + GITHUB_OWNER + '/' + GITHUB_REPO + ':' + GITHUB_BRANCH + '*\\n' +
-            '🖥️ Platform: *' + platform + '*\\n' +
+            '⬆️ *Updating TOHID-AI...*\n\n' +
+            '📦 Source: *' + GITHUB_OWNER + '/' + GITHUB_REPO + ':' + GITHUB_BRANCH + '*\n' +
+            '🖥️ Platform: *' + platform + '*\n' +
             '⏳ Getting the latest version...',
             { parse_mode: 'Markdown' }
         );
