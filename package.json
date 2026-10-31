@@ -7,8 +7,6 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "bot": "node Tohid.js",
-    "web": "node website/server.js",
-    "dev:web": "node website/server.js",
     "test": "node --check index.js && node --check MrTohid.js && node --check pair.js && node --check Tohid.js"
   },
   "keywords": [
