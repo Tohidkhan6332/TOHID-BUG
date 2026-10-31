@@ -35,7 +35,7 @@ function boardHtml(room) {
   }).join('');
 
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-    *{box-sizing:border-box}html,body{margin:0;background:transparent;font-family:Arial,sans-serif}body{padding:8px;background:radial-gradient(circle at 50% 0%,#4d285a,#05080d 70%);color:#edf5ff}.card{max-width:430px;margin:0 auto;border-radius:18px;background:rgba(12,18,24,.92);border:1px solid rgba(255,255,255,.12);padding:12px;box-shadow:0 16px 30px rgba(0,0,0,.35)}.title{text-align:center;font-size:28px;font-weight:900;color:#f2d86a;margin-bottom:4px;letter-spacing:1px}.sub{text-align:center;color:#d6e5ff;font-size:12px;letter-spacing:1.1px;margin-bottom:10px}.hud{display:flex;justify-content:space-between;gap:8px;margin-bottom:12px}.hud-box{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 10px;text-align:center;font-weight:800;font-size:12px}.board{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;background:rgba(255,255,255,.05);padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,.08)}.cell{position:relative;height:34px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);overflow:hidden}.cell.blue{background:rgba(68,154,255,.25)}.cell.red{background:rgba(255,94,94,.24)}.cell.green{background:rgba(83,214,118,.22)}.cell.yellow{background:rgba(255,196,67,.22)}.cell.center{background:rgba(255,255,255,.08)}.token{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#fff;border:2px solid rgba(255,255,255,.8);box-shadow:0 3px 8px rgba(0,0,0,.25)}.token.blue{background:#3b9dff}.token.red{background:#ff5b5b}.token.green{background:#36d17d}.token.yellow{background:#f7c948;color:#171717}.players{display:flex;gap:8px;margin-top:12px}.player-box{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px}.player-name{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;color:#dce9ff}.tokens{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.status{margin-top:12px;text-align:center;font-weight:800;font-size:12px;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);color:#edf5ff}
+    *{box-sizing:border-box}html,body{margin:0;background:transparent;font-family:Arial,sans-serif}body{padding:8px;background:radial-gradient(circle at 50% 0%,#4d285a,#05080d 70%);color:#edf5ff}.[...]
   </style></head><body><div class="card"><div class="title">🎲 LUDO</div><div class="sub">2 PLAYER · HTML MODE</div><div class="hud"><div class="hud-box">TURN<br>${turnName}</div><div class="hud-box">DICE<br>${lastDice}</div></div><div class="board">${Array.from({ length: 81 }, (_, i) => {
     const row = Math.floor(i / 9);
     const col = i % 9;
@@ -46,7 +46,7 @@ function boardHtml(room) {
     if (row < 3 && col > 5) className += ' green';
     if (row > 5 && col > 5) className += ' yellow';
     return `<div class="${className}"></div>`;
-  }).join('')}</div><div class="players"><div class="player-box"><div class="player-name">${p1.name}</div><div class="tokens">${renderTokens(p1.tokens, p1.color)}</div></div><div class="player-box"><div class="player-name">${p2.name}</div><div class="tokens">${renderTokens(p2.tokens, p2.color)}</div></div></div><div class="status">${room?.winner ? `🏆 ${room.winner} wins!` : room?.status === 'waiting' ? 'Waiting for second player...' : 'Roll the dice or use .ludo roll / .ludo move 2'}</div></div></body></html>`;
+  }).join('')}</div><div class="players"><div class="player-box"><div class="player-name">${p1.name}</div><div class="tokens">${renderTokens(p1.tokens, p1.color)}</div></div><div class="player-box"><div class="player-name">${p2.name}</div><div class="tokens">${renderTokens(p2.tokens, p2.color)}</div></div></div></div></body></html>`;
 }
 
 module.exports = {
@@ -69,7 +69,7 @@ module.exports = {
         }
       }
 
-      const botRoom = createBotRoom({ challengerJid: from, challengerName: pushName || 'Player' });
+      const botRoom = createBotRoom(from, pushName || 'Player');
       try {
         await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
         return reply('🎮 Ludo started against TOHID-BOT.\nUse: .ludo roll\nUse: .ludo move 2');
@@ -81,7 +81,7 @@ module.exports = {
     const first = String(args[0]).toLowerCase();
 
     if (first === 'bot') {
-      const botRoom = createBotRoom({ challengerJid: from, challengerName: pushName || 'Player' });
+      const botRoom = createBotRoom(from, pushName || 'Player');
       try {
         await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
         return reply('🤖 Ludo vs BOT started.\nUse .ludo roll');
@@ -124,7 +124,8 @@ module.exports = {
         return reply('Choose a token 0-3: .ludo move 0');
       }
 
-      const result = moveToken(currentRoom, currentRoom.currentTurn, tokenIndex);
+      const activePlayer = currentRoom.players[currentRoom.currentTurn];
+      const result = moveToken(currentRoom, activePlayer?.jid || from, tokenIndex);
       if (!result.ok) return reply(result.message);
       try {
         await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(currentRoom), title: 'TOHID LUDO' });
@@ -155,6 +156,6 @@ module.exports = {
       return reply('Ludo room closed.');
     }
 
-    return reply('🎮 LUDO COMMANDS\n.ludo -> start bot match\n.ludo bot -> play vs BOT\n.ludo @user -> challenge user\n.ludo accept <roomid> -> accept challenge\n.ludo roll -> roll dice\n.ludo move 0-3 -> move token\n.ludo cancel -> close room');
+    return reply('🎮 LUDO COMMANDS\n.ludo -> start bot match\n.ludo bot -> play vs BOT\n.ludo @user -> challenge user\n.ludo accept <roomid> -> accept challenge\n.ludo roll -> roll dice\n.ludo move 0..3 -> move token');
   },
 };
