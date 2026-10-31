@@ -44,7 +44,8 @@ img {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -298,7 +299,8 @@ input {
 
 .feature-grid,
 .pricing-grid,
-.dashboard-grid {
+.dashboard-grid,
+.admin-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 22px;
@@ -400,20 +402,24 @@ input {
   color: var(--muted);
 }
 
-.pairing-grid {
+.pairing-grid,
+.admin-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
   align-items: center;
 }
 
-.pairing-copy h2 {
+.pairing-copy h2,
+.form-card h3 {
   margin: 0 0 16px;
   font-size: clamp(2rem, 3vw, 3rem);
 }
 
 .pairing-copy p,
-.pairing-copy li {
+.pairing-copy li,
+.list-box,
+.mini-user {
   color: var(--muted);
   line-height: 1.8;
 }
@@ -427,13 +433,8 @@ input {
   padding: 28px 22px;
 }
 
-.form-card h3 {
-  margin-top: 0;
-  margin-bottom: 18px;
-  font-size: 1.5rem;
-}
-
-#pairing-form {
+#pairing-form,
+#approval-form {
   display: grid;
   gap: 18px;
 }
@@ -445,7 +446,8 @@ label {
   font-weight: 600;
 }
 
-input {
+input,
+select {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
@@ -455,7 +457,8 @@ input {
   outline: none;
 }
 
-input:focus {
+input:focus,
+select:focus {
   border-color: rgba(77, 208, 255, 0.8);
   box-shadow: 0 0 0 4px rgba(77, 208, 255, 0.12);
 }
@@ -493,6 +496,25 @@ input:focus {
 
 .error {
   color: var(--danger);
+}
+
+.success {
+  color: var(--success);
+}
+
+.list-box {
+  display: grid;
+  gap: 10px;
+}
+
+.mini-user {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line);
+  border-radius: 12px;
 }
 
 .dashboard-grid {
@@ -558,6 +580,7 @@ input:focus {
   .feature-grid,
   .pricing-grid,
   .dashboard-grid,
+  .admin-grid,
   .pairing-grid,
   .hero-grid,
   .footer-grid {
@@ -573,6 +596,7 @@ input:focus {
   .feature-grid,
   .pricing-grid,
   .dashboard-grid,
+  .admin-grid,
   .pairing-grid,
   .hero-grid,
   .footer-grid {
@@ -587,3 +611,5 @@ input:focus {
     padding: 72px 0;
   }
 }
+
+* { scrollbar-width: thin; scrollbar-color: #4dd0ff #07131f; }
