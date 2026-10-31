@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 const chalk = require('chalk');
 const figlet = require('figlet');
 const { runStartupDebug, attachGlobalHandlers, startSessionMonitor } = require('./debug.js');
@@ -40,16 +41,31 @@ function runtimePidIsThisProject(pid) {
         return commandLine.includes(path.join(__dirname, 'index.js')) ||
             commandLine.includes(__dirname);
     } catch (_) {
-        // If process details are unavailable, fail safely rather than
-        // starting a second Telegram/WhatsApp instance.
-        return true;
+        // An inaccessible PID may belong to another Android/Termux process.
+        // Do not treat it as this project without identity evidence.
+        return false;
+    }
+}
+
+function signalPid(pid, signal) {
+    try {
+        process.kill(pid, signal);
+        return;
+    } catch (error) {
+        if (error?.code === 'ESRCH') return;
+        // Some Termux/Android sessions reject Node's process.kill even for a
+        // process started by an older shell. Retry through the platform kill
+        // command before reporting a real failure.
+        const result = spawnSync('kill', [`-${signal}`, String(pid)], { stdio: 'ignore' });
+        if (result.status === 0) return;
+        throw error;
     }
 }
 
 async function stopExistingProjectProcess(pid) {
     if (!pidIsAlive(pid)) return;
     try {
-        process.kill(pid, 'SIGTERM');
+        signalPid(pid, 'SIGTERM');
     } catch (error) {
         if (error?.code === 'ESRCH') return;
         throw error;
@@ -60,7 +76,7 @@ async function stopExistingProjectProcess(pid) {
     }
     if (pidIsAlive(pid)) {
         console.warn(`[RUNTIME] PID ${pid} did not exit after SIGTERM; forcing shutdown.`);
-        try { process.kill(pid, 'SIGKILL'); } catch (error) {
+        try { signalPid(pid, 'SIGKILL'); } catch (error) {
             if (error?.code !== 'ESRCH') throw error;
         }
         const killDeadline = Date.now() + 3000;
@@ -107,7 +123,17 @@ async function acquireRuntimeLock() {
         const existingPid = Number(existing?.pid || 0);
         if (existingPid && existingPid !== process.pid && runtimePidIsThisProject(existingPid)) {
             console.warn(`[RUNTIME] Existing TOHID-AI instance found (PID ${existingPid}); stopping it before startup.`);
-            await stopExistingProjectProcess(existingPid);
+            try {
+                await stopExistingProjectProcess(existingPid);
+            } catch (stopError) {
+                const startedAt = Date.parse(existing?.startedAt || '');
+                const lockAge = Number.isFinite(startedAt) ? Date.now() - startedAt : Infinity;
+                if (stopError?.code === 'EPERM' && lockAge > 5 * 60 * 1000) {
+                    console.warn(`[RUNTIME] Could not signal stale PID ${existingPid}; recovering old lock.`);
+                } else {
+                    throw new Error(`Existing TOHID-AI instance (PID ${existingPid}) is active and cannot be stopped. Close the old Termux process, then run npm start again.`);
+                }
+            }
         }
 
         // Stale lock left by a crashed process.
