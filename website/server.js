@@ -3,9 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
+const { startpairing, getConnectionHealth } = require('../pair');
+
 const PORT = Number(process.env.PORT || 3000);
-const ROOT = __dirname;
+const ROOT = path.resolve(__dirname, '..');
 const SITE_ROOT = path.join(ROOT, 'website');
+const DATA_DIR = path.join(ROOT, 'website', 'data');
+const ACCESS_FILE = path.join(DATA_DIR, 'access.json');
 
 const PLANS = [
   {
@@ -31,6 +35,85 @@ const PLANS = [
     features: ['Unlimited bots', 'Custom onboarding', 'Advanced analytics']
   }
 ];
+
+function ensureDataStorage() {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(ACCESS_FILE)) {
+    fs.writeFileSync(ACCESS_FILE, JSON.stringify({ users: [] }, null, 2));
+  }
+}
+
+function normalizePhone(value) {
+  return String(value || '').replace(/[^0-9]/g, '');
+}
+
+function readApprovedUsers() {
+  ensureDataStorage();
+  try {
+    const raw = fs.readFileSync(ACCESS_FILE, 'utf8');
+    const parsed = JSON.parse(raw || '{}');
+    return Array.isArray(parsed.users) ? parsed.users : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeApprovedUsers(users) {
+  ensureDataStorage();
+  fs.writeFileSync(ACCESS_FILE, JSON.stringify({ users }, null, 2), 'utf8');
+}
+
+function findApprovedUser(number) {
+  const normalized = normalizePhone(number);
+  const users = readApprovedUsers();
+  return users.find((user) => normalizePhone(user.number) === normalized && user.status === 'approved');
+}
+
+function getPairingCodeByNumber(number) {
+  const normalized = normalizePhone(number);
+  const sessionDir = path.join(__dirname, '..', 'tohidstore', 'pairing', normalized);
+  const filePath = path.join(sessionDir, 'pairing.json');
+
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return data.code || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function waitForPairingCode(number, timeoutMs = 30000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const code = getPairingCodeByNumber(number);
+    if (code) return code;
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  return null;
+}
+
+function getConnectionStatus(number) {
+  const normalized = normalizePhone(number);
+  const connections = getConnectionHealth();
+  const match = connections.find((entry) => normalizePhone(entry.number) === normalized);
+  if (match) {
+    return {
+      state: match.state || 'unknown',
+      connected: match.state === 'online',
+      retryCount: Number(match.retryCount || 0)
+    };
+  }
+
+  return {
+    state: 'not_found',
+    connected: false,
+    retryCount: 0
+  };
+}
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -67,12 +150,7 @@ function serveStaticFile(res, filePath) {
   });
 }
 
-function validatePhone(value) {
-  const cleaned = String(value || '').replace(/[^0-9]/g, '');
-  return /^\d{10,15}$/.test(cleaned);
-}
-
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = requestUrl.pathname;
 
@@ -80,13 +158,64 @@ const server = http.createServer((req, res) => {
     sendJson(res, 200, {
       status: 'ok',
       app: 'TOHID-BUG',
-      message: 'Website is running and ready to sell pairing bots.'
+      message: 'Website and pairing server is running.'
     });
     return;
   }
 
   if (pathname === '/api/plans') {
     sendJson(res, 200, { plans: PLANS });
+    return;
+  }
+
+  if (pathname === '/api/approved-users') {
+    sendJson(res, 200, { users: readApprovedUsers() });
+    return;
+  }
+
+  if (pathname === '/api/manual-approve') {
+    if (req.method !== 'POST') {
+      sendJson(res, 405, { error: 'Method not allowed. Use POST.' });
+      return;
+    }
+
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const number = normalizePhone(payload.number);
+        const plan = String(payload.plan || 'Growth').trim();
+
+        if (!number || number.length < 10) {
+          sendJson(res, 400, { ok: false, message: 'Please provide a valid WhatsApp number.' });
+          return;
+        }
+
+        const users = readApprovedUsers();
+        const index = users.findIndex((user) => normalizePhone(user.number) === number);
+
+        const record = {
+          number: number,
+          plan,
+          status: 'approved',
+          approvedBy: payload.approvedBy || 'manual-admin',
+          approvedAt: new Date().toISOString(),
+          note: payload.note || 'Payment manually verified.'
+        };
+
+        if (index >= 0) {
+          users[index] = { ...users[index], ...record };
+        } else {
+          users.push(record);
+        }
+
+        writeApprovedUsers(users);
+        sendJson(res, 200, { ok: true, user: record, message: 'User access approved successfully.' });
+      } catch (error) {
+        sendJson(res, 400, { ok: false, message: 'Invalid JSON payload.' });
+      }
+    });
     return;
   }
 
@@ -97,38 +226,74 @@ const server = http.createServer((req, res) => {
     }
 
     let body = '';
-
-    req.on('data', chunk => {
-      body += chunk;
-    });
-
-    req.on('end', () => {
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
       try {
         const payload = JSON.parse(body || '{}');
-        const number = String(payload.number || '').trim();
+        const number = normalizePhone(payload.number);
+        const customCode = String(payload.customCode || '').trim() || null;
 
-        if (!validatePhone(number)) {
-          sendJson(res, 400, {
+        if (!number || number.length < 10) {
+          sendJson(res, 400, { ok: false, message: 'Please provide a valid WhatsApp number.' });
+          return;
+        }
+
+        const approvedUser = findApprovedUser(number);
+        if (!approvedUser) {
+          sendJson(res, 403, {
             ok: false,
-            message: 'Please enter a valid WhatsApp number.'
+            message: 'This number is not approved yet. Please complete payment verification first.'
           });
           return;
         }
 
-        const code = `AB${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-        sendJson(res, 200, {
-          ok: true,
-          status: 'pairing_in_progress',
-          number,
-          code,
-          message: 'Pairing request accepted. Ask your customer to open WhatsApp and enter the code shown below.'
-        });
+        try {
+          const socket = await startpairing(number, customCode, true);
+          const code = await waitForPairingCode(number, 30000);
+          const status = getConnectionStatus(number);
+
+          sendJson(res, 200, {
+            ok: true,
+            number,
+            code: code || customCode || 'WAITING',
+            status: status.state,
+            connected: status.connected,
+            message: socket
+              ? 'Pairing started successfully. Scan the code from WhatsApp to complete the connection.'
+              : 'Pairing request accepted.'
+          });
+        } catch (error) {
+          sendJson(res, 500, {
+            ok: false,
+            message: error && error.message ? error.message : 'Failed to start pairing.'
+          });
+        }
       } catch (error) {
-        sendJson(res, 400, {
-          ok: false,
-          message: 'Invalid request body.'
-        });
+        sendJson(res, 400, { ok: false, message: 'Invalid request body.' });
       }
+    });
+    return;
+  }
+
+  if (pathname === '/api/status') {
+    const number = normalizePhone(new URL(req.url, 'http://localhost').searchParams.get('number'));
+    if (!number) {
+      sendJson(res, 400, { ok: false, message: 'Number is required.' });
+      return;
+    }
+
+    const approvedUser = findApprovedUser(number);
+    const status = getConnectionStatus(number);
+    const code = getPairingCodeByNumber(number);
+
+    sendJson(res, 200, {
+      ok: true,
+      approved: !!approvedUser,
+      number,
+      plan: approvedUser?.plan || null,
+      status: status.state,
+      connected: status.connected,
+      pairingCode: code || null
     });
     return;
   }
@@ -154,5 +319,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
+  ensureDataStorage();
   console.log(`✅ TOHID-BUG website running at http://localhost:${PORT}`);
+  console.log('✅ Manual approval + pairing API activated.');
 });
