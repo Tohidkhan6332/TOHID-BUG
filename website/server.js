@@ -3,7 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const { startpairing, getConnectionHealth } = require('../pair');
+const pairingModule = require('../pair');
+const startpairing = pairingModule.startpairing || pairingModule;
+const getConnectionHealth = pairingModule.getConnectionHealth;
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = path.resolve(__dirname, '..');
