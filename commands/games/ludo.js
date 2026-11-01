@@ -1,25 +1,189 @@
 'use strict';
 
 const { sendRichHtml } = require('../../utils/TohidGenai');
+const {
+  createBotRoom,
+  createChallengeRoom,
+  getRoomForJid,
+  acceptChallenge,
+  rollDice,
+  moveToken,
+  removeRoom,
+  botTurn,
+} = require('../../utils/TohidLudo');
 
-function ludoHtml() {
+function getMentionedTarget(msg, args) {
+  const mentioned = msg?.message?.extendedTextMessage?.contextInfo?.mentionedJid ||
+    msg?.message?.contextInfo?.mentionedJid ||
+    [];
+
+  if (Array.isArray(mentioned) && mentioned.length) return mentioned[0];
+  const match = (args || []).find(v => String(v).includes('@'));
+  return match || null;
+}
+
+function boardHtml(room) {
+  const players = Array.isArray(room?.players) ? room.players : [];
+  const p1 = players[0] || { name: 'P1', tokens: [-1, -1, -1, -1], color: 'blue' };
+  const p2 = players[1] || { name: 'P2', tokens: [-1, -1, -1, -1], color: 'red' };
+
+  const turnName = players[room?.currentTurn]?.name || 'Unknown';
+  const lastDice = room?.lastDice ?? '—';
+
+  const renderTokens = (tokens, color) => tokens.map((pos) => {
+    const value = pos >= 0 ? String(pos) : '•';
+    return `<div class="token ${color}">${value}</div>`;
+  }).join('');
+
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-*{box-sizing:border-box}body{margin:0;padding:8px;background:#071018;color:#eef;font-family:Arial,sans-serif}.card{padding:12px;border:2px solid #f59e0b;border-radius:18px;background:linear-gradient(145deg,#241308,#142536);text-align:center}.title{font-size:24px;font-weight:900;letter-spacing:2px;color:#ffd166}.sub{font:10px monospace;color:#cbd5e1;margin:5px}.status{min-height:38px;margin:8px auto;padding:8px;border-radius:10px;background:#182b3b;font:bold 12px monospace;color:#f8fafc}.track{display:grid;grid-template-columns:repeat(13,1fr);gap:3px;max-width:390px;margin:10px auto}.cell{aspect-ratio:1;display:grid;place-items:center;border-radius:5px;background:#26394a;font:bold 13px monospace;color:#dbeafe}.cell.home{background:#374151}.cell.goal{background:#f59e0b;color:#241308}.cell.p0{outline:2px solid #38bdf8}.cell.p1{outline:2px solid #fb7185}.tokens{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;max-width:390px;margin:8px auto}.tokens button,.roll{border:1px solid #fbbf24;border-radius:9px;background:#172b3b;color:#fef3c7;padding:9px 4px;font-weight:800}.tokens button:disabled{opacity:.45}.roll{width:100%;font-size:16px;background:#92400e}.hint{margin-top:8px;font:9px monospace;color:#94a3b8}</style></head><body><div class="card"><div class="title">🎲 TOHID LUDO</div><div class="sub">RACE FOUR TOKENS TO HOME · YOU VS BOT</div><div class="status" id="status">Roll the dice to start.</div><div class="track" id="track"></div><button class="roll" id="roll">🎲 ROLL DICE</button><div class="tokens" id="tokens"></div><div class="hint">Roll 6 to leave base. Choose a highlighted token after rolling.</div></div><script>
-(function(){var track=document.getElementById('track'),tokensEl=document.getElementById('tokens'),status=document.getElementById('status'),rollBtn=document.getElementById('roll');var me=[-1,-1,-1,-1],bot=[-1,-1,-1,-1],die=0,waiting=true,finished=false;function label(v){return v<0?'BASE':v>=52?'HOME':String(v+1)}function draw(){track.innerHTML='';for(var i=0;i<52;i++){var d=document.createElement('div');d.className='cell';var mine=me.indexOf(i),theirs=bot.indexOf(i);if(mine>=0){d.className+=' p0';d.textContent='🔵'+(mine+1)}else if(theirs>=0){d.className+=' p1';d.textContent='🔴'+(theirs+1)}else d.textContent=i+1;track.appendChild(d)}tokensEl.innerHTML='';me.forEach(function(v,i){var b=document.createElement('button');b.textContent='🔵 '+(i+1)+' · '+label(v);b.disabled=finished||waiting||!canMove(v);b.onclick=function(){move(i)};tokensEl.appendChild(b)});rollBtn.disabled=finished||!waiting}function canMove(v){return die>0&&(v>=0||die===6)&&(v+die<=52)}function move(i){if(!canMove(me[i]))return;me[i]=me[i]<0?0:me[i]+die;var used=die;die=0;waiting=true;if(me[i]>=52){me[i]=52;status.textContent='🎉 Token '+(i+1)+' reached HOME!'}else status.textContent='You moved token '+(i+1)+' by '+used+'. Bot is thinking...';if(me.every(function(x){return x>=52})){finished=true;status.textContent='🏆 YOU WIN! All tokens reached HOME.';draw();return}draw();setTimeout(botTurn,450)}function botTurn(){if(finished)return;var d=Math.floor(Math.random()*6)+1;var movable=bot.map(function(v,i){return (v>=0||d===6)&&(v+d<=52)?i:-1}).filter(function(i){return i>=0});if(movable.length){var i=movable[Math.floor(Math.random()*movable.length)];bot[i]=bot[i]<0?0:bot[i]+d;if(bot[i]>=52)bot[i]=52;status.textContent='Bot rolled '+d+'. Roll again.'}else status.textContent='Bot rolled '+d+'. Your turn.';waiting=true;draw()}rollBtn.onclick=function(){if(!waiting||finished)return;die=Math.floor(Math.random()*6)+1;waiting=false;status.textContent='You rolled '+die+'. Choose a token.';if(!me.some(canMove)){status.textContent='You rolled '+die+'. No legal move; bot turn.';waiting=true;draw();return}draw()};draw()})();
-</script></body></html>`;
+    *{box-sizing:border-box}html,body{margin:0;background:transparent;font-family:Arial,sans-serif}body{padding:8px;background:radial-gradient(circle at 50% 0%,#4d285a,#05080d 70%);color:#edf5ff}.card{max-width:420px;margin:0 auto;border-radius:18px;padding:14px;background:rgba(16,19,26,.88);border:1px solid rgba(255,255,255,.08);box-shadow:0 16px 40px rgba(0,0,0,.35)}.title{font-size:24px;font-weight:700;text-align:center;margin-bottom:4px}.sub{text-align:center;font-size:12px;color:#9ab5d8;letter-spacing:2px;margin-bottom:12px}.hud{display:flex;gap:10px;margin-bottom:12px}.hud-box{flex:1;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);text-align:center;font-size:12px;font-weight:700;color:#dfeaff}.board{display:grid;grid-template-columns:repeat(9, 1fr);gap:4px;background:#121922;border-radius:12px;padding:8px;border:1px solid rgba(255,255,255,.06)}.cell{aspect-ratio:1;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:6px}.cell.center{background:rgba(255,205,86,.15);border-color:rgba(255,205,86,.5)}.cell.blue{background:rgba(30,120,255,.18)}.cell.red{background:rgba(255,70,87,.18)}.cell.green{background:rgba(66,204,146,.18)}.cell.yellow{background:rgba(244,208,63,.18)}.players{display:flex;gap:10px;margin-top:12px}.player-box{flex:1;padding:8px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05)}.player-name{font-size:13px;font-weight:700;margin-bottom:6px}.tokens{display:flex;flex-wrap:wrap;gap:6px}.token{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700;color:#08121a;box-shadow:inset 0 1px 2px rgba(255,255,255,.3)}.token.blue{background:#5ab2ff}.token.red{background:#ff7c8b}.token.green{background:#68f0b6}.token.yellow{background:#ffd75a}.token.default{background:#dfeaff}
+  </style></head><body><div class="card"><div class="title">🎲 LUDO</div><div class="sub">2 PLAYER · HTML MODE</div><div class="hud"><div class="hud-box">TURN<br>${turnName}</div><div class="hud-box">DICE<br>${lastDice}</div></div><div class="board">${Array.from({ length: 81 }, (_, i) => {
+    const row = Math.floor(i / 9);
+    const col = i % 9;
+    let className = 'cell';
+    if (row === 4 && col === 4) className += ' center';
+    if (row < 3 && col < 3) className += ' blue';
+    if (row > 5 && col < 3) className += ' red';
+    if (row < 3 && col > 5) className += ' green';
+    if (row > 5 && col > 5) className += ' yellow';
+    return `<div class="${className}"></div>`;
+  }).join('')}</div><div class="players"><div class="player-box"><div class="player-name">${p1.name}</div><div class="tokens">${renderTokens(p1.tokens, p1.color)}</div></div><div class="player-box"><div class="player-name">${p2.name}</div><div class="tokens">${renderTokens(p2.tokens, p2.color)}</div></div></div></div></body></html>`;
+}
+
+async function handleBotTurn(sock, from, msg, room) {
+  if (!room || room.players?.[room.currentTurn]?.type !== 'bot') return null;
+
+  const updatedRoom = botTurn(room);
+  try {
+    await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(updatedRoom || room), title: 'TOHID LUDO' });
+  } catch (error) {}
+
+  if (updatedRoom?.winner) {
+    return `🤖 Bot moved. ${updatedRoom.winner} wins!`;
+  }
+
+  return '🤖 Bot turn complete.';
 }
 
 module.exports = {
   name: 'ludo',
-  aliases: ['ludogame'],
-  description: 'Interactive HTML Ludo race against the bot',
+  aliases: ['ludogame', 'ludoboard'],
+  description: '2-player HTML Ludo with bot or human challenge',
   category: 'games',
-  async execute({ sock, msg, from, reply }) {
-    try {
-      await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoHtml() });
-    } catch (error) {
-      console.error('[LUDO HTML]', error.stack || error.message);
-      await reply('🎲 Ludo could not open on this WhatsApp client. Please update WhatsApp and try `.ludo` again.');
+
+  async execute({ sock, from, reply, pushName, msg, args }) {
+    const mentioned = getMentionedTarget(msg, args);
+    const room = getRoomForJid(from);
+
+    if (!args || !args.length) {
+      if (room && room.status === 'active') {
+        try {
+          await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(room), title: 'TOHID LUDO' });
+          return;
+        } catch (error) {
+          return reply('Ludo board could not be opened.');
+        }
+      }
+
+      const botRoom = createBotRoom(from, pushName || 'Player');
+      try {
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
+        return reply('🎮 Ludo started against TOHID-BOT.\nUse: .ludo roll\nUse: .ludo move 2');
+      } catch (error) {
+        return reply('Cannot start Ludo right now.');
+      }
     }
+
+    const first = String(args[0]).toLowerCase();
+
+    if (first === 'bot') {
+      const botRoom = createBotRoom(from, pushName || 'Player');
+      try {
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
+        return reply('🤖 Ludo vs BOT started.\nUse .ludo roll');
+      } catch (error) {
+        return reply('BOT Ludo could not start.');
+      }
+    }
+
+    if (first === 'accept') {
+      const targetRoomId = args[1] || null;
+      const accepted = acceptChallenge(targetRoomId, from);
+      if (!accepted) return reply('No pending Ludo room to accept.');
+      try {
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(accepted), title: 'TOHID LUDO' });
+        return reply(`✅ Ludo challenge accepted.\nRoom: ${accepted.id}\n${accepted.players[accepted.currentTurn]?.name} turn.`);
+      } catch (error) {
+        return reply('Challenge accepted but board could not open.');
+      }
+    }
+
+    if (first === 'roll') {
+      const currentRoom = getRoomForJid(from);
+      if (!currentRoom) return reply('No active Ludo room. Start with .ludo or .ludo @user');
+
+      if (currentRoom.players[currentRoom.currentTurn]?.type === 'bot') {
+        const botReply = await handleBotTurn(sock, from, msg, currentRoom);
+        return reply(botReply || '🤖 Bot turn complete.');
+      }
+
+      const rolled = rollDice(currentRoom);
+      if (!rolled.ok) return reply(rolled.message);
+
+      try {
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(currentRoom), title: 'TOHID LUDO' });
+        return reply(`🎲 Dice: ${rolled.dice}\nUse: .ludo move 0 / .ludo move 1 / .ludo move 2 / .ludo move 3`);
+      } catch (error) {
+        return reply(`🎲 Dice: ${rolled.dice}. Use .ludo move 0..3`);
+      }
+    }
+
+    if (first === 'move') {
+      const currentRoom = getRoomForJid(from);
+      if (!currentRoom) return reply('No active game room.');
+      const tokenIndex = Number(args[1]);
+      if (!Number.isInteger(tokenIndex) || tokenIndex < 0 || tokenIndex > 3) {
+        return reply('Choose a token 0-3: .ludo move 0');
+      }
+
+      const activePlayer = currentRoom.players[currentRoom.currentTurn];
+      const result = moveToken(currentRoom, activePlayer?.jid || from, tokenIndex);
+      if (!result.ok) return reply(result.message);
+
+      if (currentRoom.players[currentRoom.currentTurn]?.type === 'bot') {
+        const botReply = await handleBotTurn(sock, from, msg, currentRoom);
+        return reply(`${result.message || 'Move made.'}\n${botReply || '🤖 Bot turn complete.'}`);
+      }
+
+      try {
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(currentRoom), title: 'TOHID LUDO' });
+      } catch (error) {}
+
+      return reply(result.message || 'Move made.');
+    }
+
+    if (mentioned) {
+      const room = createChallengeRoom({
+        challengerJid: from,
+        challengerName: pushName || 'Player',
+        opponentJid: mentioned,
+        opponentName: 'Opponent',
+      });
+      try {
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(room), title: 'TOHID LUDO' });
+        return reply(`🎮 Ludo challenge sent to ${mentioned}.\nRoom ID: ${room.id}\nOpponent use: .ludo accept ${room.id}`);
+      } catch (error) {
+        return reply(`Ludo challenge sent to ${mentioned}. Room ID: ${room.id}`);
+      }
+    }
+
+    if (first === 'cancel' || first === 'close') {
+      const currentRoom = getRoomForJid(from);
+      if (!currentRoom) return reply('No active Ludo room.');
+      removeRoom(currentRoom.id);
+      return reply('Ludo room closed.');
+    }
+
+    return reply('🎮 LUDO COMMANDS\n.ludo -> start bot match\n.ludo bot -> play vs BOT\n.ludo @user -> challenge user\n.ludo accept <roomid> -> accept challenge\n.ludo roll -> roll dice\n.ludo move 0..3 -> move token');
   },
 };
