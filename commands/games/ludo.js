@@ -143,21 +143,24 @@ function boardCellMarkup() {
   for (let row = 0; row < 15; row++) {
     for (let col = 0; col < 15; col++) {
       let className = 'cell';
-      const center = row === 7 && col === 7;
-      const isBlueBase = (row < 6 && col < 6) || (row > 8 && col > 8);
-      const isRedBase = (row < 6 && col > 8) || (row > 8 && col < 6);
-      const isGreenTrack = row >= 3 && row <= 11 && col >= 3 && col <= 11;
-      const isPath = (row === 7 && col >= 0 && col <= 14) || (col === 7 && row >= 0 && row <= 14);
+      const isBoardCross = (row === 7 && col >= 0 && col <= 14) || (col === 7 && row >= 0 && row <= 14);
+      const isBlueHome = row < 6 && col < 6;
+      const isRedHome = row < 6 && col > 8;
+      const isGreenHome = row > 8 && col < 6;
+      const isYellowHome = row > 8 && col > 8;
+      const inCenter = row >= 5 && row <= 9 && col >= 5 && col <= 9;
+      const isSafeTrack = (row === 6 && col === 1) || (row === 1 && col === 8) || (row === 8 && col === 13) || (row === 13 && col === 6);
 
-      if (center) className += ' center';
-      if (isBlueBase) className += ' blue';
-      if (isRedBase) className += ' red';
-      if (isGreenTrack) className += ' green';
-      if (isPath) className += ' path';
-      if (row === 6 && col === 7) className += ' start-blue';
-      if (row === 8 && col === 7) className += ' start-red';
-      if (row === 7 && col === 6) className += ' start-green';
-      if (row === 7 && col === 8) className += ' start-yellow';
+      if (isBlueHome) className += ' blue-home';
+      if (isRedHome) className += ' red-home';
+      if (isGreenHome) className += ' green-home';
+      if (isYellowHome) className += ' yellow-home';
+      if (inCenter) className += ' center-zone';
+      if (isBoardCross) className += ' track';
+      if (isSafeTrack) className += ' safe';
+      if (row === 7 && col === 7) className += ' center-star';
+      if ((row === 6 && col === 7) || (row === 8 && col === 7) || (row === 7 && col === 6) || (row === 7 && col === 8)) className += ' start-point';
+
       cells.push(`<div class="${className}"></div>`);
     }
   }
@@ -180,8 +183,8 @@ function renderPlayerState(player, accent) {
 
 function ludoBoardHtml(room) {
   const players = Array.isArray(room?.players) ? room.players : [];
-  const p1 = players[0] || { name: 'Player 1', tokens: [-1, -1, -1, -1], color: 'blue' };
-  const p2 = players[1] || { name: 'Player 2', tokens: [-1, -1, -1, -1], color: 'red' };
+  const p1 = players[0] || { name: 'Player 1', tokens: [0, 0, 0, 0], color: 'blue' };
+  const p2 = players[1] || { name: 'Player 2', tokens: [0, 0, 0, 0], color: 'red' };
   const turnName = players[room?.currentTurn]?.name || 'Unknown';
   const lastDice = room?.lastDice ?? '—';
   const status = room?.winner ? `${room.winner} wins` : room?.status || 'active';
@@ -249,7 +252,7 @@ function ludoBoardHtml(room) {
       .board {
         display: grid;
         grid-template-columns: repeat(15, minmax(0, 1fr));
-        gap: 4px;
+        gap: 3px;
         padding: 10px;
         border-radius: 18px;
         background: rgba(2, 6, 23, 0.9);
@@ -262,17 +265,17 @@ function ludoBoardHtml(room) {
         border: 1px solid rgba(148, 163, 184, 0.18);
         display: grid;
         place-items: center;
+        position: relative;
       }
-      .cell.blue { background: rgba(96, 165, 250, 0.25); }
-      .cell.red { background: rgba(251, 113, 133, 0.25); }
-      .cell.green { background: rgba(74, 222, 128, 0.18); }
-      .cell.yellow { background: rgba(250, 204, 21, 0.18); }
-      .cell.center { background: rgba(255, 255, 255, 0.18); }
-      .cell.path { background: rgba(203, 213, 225, 0.1); }
-      .cell.start-blue { background: rgba(96, 165, 250, 0.48); }
-      .cell.start-red { background: rgba(251, 113, 133, 0.48); }
-      .cell.start-green { background: rgba(74, 222, 128, 0.45); }
-      .cell.start-yellow { background: rgba(250, 204, 21, 0.45); }
+      .blue-home { background: rgba(96, 165, 250, 0.28); }
+      .red-home { background: rgba(251, 113, 133, 0.28); }
+      .green-home { background: rgba(74, 222, 128, 0.28); }
+      .yellow-home { background: rgba(250, 204, 21, 0.28); }
+      .track { background: rgba(226, 232, 240, 0.15); }
+      .center-zone { background: rgba(255,255,255,0.04); }
+      .safe { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18); }
+      .center-star { background: radial-gradient(circle, #f8fafc 0%, #a5b4fc 35%, rgba(148,163,184,0.15) 100%); }
+      .start-point { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.45); }
       .player-row {
         display: grid;
         grid-template-columns: repeat(2, minmax(0,1fr));
@@ -295,6 +298,8 @@ function ludoBoardHtml(room) {
       }
       .player-head.blue { background: rgba(96,165,250,.18); color: #bfdbfe; }
       .player-head.red { background: rgba(251,113,133,.16); color: #fecdd3; }
+      .player-head.green { background: rgba(74,222,128,.16); color: #bbf7d0; }
+      .player-head.yellow { background: rgba(250,204,21,.18); color: #fef3c7; }
       .tokens {
         display: grid;
         grid-template-columns: repeat(4, minmax(0,1fr));
@@ -367,8 +372,8 @@ function ludoBoardHtml(room) {
       </div>
 
       <div class="info">
-        <div class="tiny">ONE FRAME MODE</div>
-        1P vs BOT • 2P Offline • 2P Online Challenge<br>All choices are shown in this same board.
+        <div class="tiny">REAL LUDO STYLE</div>
+        Classic 4-color board • 1P vs BOT • 2P Offline • 2P Online Challenge
       </div>
     </div>
 
@@ -380,13 +385,13 @@ function ludoBoardHtml(room) {
         const info = document.querySelector('.info');
         if (!info) return;
         if (action === 'roll') {
-          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>Dice rolled. Select a move from this same board.';
+          info.innerHTML = '<div class="tiny">REAL LUDO STYLE</div>Dice rolled. Select an available token from this real board view.';
         }
         if (action === 'move') {
-          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>Move selected. No extra commands are needed.';
+          info.innerHTML = '<div class="tiny">REAL LUDO STYLE</div>Move selected. No extra command is needed.';
         }
         if (action === 'reset') {
-          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>New match started. Use the same single frame.';
+          info.innerHTML = '<div class="tiny">REAL LUDO STYLE</div>New match started. Same board UI, real Ludo style.';
         }
       });
     </script>
@@ -408,7 +413,7 @@ async function handleBotTurn(sock, from, msg, room) {
 module.exports = {
   name: 'ludo',
   aliases: ['ludogame', 'ludoboard'],
-  description: 'Single-frame Ludo menu with bot, offline, and online challenge modes',
+  description: 'Real-style Ludo board with bot, offline and online challenge support',
   category: 'games',
 
   async execute({ sock, from, sender, reply, pushName, msg, args }) {
@@ -448,7 +453,7 @@ module.exports = {
         const botRoom = createBotRoom(playerJid, pushName || 'Player', from, difficulty);
         try {
           await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoBoardHtml(botRoom), title: 'TOHID LUDO' });
-          return reply('🎲 1P vs BOT mode selected. Use the same board UI to play.');
+          return reply('🎲 Real-style 1P vs BOT mode selected. Use the same board UI to play.');
         } catch (error) {
           return reply('BOT mode could not start.');
         }
@@ -463,7 +468,7 @@ module.exports = {
         });
         try {
           await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoBoardHtml(localRoom), title: 'TOHID LUDO' });
-          return reply('🎮 2P Offline mode selected. Use the same board UI to play.');
+          return reply('🎮 Real-style 2P Offline mode selected. Use the same board UI to play.');
         } catch (error) {
           return reply('Offline local match could not start.');
         }
@@ -486,7 +491,7 @@ module.exports = {
 
     try {
       await sendRichHtml({ sock, jid: from, quoted: msg, html: roomMenuHtml(), title: 'TOHID LUDO' });
-      return reply('🎲 Ludo opened in single-frame mode. All options are inside this board.');
+      return reply('🎲 Ludo opened in real-style single-frame mode. All options are inside this board.');
     } catch (error) {
       return reply('Ludo menu could not be opened.');
     }
