@@ -25,27 +25,30 @@ function getMentionedTarget(msg, args) {
   return match || null;
 }
 
-function renderBoardState(room) {
-  const players = Array.isArray(room?.players) ? room.players : [];
-  const safePlayers = players.length ? players : [
-    { name: 'YOU', tokens: [-1, -1, -1, -1], color: 'blue' },
-    { name: 'BOT', tokens: [-1, -1, -1, -1], color: 'red' },
-  ];
+function boardCellMarkup() {
+  const cells = [];
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      let className = 'cell';
+      const center = row === 7 && col === 7;
+      const isBlueBase = (row < 6 && col < 6) || (row > 8 && col > 8);
+      const isRedBase = (row < 6 && col > 8) || (row > 8 && col < 6);
+      const isGreenTrack = row >= 3 && row <= 11 && col >= 3 && col <= 11;
+      const isPath = (row === 7 && col >= 0 && col <= 14) || (col === 7 && row >= 0 && row <= 14);
 
-  const p1 = safePlayers[0] || { name: 'P1', tokens: [-1, -1, -1, -1], color: 'blue' };
-  const p2 = safePlayers[1] || { name: 'P2', tokens: [-1, -1, -1, -1], color: 'red' };
-
-  const current = room?.players?.[room.currentTurn]?.name || 'Player';
-  const lastDice = room?.lastDice ?? '—';
-  const status = room?.winner ? `${room.winner} wins` : room?.status || 'active';
-
-  return {
-    p1: { ...p1, tokens: p1.tokens || [-1, -1, -1, -1] },
-    p2: { ...p2, tokens: p2.tokens || [-1, -1, -1, -1] },
-    current,
-    lastDice,
-    status,
-  };
+      if (center) className += ' center';
+      if (isBlueBase) className += ' blue';
+      if (isRedBase) className += ' red';
+      if (isGreenTrack) className += ' green';
+      if (isPath) className += ' path';
+      if (row === 6 && col === 7) className += ' start-blue';
+      if (row === 8 && col === 7) className += ' start-red';
+      if (row === 7 && col === 6) className += ' start-green';
+      if (row === 7 && col === 8) className += ' start-yellow';
+      cells.push(`<div class="${className}"></div>`);
+    }
+  }
+  return cells.join('');
 }
 
 function offlineHtml() {
@@ -56,196 +59,167 @@ function offlineHtml() {
     <title>TOHID LUDO</title>
     <style>
       * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; background: transparent; font-family: Arial, sans-serif; }
+      html, body { margin: 0; padding: 0; width: 100%; background: transparent; font-family: Arial, sans-serif; }
       body {
-        background: radial-gradient(circle at top, #1e293b, #040a13 62%);
+        background: radial-gradient(circle at top, #172554 8%, #090d14 58%, #02050c 100%);
         padding: 12px;
-        color: #ecf4ff;
+        color: #edf6ff;
       }
-      .wrap {
-        max-width: 480px;
+      .shell {
+        max-width: 470px;
         margin: 0 auto;
-        border-radius: 22px;
+        border-radius: 24px;
         overflow: hidden;
-        background: linear-gradient(180deg, rgba(15,23,42,.96), rgba(7,12,20,.98));
-        border: 1px solid rgba(148,163,184,.22);
-        box-shadow: 0 12px 30px rgba(0,0,0,.38);
+        background: rgba(8, 14, 24, 0.96);
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        box-shadow: 0 18px 42px rgba(0,0,0,0.38);
       }
-      .header {
-        padding: 18px 16px 10px;
-        background: linear-gradient(90deg, #0ea5e9, #8b5cf6 55%, #f59e0b);
+      .top {
+        padding: 20px 16px 8px;
         text-align: center;
+        background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #f59e0b);
+        font-size: 30px;
         font-weight: 900;
-        letter-spacing: .8px;
-        font-size: 28px;
+        letter-spacing: 1px;
       }
       .sub {
         text-align: center;
+        padding-bottom: 18px;
         font-size: 10px;
         letter-spacing: 2px;
-        color: rgba(255,255,255,.8);
-        padding: 0 0 14px;
+        color: rgba(255,255,255,0.8);
+        background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #f59e0b);
       }
-      .panel {
-        padding: 16px;
-      }
-      .cards {
+      .panel { padding: 18px 16px 20px; }
+      .mini {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
       }
-      .card {
-        background: rgba(15,23,42,.9);
-        border: 1px solid rgba(96,165,250,.3);
+      .mini-box {
+        background: rgba(15, 23, 42, 0.9);
         border-radius: 14px;
         padding: 12px 10px;
+        border: 1px solid rgba(96, 165, 250, 0.28);
         text-align: center;
       }
-      .card .label {
+      .mini-box span {
         display: block;
         color: #93c5fd;
         font-size: 10px;
-        letter-spacing: 1.5px;
+        letter-spacing: 1.4px;
         margin-bottom: 6px;
       }
-      .card .value {
+      .mini-box strong {
         font-size: 24px;
-        font-weight: 900;
       }
-      .buttons {
+      .button-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
-        margin-top: 12px;
       }
       button {
         border: none;
         border-radius: 12px;
-        font-weight: 800;
-        font-size: 14px;
-        padding: 12px 10px;
+        padding: 13px 10px;
+        font-weight: 900;
+        font-size: 13px;
         cursor: pointer;
-        transition: 0.2s ease;
+        transition: transform 0.2s ease, opacity 0.2s ease;
       }
       button:active { transform: scale(0.98); }
-      .primary {
-        background: linear-gradient(90deg, #22c55e, #16a34a);
-        color: #edfff3;
-      }
-      .accent {
-        background: linear-gradient(90deg, #f59e0b, #f97316);
-        color: #fffaf0;
-      }
-      .ghost {
-        background: rgba(51,65,85,.95);
-        color: #e2e8f0;
-      }
+      .primary { background: linear-gradient(90deg, #22c55e, #16a34a); color: #ecfdf5; }
+      .gold { background: linear-gradient(90deg, #f59e0b, #f97316); color: #fff7ed; }
+      .muted { background: rgba(51, 65, 85, 0.92); color: #e2e8f0; }
       .info {
-        margin-top: 14px;
-        border-radius: 12px;
-        background: rgba(30,41,59,.7);
-        color: #cbd5e1;
-        padding: 12px;
+        margin-top: 16px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 14px;
+        padding: 12px 13px;
+        color: #dbeafe;
         font-size: 12px;
-        line-height: 1.6;
-        border: 1px solid rgba(148,163,184,.18);
+        line-height: 1.7;
       }
       .tiny {
         color: #7dd3fc;
-        font-size: 11px;
-        letter-spacing: 1px;
+        font-size: 10px;
+        letter-spacing: 1.5px;
       }
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <div class="header">🎲 LUDO</div>
+    <div class="shell">
+      <div class="top">🎲 LUDO</div>
       <div class="sub">TOHID CLASSIC MATCH</div>
       <div class="panel">
-        <div class="cards">
-          <div class="card">
-            <span class="label">TURN</span>
-            <div class="value" id="turnLabel">PLAYER</div>
-          </div>
-          <div class="card">
-            <span class="label">DICE</span>
-            <div class="value" id="diceLabel">—</div>
-          </div>
+        <div class="mini">
+          <div class="mini-box"><span>TURN</span><strong id="turnValue">PLAYER</strong></div>
+          <div class="mini-box"><span>DICE</span><strong id="diceValue">—</strong></div>
         </div>
 
-        <div class="buttons">
+        <div class="button-grid">
           <button class="primary" data-action="roll">🎲 Roll Dice</button>
-          <button class="accent" data-action="reset">🔄 New Match</button>
-          <button class="ghost" data-action="move0">🟦 Token 1</button>
-          <button class="ghost" data-action="move1">🟩 Token 2</button>
-          <button class="ghost" data-action="move2">🟥 Token 3</button>
-          <button class="ghost" data-action="move3">🟨 Token 4</button>
+          <button class="gold" data-action="reset">🔄 Reset</button>
+          <button class="muted" data-action="move0">🟦 Token 1</button>
+          <button class="muted" data-action="move1">🟩 Token 2</button>
+          <button class="muted" data-action="move2">🟥 Token 3</button>
+          <button class="muted" data-action="move3">🟨 Token 4</button>
         </div>
 
         <div class="info">
           <div class="tiny">STATUS</div>
-          <div id="statusText">Tap the dice to begin. If your client does not support interactive HTML, use command shortcuts like .ludo roll and .ludo move 0.</div>
+          <div id="statusText">Tap Roll Dice to start the match. If your client blocks the HTML controls, use the command fallback: .ludo roll, .ludo move 0, .ludo move 1.</div>
         </div>
       </div>
     </div>
 
     <script>
-      const state = {
-        turn: 'PLAYER',
-        dice: '—',
-        status: 'Tap the dice to begin.',
-        tokens: [0, 0, 0, 0],
-      };
-
-      const turnLabel = document.getElementById('turnLabel');
-      const diceLabel = document.getElementById('diceLabel');
+      const state = { turn: 'PLAYER', dice: '—', tokens: [0, 0, 0, 0], status: 'Tap Roll Dice to start the match.' };
+      const turnValue = document.getElementById('turnValue');
+      const diceValue = document.getElementById('diceValue');
       const statusText = document.getElementById('statusText');
 
-      function setState(next) {
-        Object.assign(state, next);
-        turnLabel.textContent = state.turn;
-        diceLabel.textContent = state.dice;
+      function syncUI() {
+        turnValue.textContent = state.turn;
+        diceValue.textContent = state.dice;
         statusText.textContent = state.status;
       }
 
-      function rollRandom() {
+      function rollDice() {
         const value = 1 + Math.floor(Math.random() * 6);
-        setState({
-          dice: String(value),
-          status: 'Dice landed on ' + value + '. Choose a token to move.',
-        });
+        state.dice = String(value);
+        state.status = 'Dice rolled: ' + value + '. Choose a token.';
+        syncUI();
       }
 
       function moveToken(index) {
-        const current = Number(state.tokens[index] || 0);
-        const movement = Number(state.dice === '—' ? 0 : state.dice);
         if (state.dice === '—') {
-          setState({ status: 'Roll the dice first.' });
+          state.status = 'Roll the dice before moving.';
+          syncUI();
           return;
         }
-        const nextValue = current + movement;
-        state.tokens[index] = nextValue;
-        setState({
-          status: 'Token ' + (index + 1) + ' moved to ' + nextValue + '. Turn passed to opponent.',
-          dice: '—',
-          turn: state.turn === 'PLAYER' ? 'BOT' : 'PLAYER',
-        });
+        const current = Number(state.tokens[index] || 0);
+        const next = current + Number(state.dice);
+        state.tokens[index] = next;
+        state.status = 'Token ' + (index + 1) + ' moved to ' + next + '. Turn passed to opponent.';
+        state.dice = '—';
+        state.turn = state.turn === 'PLAYER' ? 'BOT' : 'PLAYER';
+        syncUI();
       }
 
       document.addEventListener('click', (event) => {
         const btn = event.target.closest('[data-action]');
         if (!btn) return;
         const action = btn.getAttribute('data-action');
-
-        if (action === 'roll') rollRandom();
+        if (action === 'roll') rollDice();
         else if (action === 'reset') {
-          setState({
-            turn: 'PLAYER',
-            dice: '—',
-            status: 'Match reset. Tap the dice to begin.',
-            tokens: [0, 0, 0, 0],
-          });
+          state.turn = 'PLAYER';
+          state.dice = '—';
+          state.tokens = [0, 0, 0, 0];
+          state.status = 'Match reset. Tap Roll Dice to start again.';
+          syncUI();
         } else if (action === 'move0') moveToken(0);
         else if (action === 'move1') moveToken(1);
         else if (action === 'move2') moveToken(2);
@@ -256,21 +230,27 @@ function offlineHtml() {
 </html>`;
 }
 
+function renderPlayerState(player, accent) {
+  const tokens = (player?.tokens || [-1, -1, -1, -1]).map((pos, idx) => {
+    const value = pos >= 0 ? String(pos) : '•';
+    return `<div class="token ${accent}">${value}</div>`;
+  }).join('');
+
+  return `
+    <div class="player-box">
+      <div class="player-head ${accent}">${player?.name || 'Player'}</div>
+      <div class="tokens">${tokens}</div>
+    </div>
+  `;
+}
+
 function boardHtml(room) {
-  const state = renderBoardState(room);
-  const currentTurn = state.current || 'Player';
-  const lastDice = state.lastDice ?? '—';
+  const players = Array.isArray(room?.players) ? room.players : [];
+  const p1 = players[0] || { name: 'P1', tokens: [-1, -1, -1, -1], color: 'blue' };
+  const p2 = players[1] || { name: 'P2', tokens: [-1, -1, -1, -1], color: 'red' };
+  const turnName = players[room?.currentTurn]?.name || 'Unknown';
+  const lastDice = room?.lastDice ?? '—';
   const status = room?.winner ? `${room.winner} wins` : room?.status || 'active';
-
-  const p1Tokens = state.p1.tokens.map((pos, i) => {
-    const val = pos >= 0 ? String(pos) : '•';
-    return `<div class="token blue">${val}</div>`;
-  }).join('');
-
-  const p2Tokens = state.p2.tokens.map((pos, i) => {
-    const val = pos >= 0 ? String(pos) : '•';
-    return `<div class="token red">${val}</div>`;
-  }).join('');
 
   return `<!doctype html>
 <html>
@@ -279,120 +259,131 @@ function boardHtml(room) {
     <title>TOHID LUDO</title>
     <style>
       * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; background: transparent; font-family: Arial, sans-serif; }
+      html, body { margin: 0; padding: 0; width: 100%; background: transparent; font-family: Arial, sans-serif; }
       body {
-        background: radial-gradient(circle at top, #312e81, #090d14 70%);
+        background: radial-gradient(circle at top, #1e1b4b, #070d14 65%, #02050a 100%);
         padding: 12px;
-        color: #eef6ff;
+        color: #f8fafc;
       }
-      .board-shell {
-        max-width: 520px;
+      .game-box {
+        max-width: 560px;
         margin: 0 auto;
+        background: rgba(9, 15, 24, 0.98);
         border-radius: 26px;
         overflow: hidden;
-        background: rgba(11,18,32,.96);
-        border: 1px solid rgba(148,163,184,.25);
-        box-shadow: 0 18px 36px rgba(0,0,0,.45);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        box-shadow: 0 18px 36px rgba(0,0,0,0.45);
       }
-      .topbar {
-        padding: 16px 18px 8px;
-        background: linear-gradient(90deg, #0f766e, #2563eb, #7c3aed);
+      .header {
+        padding: 18px 18px 10px;
         text-align: center;
+        background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #f59e0b);
+        font-size: 28px;
         font-weight: 900;
-        font-size: 27px;
         letter-spacing: 1px;
       }
-      .meta {
+      .status-row {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0,1fr));
         gap: 8px;
-        padding: 8px 16px 14px;
-        background: rgba(15,23,42,.9);
+        padding: 12px 14px 6px;
+        background: rgba(15,23,42,.96);
       }
-      .meta-box {
-        background: rgba(30,41,59,.8);
+      .chip {
+        background: rgba(30,41,59,.9);
         border: 1px solid rgba(148,163,184,.18);
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 10px 8px;
         text-align: center;
       }
-      .meta-box .label {
+      .chip .label {
         display: block;
-        font-size: 9px;
-        letter-spacing: 1.4px;
         color: #93c5fd;
+        font-size: 9px;
+        letter-spacing: 1.5px;
+        margin-bottom: 6px;
       }
-      .meta-box .text {
+      .chip .value {
         display: block;
         font-weight: 900;
-        margin-top: 5px;
         font-size: 16px;
       }
-      .grid {
+      .board-wrap {
+        padding: 8px 12px 2px;
+        background: rgba(15,23,42,.96);
+      }
+      .board {
         display: grid;
-        grid-template-columns: repeat(15, 1fr);
+        grid-template-columns: repeat(15, minmax(0, 1fr));
         gap: 4px;
-        padding: 12px;
-        background: rgba(15,23,42,.9);
+        padding: 10px;
+        border-radius: 18px;
+        background: rgba(2, 6, 23, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.18);
       }
       .cell {
         aspect-ratio: 1;
         border-radius: 6px;
-        background: rgba(148,163,184,.12);
-        border: 1px solid rgba(148,163,184,.18);
+        background: rgba(148, 163, 184, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.18);
         display: grid;
         place-items: center;
-        font-size: 8px;
-        font-weight: 800;
       }
-      .cell.blue { background: rgba(96,165,250,.28); }
-      .cell.red { background: rgba(251,113,133,.28); }
-      .cell.green { background: rgba(74,222,128,.23); }
-      .cell.yellow { background: rgba(250,204,21,.24); }
-      .cell.start { background: rgba(99,102,241,.42); }
-      .cell.center { background: rgba(255,255,255,.18); }
-      .token-zone {
+      .cell.blue { background: rgba(96, 165, 250, 0.25); }
+      .cell.red { background: rgba(251, 113, 133, 0.25); }
+      .cell.green { background: rgba(74, 222, 128, 0.18); }
+      .cell.yellow { background: rgba(250, 204, 21, 0.18); }
+      .cell.center { background: rgba(255, 255, 255, 0.18); }
+      .cell.path { background: rgba(203, 213, 225, 0.1); }
+      .cell.start-blue { background: rgba(96, 165, 250, 0.48); }
+      .cell.start-red { background: rgba(251, 113, 133, 0.48); }
+      .cell.start-green { background: rgba(74, 222, 128, 0.45); }
+      .cell.start-yellow { background: rgba(250, 204, 21, 0.45); }
+      .player-row {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0,1fr));
         gap: 10px;
-        padding: 12px 14px 18px;
-        background: rgba(15,23,42,.9);
+        padding: 10px 12px 16px;
+        background: rgba(15,23,42,.96);
       }
       .player-box {
-        background: rgba(15,23,42,.8);
-        border: 1px solid rgba(148,163,184,.18);
+        background: rgba(15, 23, 42, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.18);
         border-radius: 14px;
         padding: 10px;
       }
-      .player-name {
+      .player-head {
         font-weight: 900;
         font-size: 14px;
-        margin-bottom: 8px;
-        color: #f8fafc;
+        margin-bottom: 10px;
+        padding: 6px 8px;
+        border-radius: 10px;
       }
+      .player-head.blue { background: rgba(96,165,250,.18); color: #bfdbfe; }
+      .player-head.red { background: rgba(251,113,133,.16); color: #fecdd3; }
       .tokens {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0,1fr));
         gap: 8px;
       }
       .token {
         display: grid;
         place-items: center;
-        border-radius: 12px;
         min-height: 38px;
-        font-size: 12px;
+        border-radius: 12px;
         font-weight: 900;
         color: #0f172a;
       }
-      .token.blue { background: linear-gradient(135deg, #93c5fd, #60a5fa); }
-      .token.red { background: linear-gradient(135deg, #fda4af, #f87171); }
-      .token.green { background: linear-gradient(135deg, #86efac, #4ade80); }
-      .token.yellow { background: linear-gradient(135deg, #fde68a, #facc15); }
+      .token.blue { background: linear-gradient(135deg, #bfdbfe, #60a5fa); }
+      .token.red { background: linear-gradient(135deg, #fecdd3, #f87171); }
+      .token.green { background: linear-gradient(135deg, #bbf7d0, #4ade80); }
+      .token.yellow { background: linear-gradient(135deg, #fef3c7, #facc15); }
       .actions {
         display: grid;
         grid-template-columns: repeat(3, minmax(0,1fr));
         gap: 8px;
-        padding: 0 14px 16px;
+        padding: 0 12px 16px;
+        background: rgba(15,23,42,.96);
       }
       button {
         border: none;
@@ -403,103 +394,86 @@ function boardHtml(room) {
         cursor: pointer;
       }
       .primary { background: linear-gradient(90deg, #22c55e, #16a34a); color: #f0fdf4; }
-      .warning { background: linear-gradient(90deg, #f59e0b, #f97316); color: #fff7ed; }
-      .muted { background: rgba(51,65,85,.9); color: #e2e8f0; }
-      .status-bar {
-        margin: 0 14px 16px;
-        background: rgba(30,41,59,.8);
-        border: 1px solid rgba(148,163,184,.2);
+      .gold { background: linear-gradient(90deg, #f59e0b, #f97316); color: #fff7ed; }
+      .muted { background: rgba(51,65,85,.92); color: #e2e8f0; }
+      .info {
+        margin: 0 12px 16px;
+        background: rgba(30,41,59,.88);
+        border: 1px solid rgba(148,163,184,.18);
         border-radius: 12px;
         padding: 10px 12px;
         font-size: 12px;
         line-height: 1.6;
       }
-      .tiny {
-        color: #a5b4fc;
-        font-size: 10px;
-        letter-spacing: 1.5px;
-      }
+      .tiny { color: #a5b4fc; font-size: 10px; letter-spacing: 1.5px; }
     </style>
   </head>
   <body>
-    <div class="board-shell">
-      <div class="topbar">🎲 TOHID LUDO</div>
-      <div class="meta">
-        <div class="meta-box"><span class="label">TURN</span><span class="text">${currentTurn}</span></div>
-        <div class="meta-box"><span class="label">DICE</span><span class="text">${lastDice}</span></div>
-        <div class="meta-box"><span class="label">STATE</span><span class="text">${status}</span></div>
+    <div class="game-box">
+      <div class="header">🎲 TOHID LUDO</div>
+      <div class="status-row">
+        <div class="chip"><span class="label">TURN</span><span class="value">${turnName}</span></div>
+        <div class="chip"><span class="label">DICE</span><span class="value">${lastDice}</span></div>
+        <div class="chip"><span class="label">STATE</span><span class="value">${status}</span></div>
       </div>
 
-      <div class="grid">
-        ${Array.from({ length: 225 }, (_, index) => {
-          const row = Math.floor(index / 15);
-          const col = index % 15;
-          let cls = 'cell';
-          if (row === 7 && col === 7) cls += ' center';
-          if ((row >= 0 && row <= 5 && col >= 0 && col <= 5) || (row >= 9 && row <= 14 && col >= 9 && col <= 14)) cls += ' blue';
-          if ((row >= 0 && row <= 5 && col >= 9 && col <= 14) || (row >= 9 && row <= 14 && col >= 0 && col <= 5)) cls += ' red';
-          if (row >= 3 && row <= 7 && col >= 3 && col <= 7) cls += ' green';
-          if (row >= 8 && row <= 12 && col >= 8 && col <= 12) cls += ' yellow';
-          if ((row === 7 && col >= 0 && col <= 2) || (row >= 0 && row <= 2 && col === 7) || (row === 7 && col >= 12 && col <= 14) || (row >= 12 && row <= 14 && col === 7)) cls += ' start';
-          return `<div class="${cls}"></div>`;
-        }).join('')}
+      <div class="board-wrap">
+        <div class="board">${boardCellMarkup()}</div>
       </div>
 
-      <div class="token-zone">
-        <div class="player-box">
-          <div class="player-name">${state.p1.name}</div>
-          <div class="tokens">${p1Tokens}</div>
-        </div>
-        <div class="player-box">
-          <div class="player-name">${state.p2.name}</div>
-          <div class="tokens">${p2Tokens}</div>
-        </div>
+      <div class="player-row">
+        ${renderPlayerState(p1, p1.color || 'blue')}
+        ${renderPlayerState(p2, p2.color || 'red')}
       </div>
 
       <div class="actions">
         <button class="primary" data-action="roll">🎲 Roll</button>
-        <button class="warning" data-action="move">🔁 Move</button>
+        <button class="gold" data-action="move">🧭 Move</button>
         <button class="muted" data-action="reset">🔄 Reset</button>
       </div>
 
-      <div class="status-bar">
+      <div class="info">
         <div class="tiny">ACTIONS</div>
-        Use the on-screen buttons for a fast match flow. If your client blocks the HTML controls, use: .ludo roll or .ludo move 0
+        Tap Roll to generate a dice. Use command fallback if your client blocks HTML controls: .ludo roll · .ludo move 0 · .ludo move 1 · .ludo move 2 · .ludo move 3
       </div>
     </div>
 
     <script>
-      const state = {
-        turn: '${currentTurn}',
+      const boardState = {
+        turn: '${turnName}',
         dice: '${lastDice}',
         status: '${status}',
+        tick: 0,
       };
 
-      function updateInfo() {
-        const el = document.querySelector('.meta-box .text');
+      function updateStatus(msg) {
+        const info = document.querySelector('.info');
+        if (info) {
+          info.innerHTML = '<div class="tiny">ACTIONS</div>' + msg;
+        }
       }
 
       document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action]');
         if (!button) return;
         const action = button.getAttribute('data-action');
-        const statusBox = document.querySelector('.status-bar');
 
         if (action === 'roll') {
-          const dice = 1 + Math.floor(Math.random() * 6);
-          state.dice = String(dice);
-          state.status = 'Dice rolled: ' + dice + '. Choose a move.';
-          statusBox.innerHTML = '<div class="tiny">ACTIONS</div>Dice rolled: ' + dice + '. Choose a move.';
+          const value = 1 + Math.floor(Math.random() * 6);
+          boardState.dice = String(value);
+          boardState.status = 'Dice rolled: ' + value + '. Choose a move.';
+          updateStatus('Dice rolled: ' + value + '. Choose a move.');
         }
 
         if (action === 'move') {
-          state.status = 'Move selected. Use the command fallback if your client blocks HTML controls.';
-          statusBox.innerHTML = '<div class="tiny">ACTIONS</div>Move selected. Use .ludo move 0 / .ludo move 1 if needed.';
+          boardState.status = 'Move selected. Use command fallback if UI is blocked.';
+          updateStatus('Move selected. Use command fallback: .ludo move 0 / 1 / 2 / 3');
         }
 
         if (action === 'reset') {
-          state.status = 'New match started.';
-          statusBox.innerHTML = '<div class="tiny">ACTIONS</div>New match started. Tap Roll to begin again.';
+          boardState.dice = '—';
+          boardState.status = 'New match started.';
+          updateStatus('New match started. Tap Roll to generate the first move.');
         }
       });
     </script>
@@ -654,7 +628,7 @@ module.exports = {
     }
 
     if (mentioned) {
-      const room = createChallengeRoom({
+      const gameRoom = createChallengeRoom({
         chatId: from,
         challengerJid: playerJid,
         challengerName: pushName || 'Player',
@@ -662,10 +636,10 @@ module.exports = {
         opponentName: 'Opponent',
       });
       try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(room), title: 'TOHID LUDO' });
-        return reply(`🎮 Ludo challenge sent to ${mentioned}.\nRoom ID: ${room.id}\nOpponent use: .ludo accept ${room.id}`);
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(gameRoom), title: 'TOHID LUDO' });
+        return reply(`🎮 Ludo challenge sent to ${mentioned}.\nRoom ID: ${gameRoom.id}\nOpponent use: .ludo accept ${gameRoom.id}`);
       } catch (error) {
-        return reply(`Ludo challenge sent to ${mentioned}. Room ID: ${room.id}`);
+        return reply(`Ludo challenge sent to ${mentioned}. Room ID: ${gameRoom.id}`);
       }
     }
 
