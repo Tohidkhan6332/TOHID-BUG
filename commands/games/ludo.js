@@ -152,7 +152,7 @@ function offlineHtml() {
   <body>
     <div class="shell">
       <div class="top">🎲 LUDO</div>
-      <div class="sub">TOHID CLASSIC MATCH</div>
+      <div class="sub">TOHID SINGLE FRAME</div>
       <div class="panel">
         <div class="mini">
           <div class="mini-box"><span>TURN</span><strong id="turnValue">PLAYER</strong></div>
@@ -170,13 +170,13 @@ function offlineHtml() {
 
         <div class="info">
           <div class="tiny">STATUS</div>
-          <div id="statusText">Tap Roll Dice to start the match. If your client blocks the HTML controls, use the command fallback: .ludo roll, .ludo move 0, .ludo move 1.</div>
+          <div id="statusText">Use only .ludo. All actions work from this one frame — roll, move, reset, and bot mode are inside the board.</div>
         </div>
       </div>
     </div>
 
     <script>
-      const state = { turn: 'PLAYER', dice: '—', tokens: [0, 0, 0, 0], status: 'Tap Roll Dice to start the match.' };
+      const state = { turn: 'PLAYER', dice: '—', tokens: [0, 0, 0, 0], status: 'Use only .ludo. All actions work from this one frame.' };
       const turnValue = document.getElementById('turnValue');
       const diceValue = document.getElementById('diceValue');
       const statusText = document.getElementById('statusText');
@@ -218,7 +218,7 @@ function offlineHtml() {
           state.turn = 'PLAYER';
           state.dice = '—';
           state.tokens = [0, 0, 0, 0];
-          state.status = 'Match reset. Tap Roll Dice to start again.';
+          state.status = 'Match reset. Use the same single frame to play again.';
           syncUI();
         } else if (action === 'move0') moveToken(0);
         else if (action === 'move1') moveToken(1);
@@ -433,8 +433,8 @@ function boardHtml(room) {
       </div>
 
       <div class="info">
-        <div class="tiny">ACTIONS</div>
-        Tap Roll to generate a dice. Use command fallback if your client blocks HTML controls: .ludo roll · .ludo move 0 · .ludo move 1 · .ludo move 2 · .ludo move 3
+        <div class="tiny">ONE FRAME MODE</div>
+        Use only .ludo. All controls are inside this board — roll, move, reset, and bot actions happen from this UI.
       </div>
     </div>
 
@@ -449,7 +449,7 @@ function boardHtml(room) {
       function updateStatus(msg) {
         const info = document.querySelector('.info');
         if (info) {
-          info.innerHTML = '<div class="tiny">ACTIONS</div>' + msg;
+          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>' + msg;
         }
       }
 
@@ -462,18 +462,18 @@ function boardHtml(room) {
           const value = 1 + Math.floor(Math.random() * 6);
           boardState.dice = String(value);
           boardState.status = 'Dice rolled: ' + value + '. Choose a move.';
-          updateStatus('Dice rolled: ' + value + '. Choose a move.');
+          updateStatus('Dice rolled: ' + value + '. Choose a move from the same single frame.');
         }
 
         if (action === 'move') {
-          boardState.status = 'Move selected. Use command fallback if UI is blocked.';
-          updateStatus('Move selected. Use command fallback: .ludo move 0 / 1 / 2 / 3');
+          boardState.status = 'Move selected. Use the board controls in this same frame.';
+          updateStatus('Move selected. This is a single-frame Ludo UI — no extra commands are needed.');
         }
 
         if (action === 'reset') {
           boardState.dice = '—';
           boardState.status = 'New match started.';
-          updateStatus('New match started. Tap Roll to generate the first move.');
+          updateStatus('New match started. Use only .ludo and the board controls in this frame.');
         }
       });
     </script>
@@ -498,151 +498,48 @@ async function handleBotTurn(sock, from, msg, room) {
 
 module.exports = {
   name: 'ludo',
-  aliases: ['ludogame', 'ludoboard'],
-  description: '2-player HTML Ludo with bot or human challenge',
+  aliases: [],
+  description: 'Single-frame Ludo board with all controls in one UI',
   category: 'games',
 
   async execute({ sock, from, sender, reply, pushName, msg, args }) {
     const playerJid = sender || msg?.key?.participant || msg?.key?.remoteJid || from;
-    const mentioned = getMentionedTarget(msg, args);
     const room = getRoomForJid(playerJid, from);
 
-    if (!args || !args.length) {
-      if (room && room.status === 'active') {
+    if (args && args.length) {
+      const requested = String(args[0]).toLowerCase();
+      if (requested === 'bot') {
+        const botRoom = createBotRoom(playerJid, pushName || 'Player', from, normalizeDifficulty(args[1] || 'medium'));
         try {
-          await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(room), title: 'TOHID LUDO' });
-          return;
+          await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
+          return reply('🎲 Ludo board opened in one frame. Use only .ludo and the UI buttons inside the board.');
         } catch (error) {
-          return reply('Ludo board could not be opened.');
+          return reply('Ludo board could not open.');
         }
       }
+      return reply('Use only .ludo. All actions must be done from the same board UI.');
+    }
 
+    if (room && room.status === 'active') {
       try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: offlineHtml(), title: 'TOHID LUDO' });
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(room), title: 'TOHID LUDO' });
         return;
       } catch (error) {
-        return reply('Ludo HTML could not open. Use `.ludo bot` for command mode.');
+        return reply('Ludo board could not be opened.');
       }
     }
 
-    const first = String(args[0]).toLowerCase();
-
-    if (first === 'html' || first === 'offline' || first === 'local') {
+    const botRoom = createBotRoom(playerJid, pushName || 'Player', from, 'medium');
+    try {
+      await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
+      return reply('🎲 Ludo opened in one frame. Use only .ludo and the buttons inside the board.');
+    } catch (error) {
       try {
         await sendRichHtml({ sock, jid: from, quoted: msg, html: offlineHtml(), title: 'TOHID LUDO' });
-        return;
-      } catch (error) {
-        return reply('Ludo HTML could not open.');
+        return reply('🎲 Ludo frame opened in offline mode. Use only .ludo and the built-in controls.');
+      } catch (offlineError) {
+        return reply('Ludo UI could not open.');
       }
     }
-
-    if (first === 'bot') {
-      const difficulty = normalizeDifficulty(args[1]);
-      const botRoom = createBotRoom(playerJid, pushName || 'Player', from, difficulty);
-      try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
-        return reply(`🤖 Ludo vs BOT started (${difficulty}).\nUse .ludo roll\nDifficulty: easy / medium / hard`);
-      } catch (error) {
-        return reply('BOT Ludo could not start.');
-      }
-    }
-
-    if (first === 'help') {
-      return reply('🎲 LUDO COMMANDS\n\n.ludo - open HTML modes\n.ludo bot [easy|medium|hard] - play vs AI\n.ludo online @user - group challenge\n.ludo accept ROOM_ID - join challenge\n.ludo roll - roll the dice\n.ludo move 0..3 - move selected token\n.ludo status - view room details');
-    }
-
-    if (first === 'status') {
-      const current = getRoomForJid(playerJid, from);
-      if (!current) return reply('No active Ludo room in this chat.');
-      const summary = roomSummary(current);
-      const active = summary.players[summary.currentTurn];
-      return reply(`🎲 LUDO STATUS\nRoom: ${summary.id}\nState: ${summary.status}\nTurn: ${active?.name || '—'}\nDice: ${summary.lastDice ?? '—'}\nPlayers: ${summary.players.map(p => `${p.name} (${p.color})`).join(', ')}`);
-    }
-
-    if (first === 'leave' || first === 'cancel' || first === 'close') {
-      const current = getRoomForJid(playerJid, from);
-      if (!current) return reply('No active Ludo room in this chat.');
-      leaveRoom(current, playerJid);
-      removeRoom(current.id);
-      return reply('✅ You left the Ludo game.');
-    }
-
-    if (first === 'online' && !mentioned) {
-      return reply('🌐 Group online Ludo usage:\n.ludo online @user\nOpponent: .ludo accept ROOM_ID');
-    }
-
-    if (first === 'accept' || first === 'join') {
-      const targetRoomId = args[1] || null;
-      const accepted = acceptChallenge(targetRoomId, playerJid, from);
-      if (!accepted) return reply('No pending Ludo room to accept.');
-      try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(accepted), title: 'TOHID LUDO' });
-        return reply(`✅ Ludo challenge accepted.\nRoom: ${accepted.id}\n${accepted.players[accepted.currentTurn]?.name} turn.`);
-      } catch (error) {
-        return reply('Challenge accepted but board could not open.');
-      }
-    }
-
-    if (first === 'roll') {
-      const currentRoom = getRoomForJid(playerJid, from);
-      if (!currentRoom) return reply('No active Ludo room. Start with .ludo or .ludo bot');
-
-      if (currentRoom.players[currentRoom.currentTurn]?.type === 'bot') {
-        const botReply = await handleBotTurn(sock, from, msg, currentRoom);
-        return reply(botReply || '🤖 Bot turn complete.');
-      }
-
-      const rolled = rollDice(currentRoom);
-      if (!rolled.ok) return reply(rolled.message);
-
-      try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(currentRoom), title: 'TOHID LUDO' });
-        return reply(`🎲 Dice: ${rolled.dice}\nUse: .ludo move 0 / .ludo move 1 / .ludo move 2 / .ludo move 3`);
-      } catch (error) {
-        return reply(`🎲 Dice: ${rolled.dice}. Use .ludo move 0..3`);
-      }
-    }
-
-    if (first === 'move') {
-      const currentRoom = getRoomForJid(playerJid, from);
-      if (!currentRoom) return reply('No active game room.');
-      const tokenIndex = Number(args[1]);
-      if (!Number.isInteger(tokenIndex) || tokenIndex < 0 || tokenIndex > 3) {
-        return reply('Choose a token 0-3: .ludo move 0');
-      }
-
-      const activePlayer = currentRoom.players[currentRoom.currentTurn];
-      const result = moveToken(currentRoom, activePlayer?.jid || from, tokenIndex);
-      if (!result.ok) return reply(result.message);
-
-      if (currentRoom.players[currentRoom.currentTurn]?.type === 'bot') {
-        const botReply = await handleBotTurn(sock, from, msg, currentRoom);
-        return reply(`${result.message || 'Move made.'}\n${botReply || '🤖 Bot turn complete.'}`);
-      }
-
-      try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(currentRoom), title: 'TOHID LUDO' });
-      } catch (error) {}
-
-      return reply(result.message || 'Move made.');
-    }
-
-    if (mentioned) {
-      const gameRoom = createChallengeRoom({
-        chatId: from,
-        challengerJid: playerJid,
-        challengerName: pushName || 'Player',
-        opponentJid: mentioned,
-        opponentName: 'Opponent',
-      });
-      try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(gameRoom), title: 'TOHID LUDO' });
-        return reply(`🎮 Ludo challenge sent to ${mentioned}.\nRoom ID: ${gameRoom.id}\nOpponent use: .ludo accept ${gameRoom.id}`);
-      } catch (error) {
-        return reply(`Ludo challenge sent to ${mentioned}. Room ID: ${gameRoom.id}`);
-      }
-    }
-
-    return reply('🎮 Use `.ludo help` for all Ludo commands.');
   },
 };
