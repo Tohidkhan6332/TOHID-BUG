@@ -25,6 +25,119 @@ function getMentionedTarget(msg, args) {
   return match || null;
 }
 
+function roomMenuHtml() {
+  return `<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>TOHID LUDO</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; width: 100%; background: transparent; font-family: Arial, sans-serif; }
+      body {
+        background: radial-gradient(circle at top, #111827, #040814 65%, #02050a 100%);
+        padding: 12px;
+        color: #f8fafc;
+      }
+      .shell {
+        max-width: 530px;
+        margin: 0 auto;
+        background: rgba(15, 23, 42, 0.96);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 26px;
+        overflow: hidden;
+        box-shadow: 0 18px 38px rgba(0,0,0,0.45);
+      }
+      .header {
+        padding: 20px 18px 12px;
+        text-align: center;
+        background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #f59e0b);
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: 1px;
+      }
+      .subtitle {
+        padding: 0 18px 16px;
+        text-align: center;
+        background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #f59e0b);
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.85);
+      }
+      .body {
+        padding: 18px 14px 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .mode-btn {
+        border: none;
+        border-radius: 16px;
+        padding: 16px 10px;
+        font-size: 15px;
+        font-weight: 900;
+        cursor: pointer;
+        color: white;
+        min-height: 94px;
+      }
+      .bot { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+      .local { background: linear-gradient(135deg, #22c55e, #16a34a); }
+      .online { background: linear-gradient(135deg, #f59e0b, #f97316); }
+      .status { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+      .info {
+        margin-top: 16px;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(148,163,184,.18);
+        border-radius: 14px;
+        padding: 12px 13px;
+        line-height: 1.7;
+        color: #dbeafe;
+        font-size: 12px;
+      }
+      .tiny { color: #a5b4fc; font-size: 10px; letter-spacing: 1.4px; margin-bottom: 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="header">🎲 LUDO</div>
+      <div class="subtitle">ONE COMMAND • ALL MODES</div>
+      <div class="body">
+        <div class="grid">
+          <button class="mode-btn bot" data-mode="bot">1P<br>VS BOT</button>
+          <button class="mode-btn local" data-mode="local">2P<br>OFFLINE</button>
+          <button class="mode-btn online" data-mode="online">2P<br>ONLINE</button>
+          <button class="mode-btn status" data-mode="status">STATUS</button>
+        </div>
+        <div class="info">
+          <div class="tiny">SINGLE FRAME</div>
+          This board contains all Ludo options in one place. Use only <b>.ludo</b> and then choose a mode from the UI.
+          <br>• 1P vs BOT<br>• 2P Offline<br>• 2P Online Challenge<br>• Status
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-mode]');
+        if (!button) return;
+        const mode = button.getAttribute('data-mode');
+        const info = document.querySelector('.info');
+        if (!info) return;
+        const map = {
+          bot: 'Selected: 1 Player vs BOT. This is the AI mode in the same frame.',
+          local: 'Selected: 2 Player Offline. Local match starts from the same Ludo board.',
+          online: 'Selected: 2 Player Online. Mention a contact in chat to challenge them.',
+          status: 'Selected: Status. Use room details from the same frame.'
+        };
+        info.innerHTML = '<div class="tiny">MODE</div>' + map[mode];
+      });
+    </script>
+  </body>
+</html>`;
+}
+
 function boardCellMarkup() {
   const cells = [];
   for (let row = 0; row < 15; row++) {
@@ -51,187 +164,8 @@ function boardCellMarkup() {
   return cells.join('');
 }
 
-function offlineHtml() {
-  return `<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <title>TOHID LUDO</title>
-    <style>
-      * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; width: 100%; background: transparent; font-family: Arial, sans-serif; }
-      body {
-        background: radial-gradient(circle at top, #172554 8%, #090d14 58%, #02050c 100%);
-        padding: 12px;
-        color: #edf6ff;
-      }
-      .shell {
-        max-width: 470px;
-        margin: 0 auto;
-        border-radius: 24px;
-        overflow: hidden;
-        background: rgba(8, 14, 24, 0.96);
-        border: 1px solid rgba(148, 163, 184, 0.24);
-        box-shadow: 0 18px 42px rgba(0,0,0,0.38);
-      }
-      .top {
-        padding: 20px 16px 8px;
-        text-align: center;
-        background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #f59e0b);
-        font-size: 30px;
-        font-weight: 900;
-        letter-spacing: 1px;
-      }
-      .sub {
-        text-align: center;
-        padding-bottom: 18px;
-        font-size: 10px;
-        letter-spacing: 2px;
-        color: rgba(255,255,255,0.8);
-        background: linear-gradient(90deg, #0ea5e9, #8b5cf6, #f59e0b);
-      }
-      .panel { padding: 18px 16px 20px; }
-      .mini {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-      .mini-box {
-        background: rgba(15, 23, 42, 0.9);
-        border-radius: 14px;
-        padding: 12px 10px;
-        border: 1px solid rgba(96, 165, 250, 0.28);
-        text-align: center;
-      }
-      .mini-box span {
-        display: block;
-        color: #93c5fd;
-        font-size: 10px;
-        letter-spacing: 1.4px;
-        margin-bottom: 6px;
-      }
-      .mini-box strong {
-        font-size: 24px;
-      }
-      .button-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-      button {
-        border: none;
-        border-radius: 12px;
-        padding: 13px 10px;
-        font-weight: 900;
-        font-size: 13px;
-        cursor: pointer;
-        transition: transform 0.2s ease, opacity 0.2s ease;
-      }
-      button:active { transform: scale(0.98); }
-      .primary { background: linear-gradient(90deg, #22c55e, #16a34a); color: #ecfdf5; }
-      .gold { background: linear-gradient(90deg, #f59e0b, #f97316); color: #fff7ed; }
-      .muted { background: rgba(51, 65, 85, 0.92); color: #e2e8f0; }
-      .info {
-        margin-top: 16px;
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        border-radius: 14px;
-        padding: 12px 13px;
-        color: #dbeafe;
-        font-size: 12px;
-        line-height: 1.7;
-      }
-      .tiny {
-        color: #7dd3fc;
-        font-size: 10px;
-        letter-spacing: 1.5px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="shell">
-      <div class="top">🎲 LUDO</div>
-      <div class="sub">TOHID SINGLE FRAME</div>
-      <div class="panel">
-        <div class="mini">
-          <div class="mini-box"><span>TURN</span><strong id="turnValue">PLAYER</strong></div>
-          <div class="mini-box"><span>DICE</span><strong id="diceValue">—</strong></div>
-        </div>
-
-        <div class="button-grid">
-          <button class="primary" data-action="roll">🎲 Roll Dice</button>
-          <button class="gold" data-action="reset">🔄 Reset</button>
-          <button class="muted" data-action="move0">🟦 Token 1</button>
-          <button class="muted" data-action="move1">🟩 Token 2</button>
-          <button class="muted" data-action="move2">🟥 Token 3</button>
-          <button class="muted" data-action="move3">🟨 Token 4</button>
-        </div>
-
-        <div class="info">
-          <div class="tiny">STATUS</div>
-          <div id="statusText">Use only .ludo. All actions work from this one frame — roll, move, reset, and bot mode are inside the board.</div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      const state = { turn: 'PLAYER', dice: '—', tokens: [0, 0, 0, 0], status: 'Use only .ludo. All actions work from this one frame.' };
-      const turnValue = document.getElementById('turnValue');
-      const diceValue = document.getElementById('diceValue');
-      const statusText = document.getElementById('statusText');
-
-      function syncUI() {
-        turnValue.textContent = state.turn;
-        diceValue.textContent = state.dice;
-        statusText.textContent = state.status;
-      }
-
-      function rollDice() {
-        const value = 1 + Math.floor(Math.random() * 6);
-        state.dice = String(value);
-        state.status = 'Dice rolled: ' + value + '. Choose a token.';
-        syncUI();
-      }
-
-      function moveToken(index) {
-        if (state.dice === '—') {
-          state.status = 'Roll the dice before moving.';
-          syncUI();
-          return;
-        }
-        const current = Number(state.tokens[index] || 0);
-        const next = current + Number(state.dice);
-        state.tokens[index] = next;
-        state.status = 'Token ' + (index + 1) + ' moved to ' + next + '. Turn passed to opponent.';
-        state.dice = '—';
-        state.turn = state.turn === 'PLAYER' ? 'BOT' : 'PLAYER';
-        syncUI();
-      }
-
-      document.addEventListener('click', (event) => {
-        const btn = event.target.closest('[data-action]');
-        if (!btn) return;
-        const action = btn.getAttribute('data-action');
-        if (action === 'roll') rollDice();
-        else if (action === 'reset') {
-          state.turn = 'PLAYER';
-          state.dice = '—';
-          state.tokens = [0, 0, 0, 0];
-          state.status = 'Match reset. Use the same single frame to play again.';
-          syncUI();
-        } else if (action === 'move0') moveToken(0);
-        else if (action === 'move1') moveToken(1);
-        else if (action === 'move2') moveToken(2);
-        else if (action === 'move3') moveToken(3);
-      });
-    </script>
-  </body>
-</html>`;
-}
-
 function renderPlayerState(player, accent) {
-  const tokens = (player?.tokens || [-1, -1, -1, -1]).map((pos, idx) => {
+  const tokens = (player?.tokens || [-1, -1, -1, -1]).map(pos => {
     const value = pos >= 0 ? String(pos) : '•';
     return `<div class="token ${accent}">${value}</div>`;
   }).join('');
@@ -244,10 +178,10 @@ function renderPlayerState(player, accent) {
   `;
 }
 
-function boardHtml(room) {
+function ludoBoardHtml(room) {
   const players = Array.isArray(room?.players) ? room.players : [];
-  const p1 = players[0] || { name: 'P1', tokens: [-1, -1, -1, -1], color: 'blue' };
-  const p2 = players[1] || { name: 'P2', tokens: [-1, -1, -1, -1], color: 'red' };
+  const p1 = players[0] || { name: 'Player 1', tokens: [-1, -1, -1, -1], color: 'blue' };
+  const p2 = players[1] || { name: 'Player 2', tokens: [-1, -1, -1, -1], color: 'red' };
   const turnName = players[room?.currentTurn]?.name || 'Unknown';
   const lastDice = room?.lastDice ?? '—';
   const status = room?.winner ? `${room.winner} wins` : room?.status || 'active';
@@ -434,46 +368,25 @@ function boardHtml(room) {
 
       <div class="info">
         <div class="tiny">ONE FRAME MODE</div>
-        Use only .ludo. All controls are inside this board — roll, move, reset, and bot actions happen from this UI.
+        1P vs BOT • 2P Offline • 2P Online Challenge<br>All choices are shown in this same board.
       </div>
     </div>
 
     <script>
-      const boardState = {
-        turn: '${turnName}',
-        dice: '${lastDice}',
-        status: '${status}',
-        tick: 0,
-      };
-
-      function updateStatus(msg) {
-        const info = document.querySelector('.info');
-        if (info) {
-          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>' + msg;
-        }
-      }
-
       document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-action]');
         if (!button) return;
         const action = button.getAttribute('data-action');
-
+        const info = document.querySelector('.info');
+        if (!info) return;
         if (action === 'roll') {
-          const value = 1 + Math.floor(Math.random() * 6);
-          boardState.dice = String(value);
-          boardState.status = 'Dice rolled: ' + value + '. Choose a move.';
-          updateStatus('Dice rolled: ' + value + '. Choose a move from the same single frame.');
+          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>Dice rolled. Select a move from this same board.';
         }
-
         if (action === 'move') {
-          boardState.status = 'Move selected. Use the board controls in this same frame.';
-          updateStatus('Move selected. This is a single-frame Ludo UI — no extra commands are needed.');
+          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>Move selected. No extra commands are needed.';
         }
-
         if (action === 'reset') {
-          boardState.dice = '—';
-          boardState.status = 'New match started.';
-          updateStatus('New match started. Use only .ludo and the board controls in this frame.');
+          info.innerHTML = '<div class="tiny">ONE FRAME MODE</div>New match started. Use the same single frame.';
         }
       });
     </script>
@@ -486,60 +399,96 @@ async function handleBotTurn(sock, from, msg, room) {
 
   const updatedRoom = botTurn(room);
   try {
-    await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(updatedRoom || room), title: 'TOHID LUDO' });
+    await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoBoardHtml(updatedRoom || room), title: 'TOHID LUDO' });
   } catch (error) {}
 
-  if (updatedRoom?.winner) {
-    return `🤖 Bot moved. ${updatedRoom.winner} wins!`;
-  }
-
-  return '🤖 Bot turn complete.';
+  return updatedRoom?.winner ? `🤖 Bot moved. ${updatedRoom.winner} wins!` : '🤖 Bot turn complete.';
 }
 
 module.exports = {
   name: 'ludo',
-  aliases: [],
-  description: 'Single-frame Ludo board with all controls in one UI',
+  aliases: ['ludogame', 'ludoboard'],
+  description: 'Single-frame Ludo menu with bot, offline, and online challenge modes',
   category: 'games',
 
   async execute({ sock, from, sender, reply, pushName, msg, args }) {
     const playerJid = sender || msg?.key?.participant || msg?.key?.remoteJid || from;
+    const mentioned = getMentionedTarget(msg, args);
     const room = getRoomForJid(playerJid, from);
-
-    if (args && args.length) {
-      const requested = String(args[0]).toLowerCase();
-      if (requested === 'bot') {
-        const botRoom = createBotRoom(playerJid, pushName || 'Player', from, normalizeDifficulty(args[1] || 'medium'));
-        try {
-          await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
-          return reply('🎲 Ludo board opened in one frame. Use only .ludo and the UI buttons inside the board.');
-        } catch (error) {
-          return reply('Ludo board could not open.');
-        }
-      }
-      return reply('Use only .ludo. All actions must be done from the same board UI.');
-    }
 
     if (room && room.status === 'active') {
       try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(room), title: 'TOHID LUDO' });
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoBoardHtml(room), title: 'TOHID LUDO' });
         return;
       } catch (error) {
         return reply('Ludo board could not be opened.');
       }
     }
 
-    const botRoom = createBotRoom(playerJid, pushName || 'Player', from, 'medium');
-    try {
-      await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
-      return reply('🎲 Ludo opened in one frame. Use only .ludo and the buttons inside the board.');
-    } catch (error) {
+    if (mentioned) {
+      const challenge = createChallengeRoom({
+        chatId: from,
+        challengerJid: playerJid,
+        challengerName: pushName || 'Player',
+        opponentJid: mentioned,
+        opponentName: 'Opponent',
+      });
       try {
-        await sendRichHtml({ sock, jid: from, quoted: msg, html: offlineHtml(), title: 'TOHID LUDO' });
-        return reply('🎲 Ludo frame opened in offline mode. Use only .ludo and the built-in controls.');
-      } catch (offlineError) {
-        return reply('Ludo UI could not open.');
+        await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoBoardHtml(challenge), title: 'TOHID LUDO' });
+        return reply(`🎮 Ludo online challenge created for ${mentioned}.\nRoom ID: ${challenge.id}\nOpponent use: .ludo`);
+      } catch (error) {
+        return reply(`🎮 Ludo challenge created for ${mentioned}. Room ID: ${challenge.id}`);
       }
+    }
+
+    if (args && args.length) {
+      const requested = String(args[0]).toLowerCase();
+      if (requested === 'bot') {
+        const difficulty = normalizeDifficulty(args[1] || 'medium');
+        const botRoom = createBotRoom(playerJid, pushName || 'Player', from, difficulty);
+        try {
+          await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoBoardHtml(botRoom), title: 'TOHID LUDO' });
+          return reply('🎲 1P vs BOT mode selected. Use the same board UI to play.');
+        } catch (error) {
+          return reply('BOT mode could not start.');
+        }
+      }
+      if (requested === 'local' || requested === '2p' || requested === 'offline') {
+        const localRoom = createChallengeRoom({
+          chatId: from,
+          challengerJid: playerJid,
+          challengerName: pushName || 'Player 1',
+          opponentJid: `${playerJid}_friend`,
+          opponentName: 'Player 2',
+        });
+        try {
+          await sendRichHtml({ sock, jid: from, quoted: msg, html: ludoBoardHtml(localRoom), title: 'TOHID LUDO' });
+          return reply('🎮 2P Offline mode selected. Use the same board UI to play.');
+        } catch (error) {
+          return reply('Offline local match could not start.');
+        }
+      }
+      if (requested === 'status') {
+        const current = getRoomForJid(playerJid, from);
+        if (!current) return reply('No active Ludo room in this chat.');
+        const summary = roomSummary(current);
+        const active = summary.players[summary.currentTurn];
+        return reply(`🎲 LUDO STATUS\nRoom: ${summary.id}\nState: ${summary.status}\nTurn: ${active?.name || '—'}\nDice: ${summary.lastDice ?? '—'}`);
+      }
+      if (requested === 'leave' || requested === 'cancel' || requested === 'close') {
+        const current = getRoomForJid(playerJid, from);
+        if (!current) return reply('No active Ludo room in this chat.');
+        leaveRoom(current, playerJid);
+        removeRoom(current.id);
+        return reply('✅ You left the Ludo game.');
+      }
+    }
+
+    try {
+      await sendRichHtml({ sock, jid: from, quoted: msg, html: roomMenuHtml(), title: 'TOHID LUDO' });
+      return reply('🎲 Ludo opened in single-frame mode. All options are inside this board.');
+    } catch (error) {
+      return reply('Ludo menu could not be opened.');
     }
   },
 };
