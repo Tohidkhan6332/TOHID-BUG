@@ -27,6 +27,7 @@ const GAME_ROWS = [
   ['numberguess', '🔢 NUMBER GUESS', 'Guess the number'],
   ['eye', '🎯 WOULD YOU RATHER', 'Would You Rather'],
   ['naijawhot', '🎴 NAIJA WHOT', 'Naija Whot card game'],
+  ['ludo', '🎲 LUDO', 'Race four tokens against the bot'],
   ['challenge', '🎮 CHALLENGE', 'Challenge another player']
 ];
 
