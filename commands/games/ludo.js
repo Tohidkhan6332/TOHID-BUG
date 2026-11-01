@@ -10,6 +10,9 @@ const {
   moveToken,
   removeRoom,
   botTurn,
+  leaveRoom,
+  roomSummary,
+  normalizeDifficulty,
 } = require('../../utils/TohidLudo');
 
 function getMentionedTarget(msg, args) {
@@ -79,9 +82,10 @@ module.exports = {
   description: '2-player HTML Ludo with bot or human challenge',
   category: 'games',
 
-  async execute({ sock, from, reply, pushName, msg, args }) {
+  async execute({ sock, from, sender, reply, pushName, msg, args }) {
+    const playerJid = sender || msg?.key?.participant || msg?.key?.remoteJid || from;
     const mentioned = getMentionedTarget(msg, args);
-    const room = getRoomForJid(from);
+    const room = getRoomForJid(playerJid, from);
 
     if (!args || !args.length) {
       if (room && room.status === 'active') {
@@ -113,18 +117,43 @@ module.exports = {
     }
 
     if (first === 'bot') {
-      const botRoom = createBotRoom(from, pushName || 'Player');
+      const difficulty = normalizeDifficulty(args[1]);
+      const botRoom = createBotRoom(playerJid, pushName || 'Player', from, difficulty);
       try {
         await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(botRoom), title: 'TOHID LUDO' });
-        return reply('🤖 Ludo vs BOT started.\nUse .ludo roll');
+        return reply(`🤖 Ludo vs BOT started (${difficulty}).\nUse .ludo roll\nDifficulty: easy / medium / hard`);
       } catch (error) {
         return reply('BOT Ludo could not start.');
       }
     }
 
-    if (first === 'accept') {
+    if (first === 'help') {
+      return reply('🎲 LUDO COMMANDS\n\n.ludo - open HTML modes\n.ludo bot [easy|medium|hard] - play vs AI\n.ludo online @user - group challenge\n.ludo accept ROOM_ID - join challenge\n.ludo roll - roll dice\n.ludo move 0..3 - move token\n.ludo status - show room state\n.ludo leave - leave current game');
+    }
+
+    if (first === 'status') {
+      const current = getRoomForJid(playerJid, from);
+      if (!current) return reply('No active Ludo room in this chat.');
+      const summary = roomSummary(current);
+      const active = summary.players[summary.currentTurn];
+      return reply(`🎲 LUDO STATUS\nRoom: ${summary.id}\nState: ${summary.status}\nTurn: ${active?.name || '—'}\nDice: ${summary.lastDice ?? '—'}\nPlayers: ${summary.players.map(p => `${p.name} (${p.finished}/4)`).join(' vs ')}`);
+    }
+
+    if (first === 'leave' || first === 'cancel' || first === 'close') {
+      const current = getRoomForJid(playerJid, from);
+      if (!current) return reply('No active Ludo room in this chat.');
+      leaveRoom(current, playerJid);
+      removeRoom(current.id);
+      return reply('✅ You left the Ludo game.');
+    }
+
+    if (first === 'online' && !mentioned) {
+      return reply('🌐 Group online Ludo usage:\n.ludo online @user\nOpponent: .ludo accept ROOM_ID');
+    }
+
+    if (first === 'accept' || first === 'join') {
       const targetRoomId = args[1] || null;
-      const accepted = acceptChallenge(targetRoomId, from);
+      const accepted = acceptChallenge(targetRoomId, playerJid, from);
       if (!accepted) return reply('No pending Ludo room to accept.');
       try {
         await sendRichHtml({ sock, jid: from, quoted: msg, html: boardHtml(accepted), title: 'TOHID LUDO' });
@@ -135,7 +164,7 @@ module.exports = {
     }
 
     if (first === 'roll') {
-      const currentRoom = getRoomForJid(from);
+      const currentRoom = getRoomForJid(playerJid, from);
       if (!currentRoom) return reply('No active Ludo room. Start with .ludo or .ludo @user');
 
       if (currentRoom.players[currentRoom.currentTurn]?.type === 'bot') {
@@ -155,7 +184,7 @@ module.exports = {
     }
 
     if (first === 'move') {
-      const currentRoom = getRoomForJid(from);
+      const currentRoom = getRoomForJid(playerJid, from);
       if (!currentRoom) return reply('No active game room.');
       const tokenIndex = Number(args[1]);
       if (!Number.isInteger(tokenIndex) || tokenIndex < 0 || tokenIndex > 3) {
@@ -180,7 +209,8 @@ module.exports = {
 
     if (mentioned) {
       const room = createChallengeRoom({
-        challengerJid: from,
+        chatId: from,
+        challengerJid: playerJid,
         challengerName: pushName || 'Player',
         opponentJid: mentioned,
         opponentName: 'Opponent',
@@ -193,13 +223,6 @@ module.exports = {
       }
     }
 
-    if (first === 'cancel' || first === 'close') {
-      const currentRoom = getRoomForJid(from);
-      if (!currentRoom) return reply('No active Ludo room.');
-      removeRoom(currentRoom.id);
-      return reply('Ludo room closed.');
-    }
-
-    return reply('🎮 LUDO COMMANDS\n.ludo -> start bot match\n.ludo bot -> play vs BOT\n.ludo @user -> challenge user\n.ludo accept <roomid> -> accept challenge\n.ludo roll -> roll dice\n.ludo move 0..3 -> move token');
+    return reply('🎮 Use `.ludo help` for all Ludo commands.');
   },
 };
