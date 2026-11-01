@@ -25,40 +25,486 @@ function getMentionedTarget(msg, args) {
   return match || null;
 }
 
+function renderBoardState(room) {
+  const players = Array.isArray(room?.players) ? room.players : [];
+  const safePlayers = players.length ? players : [
+    { name: 'YOU', tokens: [-1, -1, -1, -1], color: 'blue' },
+    { name: 'BOT', tokens: [-1, -1, -1, -1], color: 'red' },
+  ];
+
+  const p1 = safePlayers[0] || { name: 'P1', tokens: [-1, -1, -1, -1], color: 'blue' };
+  const p2 = safePlayers[1] || { name: 'P2', tokens: [-1, -1, -1, -1], color: 'red' };
+
+  const current = room?.players?.[room.currentTurn]?.name || 'Player';
+  const lastDice = room?.lastDice ?? '—';
+  const status = room?.winner ? `${room.winner} wins` : room?.status || 'active';
+
+  return {
+    p1: { ...p1, tokens: p1.tokens || [-1, -1, -1, -1] },
+    p2: { ...p2, tokens: p2.tokens || [-1, -1, -1, -1] },
+    current,
+    lastDice,
+    status,
+  };
+}
+
 function offlineHtml() {
-  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-*{box-sizing:border-box}body{margin:0;padding:8px;background:#071018;color:#eef;font-family:Arial,sans-serif}.card{max-width:440px;margin:auto;padding:14px;border:2px solid #f59e0b;border-radius:18px;background:linear-gradient(145deg,#241308,#142536);text-align:center}.title{font-size:25px;font-weight:900;color:#ffd166}.sub{font:10px monospace;color:#cbd5e1;margin:5px}.mode,.roll,.token{border:1px solid #fbbf24;border-radius:10px;background:#172b3b;color:#fef3c7;padding:10px;margin:4px;font-weight:800}.mode{width:46%;min-height:54px}.mode.online{border-color:#60a5fa}.hide{display:none}.status{min-height:38px;margin:9px 0;padding:9px;border-radius:10px;background:#182b3b;font:bold 12px monospace}.hud{display:flex;gap:7px}.hud div{flex:1;padding:8px;border-radius:9px;background:#20394d;font:bold 11px monospace}.board{display:grid;grid-template-columns:repeat(15,1fr);gap:2px;margin:10px auto;max-width:410px;padding:5px;border-radius:10px;background:#111827}.cell{aspect-ratio:1;display:grid;place-items:center;border-radius:3px;background:#eef2f7;color:#64748b;font:bold 8px monospace}.cell.path{background:#fff}.cell.bluebase{background:#67b7ff}.cell.redbase{background:#ff8792}.cell.blue{background:#38a9f5;color:#06213a;outline:1px solid #bde8ff}.cell.red{background:#ff6474;color:#3b0710;outline:1px solid #ffd1d6}.cell.home{background:#fbbf24;color:#432006;font-size:12px}.tokens{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.token{width:100%;margin:0;padding:8px 2px;font-size:11px}.token.blue{border-color:#38bdf8}.token.red{border-color:#fb7185}.token:disabled{opacity:.35}.roll{width:100%;font-size:16px;background:#92400e}.hint{margin-top:8px;font:9px monospace;color:#94a3b8}.online{line-height:1.4}
-</style></head><body><div class="card"><div class="title">🎲 TOHID LUDO</div><div class="sub">CLASSIC 2-PLAYER BOARD</div><div id="chooser"><button class="mode" id="local">👥 2 OFFLINE</button><button class="mode" id="bot">🤖 VS BOT</button><button class="mode online" id="online">🌐 2 ONLINE</button><div class="hint">Four tokens, dice, BASE, path and HOME.</div></div><div id="game" class="hide"><div class="status" id="status"></div><div class="hud"><div>TURN<br><span id="turn"></span></div><div>DICE<br><span id="die">—</span></div></div><div class="board" id="board"></div><button class="roll" id="roll">🎲 ROLL DICE</button><div class="tokens" id="tokens"></div><button class="mode" id="restart">↻ RESTART</button><div class="hint">Roll 6 to leave BASE. Tap a legal token to move.</div></div><div id="onlineHelp" class="hide"><div class="status online">🌐 Online mode uses a shared WhatsApp room.<br><br>Start: <b>.ludo online @user</b><br>Join: <b>.ludo accept ROOM_ID</b><br>Play: <b>.ludo roll</b> then <b>.ludo move 0</b> to <b>3</b></div><button class="mode" id="back">← BACK</button></div></div><script>
-(function(){var chooser=document.getElementById('chooser'),game=document.getElementById('game'),help=document.getElementById('onlineHelp'),board=document.getElementById('board'),tokensEl=document.getElementById('tokens'),status=document.getElementById('status'),turnEl=document.getElementById('turn'),dieEl=document.getElementById('die'),rollBtn=document.getElementById('roll'),mode='';var route=[[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[8,8],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,6],[8,5],[8,4],[8,3],[8,2]],pathIndex={};route.forEach(function(p,i){pathIndex[p[0]+','+p[1]]=i});var players=[],turn=0,die=null,done=false;function start(kind){mode=kind;players=[{name:'PLAYER 1',color:'blue',start:0,tokens:[-1,-1,-1,-1]},{name:kind==='bot'?'TOHID-BOT':'PLAYER 2',color:'red',start:26,tokens:[-1,-1,-1,-1]}];turn=0;die=null;done=false;chooser.className='hide';help.className='hide';game.className='';status.textContent='Roll the dice to start.';draw()}function posLabel(v){return v<0?'BASE':v>=57?'HOME':String(v+1)}function legal(v){return !done&&die!==null&&(v>=0||die===6)&&v+die<=57}function winner(p){return p.tokens.every(function(v){return v>=57})}function draw(){board.innerHTML='';for(var r=0;r<15;r++)for(var c=0;c<15;c++){var d=document.createElement('div'),key=r+','+c,idx=pathIndex[key];d.className='cell';if(r<6&&c<6)d.className+=' bluebase';if(r>8&&c<6)d.className+=' redbase';if(idx!==undefined)d.className+=' path';if((r===6&&c>=6&&c<=8)||(r===7&&c===7)||(r===8&&c>=6&&c<=8))d.className+=' home';players.forEach(function(p,pi){p.tokens.forEach(function(v,ti){if(v>=0&&v<57&&idx!==undefined&&((p.start+v)%52)===idx){d.className+=' '+p.color;d.textContent=(pi?'🔴':'🔵')+(ti+1)}})});if(!d.textContent&&((r===2&&c===2)||(r===2&&c===11)||(r===11&&c===2)||(r===11&&c===11))){d.textContent='●'}board.appendChild(d)}turnEl.textContent=players[turn]?players[turn].name:'—';dieEl.textContent=die===null?'—':die;tokensEl.innerHTML='';var p=players[turn];if(!p)return;p.tokens.forEach(function(v,i){var b=document.createElement('button');b.className='token '+p.color;b.textContent=(turn?'🔴':'🔵')+(i+1)+' · '+posLabel(v);b.disabled=!legal(v);b.onclick=function(){move(i)};tokensEl.appendChild(b)});rollBtn.disabled=done||die!==null||players[turn].name==='TOHID-BOT'}function nextTurn(){die=null;turn=(turn+1)%2;draw();if(mode==='bot'&&turn===1&&!done)setTimeout(botTurn,500)}function roll(){if(done||die!==null||players[turn].name==='TOHID-BOT')return;die=Math.floor(Math.random()*6)+1;status.textContent=players[turn].name+' rolled '+die+'. Choose a token.';if(!players[turn].tokens.some(legal)){status.textContent+=' No legal move.';draw();setTimeout(nextTurn,650);return}draw()}function move(i){var p=players[turn];if(!legal(p.tokens[i]))return;var rolled=die;p.tokens[i]=p.tokens[i]<0?0:p.tokens[i]+rolled;var landing=(p.start+p.tokens[i])%52;var safe={0:true,8:true,13:true,21:true,26:true,34:true,39:true,47:true};var other=players[1-turn];if(p.tokens[i]<57&&!safe[landing])other.tokens.forEach(function(v,j){if(v>=0&&v<57&&(other.start+v)%52===landing)other.tokens[j]=-1});status.textContent=p.name+' moved token '+(i+1)+(rolled===6?' and gets another turn.':'');if(winner(p)){done=true;status.textContent='🏆 '+p.name+' WINS!';draw();return}if(rolled===6){die=null;draw()}else nextTurn()}function botTurn(){if(done||mode!=='bot'||turn!==1)return;die=Math.floor(Math.random()*6)+1;var choices=players[1].tokens.map(function(v,i){return legal(v)?i:-1}).filter(function(i){return i>=0});if(choices.length){var i=choices[Math.floor(Math.random()*choices.length)];players[1].tokens[i]=players[1].tokens[i]<0?0:players[1].tokens[i]+die;status.textContent='🤖 Bot rolled '+die+' and moved token '+(i+1)+'.'}else status.textContent='🤖 Bot rolled '+die+' and had no legal move.';if(winner(players[1])){done=true;status.textContent='🤖 BOT WINS!';draw();return}nextTurn()}document.getElementById('local').onclick=function(){start('local')};document.getElementById('bot').onclick=function(){start('bot')};document.getElementById('online').onclick=function(){chooser.className='hide';help.className='';game.className='hide'};document.getElementById('back').onclick=function(){help.className='hide';chooser.className=''};rollBtn.onclick=roll;document.getElementById('restart').onclick=function(){start(mode)};})();
-</script></body></html>`;
+  return `<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>TOHID LUDO</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: transparent; font-family: Arial, sans-serif; }
+      body {
+        background: radial-gradient(circle at top, #1e293b, #040a13 62%);
+        padding: 12px;
+        color: #ecf4ff;
+      }
+      .wrap {
+        max-width: 480px;
+        margin: 0 auto;
+        border-radius: 22px;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(15,23,42,.96), rgba(7,12,20,.98));
+        border: 1px solid rgba(148,163,184,.22);
+        box-shadow: 0 12px 30px rgba(0,0,0,.38);
+      }
+      .header {
+        padding: 18px 16px 10px;
+        background: linear-gradient(90deg, #0ea5e9, #8b5cf6 55%, #f59e0b);
+        text-align: center;
+        font-weight: 900;
+        letter-spacing: .8px;
+        font-size: 28px;
+      }
+      .sub {
+        text-align: center;
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,.8);
+        padding: 0 0 14px;
+      }
+      .panel {
+        padding: 16px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .card {
+        background: rgba(15,23,42,.9);
+        border: 1px solid rgba(96,165,250,.3);
+        border-radius: 14px;
+        padding: 12px 10px;
+        text-align: center;
+      }
+      .card .label {
+        display: block;
+        color: #93c5fd;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        margin-bottom: 6px;
+      }
+      .card .value {
+        font-size: 24px;
+        font-weight: 900;
+      }
+      .buttons {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        padding: 12px 10px;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+      button:active { transform: scale(0.98); }
+      .primary {
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        color: #edfff3;
+      }
+      .accent {
+        background: linear-gradient(90deg, #f59e0b, #f97316);
+        color: #fffaf0;
+      }
+      .ghost {
+        background: rgba(51,65,85,.95);
+        color: #e2e8f0;
+      }
+      .info {
+        margin-top: 14px;
+        border-radius: 12px;
+        background: rgba(30,41,59,.7);
+        color: #cbd5e1;
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.6;
+        border: 1px solid rgba(148,163,184,.18);
+      }
+      .tiny {
+        color: #7dd3fc;
+        font-size: 11px;
+        letter-spacing: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="header">🎲 LUDO</div>
+      <div class="sub">TOHID CLASSIC MATCH</div>
+      <div class="panel">
+        <div class="cards">
+          <div class="card">
+            <span class="label">TURN</span>
+            <div class="value" id="turnLabel">PLAYER</div>
+          </div>
+          <div class="card">
+            <span class="label">DICE</span>
+            <div class="value" id="diceLabel">—</div>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" data-action="roll">🎲 Roll Dice</button>
+          <button class="accent" data-action="reset">🔄 New Match</button>
+          <button class="ghost" data-action="move0">🟦 Token 1</button>
+          <button class="ghost" data-action="move1">🟩 Token 2</button>
+          <button class="ghost" data-action="move2">🟥 Token 3</button>
+          <button class="ghost" data-action="move3">🟨 Token 4</button>
+        </div>
+
+        <div class="info">
+          <div class="tiny">STATUS</div>
+          <div id="statusText">Tap the dice to begin. If your client does not support interactive HTML, use command shortcuts like .ludo roll and .ludo move 0.</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const state = {
+        turn: 'PLAYER',
+        dice: '—',
+        status: 'Tap the dice to begin.',
+        tokens: [0, 0, 0, 0],
+      };
+
+      const turnLabel = document.getElementById('turnLabel');
+      const diceLabel = document.getElementById('diceLabel');
+      const statusText = document.getElementById('statusText');
+
+      function setState(next) {
+        Object.assign(state, next);
+        turnLabel.textContent = state.turn;
+        diceLabel.textContent = state.dice;
+        statusText.textContent = state.status;
+      }
+
+      function rollRandom() {
+        const value = 1 + Math.floor(Math.random() * 6);
+        setState({
+          dice: String(value),
+          status: 'Dice landed on ' + value + '. Choose a token to move.',
+        });
+      }
+
+      function moveToken(index) {
+        const current = Number(state.tokens[index] || 0);
+        const movement = Number(state.dice === '—' ? 0 : state.dice);
+        if (state.dice === '—') {
+          setState({ status: 'Roll the dice first.' });
+          return;
+        }
+        const nextValue = current + movement;
+        state.tokens[index] = nextValue;
+        setState({
+          status: 'Token ' + (index + 1) + ' moved to ' + nextValue + '. Turn passed to opponent.',
+          dice: '—',
+          turn: state.turn === 'PLAYER' ? 'BOT' : 'PLAYER',
+        });
+      }
+
+      document.addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+
+        if (action === 'roll') rollRandom();
+        else if (action === 'reset') {
+          setState({
+            turn: 'PLAYER',
+            dice: '—',
+            status: 'Match reset. Tap the dice to begin.',
+            tokens: [0, 0, 0, 0],
+          });
+        } else if (action === 'move0') moveToken(0);
+        else if (action === 'move1') moveToken(1);
+        else if (action === 'move2') moveToken(2);
+        else if (action === 'move3') moveToken(3);
+      });
+    </script>
+  </body>
+</html>`;
 }
 
 function boardHtml(room) {
-  const players = Array.isArray(room?.players) ? room.players : [];
-  const p1 = players[0] || { name: 'P1', tokens: [-1, -1, -1, -1], color: 'blue' };
-  const p2 = players[1] || { name: 'P2', tokens: [-1, -1, -1, -1], color: 'red' };
+  const state = renderBoardState(room);
+  const currentTurn = state.current || 'Player';
+  const lastDice = state.lastDice ?? '—';
+  const status = room?.winner ? `${room.winner} wins` : room?.status || 'active';
 
-  const turnName = players[room?.currentTurn]?.name || 'Unknown';
-  const lastDice = room?.lastDice ?? '—';
-
-  const renderTokens = (tokens, color) => tokens.map((pos) => {
-    const value = pos >= 0 ? String(pos) : '•';
-    return `<div class="token ${color}">${value}</div>`;
+  const p1Tokens = state.p1.tokens.map((pos, i) => {
+    const val = pos >= 0 ? String(pos) : '•';
+    return `<div class="token blue">${val}</div>`;
   }).join('');
 
-  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-    *{box-sizing:border-box}html,body{margin:0;background:transparent;font-family:Arial,sans-serif}body{padding:8px;background:radial-gradient(circle at 50% 0%,#4d285a,#05080d 70%);color:#edf5ff}.card{max-width:420px;margin:0 auto;border-radius:18px;padding:14px;background:rgba(16,19,26,.88);border:1px solid rgba(255,255,255,.08);box-shadow:0 16px 40px rgba(0,0,0,.35)}.title{font-size:24px;font-weight:700;text-align:center;margin-bottom:4px}.sub{text-align:center;font-size:12px;color:#9ab5d8;letter-spacing:2px;margin-bottom:12px}.hud{display:flex;gap:10px;margin-bottom:12px}.hud-box{flex:1;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);text-align:center;font-size:12px;font-weight:700;color:#dfeaff}.board{display:grid;grid-template-columns:repeat(9, 1fr);gap:4px;background:#121922;border-radius:12px;padding:8px;border:1px solid rgba(255,255,255,.06)}.cell{aspect-ratio:1;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:6px}.cell.center{background:rgba(255,205,86,.15);border-color:rgba(255,205,86,.5)}.cell.blue{background:rgba(30,120,255,.18)}.cell.red{background:rgba(255,70,87,.18)}.cell.green{background:rgba(66,204,146,.18)}.cell.yellow{background:rgba(244,208,63,.18)}.players{display:flex;gap:10px;margin-top:12px}.player-box{flex:1;padding:8px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05)}.player-name{font-size:13px;font-weight:700;margin-bottom:6px}.tokens{display:flex;flex-wrap:wrap;gap:6px}.token{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700;color:#08121a;box-shadow:inset 0 1px 2px rgba(255,255,255,.3)}.token.blue{background:#5ab2ff}.token.red{background:#ff7c8b}.token.green{background:#68f0b6}.token.yellow{background:#ffd75a}.token.default{background:#dfeaff}
-  </style></head><body><div class="card"><div class="title">🎲 LUDO</div><div class="sub">2 PLAYER · HTML MODE</div><div class="hud"><div class="hud-box">TURN<br>${turnName}</div><div class="hud-box">DICE<br>${lastDice}</div></div><div class="board">${Array.from({ length: 81 }, (_, i) => {
-    const row = Math.floor(i / 9);
-    const col = i % 9;
-    let className = 'cell';
-    if (row === 4 && col === 4) className += ' center';
-    if (row < 3 && col < 3) className += ' blue';
-    if (row > 5 && col < 3) className += ' red';
-    if (row < 3 && col > 5) className += ' green';
-    if (row > 5 && col > 5) className += ' yellow';
-    return `<div class="${className}"></div>`;
-  }).join('')}</div><div class="players"><div class="player-box"><div class="player-name">${p1.name}</div><div class="tokens">${renderTokens(p1.tokens, p1.color)}</div></div><div class="player-box"><div class="player-name">${p2.name}</div><div class="tokens">${renderTokens(p2.tokens, p2.color)}</div></div></div></div></body></html>`;
+  const p2Tokens = state.p2.tokens.map((pos, i) => {
+    const val = pos >= 0 ? String(pos) : '•';
+    return `<div class="token red">${val}</div>`;
+  }).join('');
+
+  return `<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>TOHID LUDO</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: transparent; font-family: Arial, sans-serif; }
+      body {
+        background: radial-gradient(circle at top, #312e81, #090d14 70%);
+        padding: 12px;
+        color: #eef6ff;
+      }
+      .board-shell {
+        max-width: 520px;
+        margin: 0 auto;
+        border-radius: 26px;
+        overflow: hidden;
+        background: rgba(11,18,32,.96);
+        border: 1px solid rgba(148,163,184,.25);
+        box-shadow: 0 18px 36px rgba(0,0,0,.45);
+      }
+      .topbar {
+        padding: 16px 18px 8px;
+        background: linear-gradient(90deg, #0f766e, #2563eb, #7c3aed);
+        text-align: center;
+        font-weight: 900;
+        font-size: 27px;
+        letter-spacing: 1px;
+      }
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 8px 16px 14px;
+        background: rgba(15,23,42,.9);
+      }
+      .meta-box {
+        background: rgba(30,41,59,.8);
+        border: 1px solid rgba(148,163,184,.18);
+        border-radius: 10px;
+        padding: 10px 8px;
+        text-align: center;
+      }
+      .meta-box .label {
+        display: block;
+        font-size: 9px;
+        letter-spacing: 1.4px;
+        color: #93c5fd;
+      }
+      .meta-box .text {
+        display: block;
+        font-weight: 900;
+        margin-top: 5px;
+        font-size: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(15, 1fr);
+        gap: 4px;
+        padding: 12px;
+        background: rgba(15,23,42,.9);
+      }
+      .cell {
+        aspect-ratio: 1;
+        border-radius: 6px;
+        background: rgba(148,163,184,.12);
+        border: 1px solid rgba(148,163,184,.18);
+        display: grid;
+        place-items: center;
+        font-size: 8px;
+        font-weight: 800;
+      }
+      .cell.blue { background: rgba(96,165,250,.28); }
+      .cell.red { background: rgba(251,113,133,.28); }
+      .cell.green { background: rgba(74,222,128,.23); }
+      .cell.yellow { background: rgba(250,204,21,.24); }
+      .cell.start { background: rgba(99,102,241,.42); }
+      .cell.center { background: rgba(255,255,255,.18); }
+      .token-zone {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 12px 14px 18px;
+        background: rgba(15,23,42,.9);
+      }
+      .player-box {
+        background: rgba(15,23,42,.8);
+        border: 1px solid rgba(148,163,184,.18);
+        border-radius: 14px;
+        padding: 10px;
+      }
+      .player-name {
+        font-weight: 900;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #f8fafc;
+      }
+      .tokens {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .token {
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        min-height: 38px;
+        font-size: 12px;
+        font-weight: 900;
+        color: #0f172a;
+      }
+      .token.blue { background: linear-gradient(135deg, #93c5fd, #60a5fa); }
+      .token.red { background: linear-gradient(135deg, #fda4af, #f87171); }
+      .token.green { background: linear-gradient(135deg, #86efac, #4ade80); }
+      .token.yellow { background: linear-gradient(135deg, #fde68a, #facc15); }
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0,1fr));
+        gap: 8px;
+        padding: 0 14px 16px;
+      }
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 11px 10px;
+        font-weight: 900;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .primary { background: linear-gradient(90deg, #22c55e, #16a34a); color: #f0fdf4; }
+      .warning { background: linear-gradient(90deg, #f59e0b, #f97316); color: #fff7ed; }
+      .muted { background: rgba(51,65,85,.9); color: #e2e8f0; }
+      .status-bar {
+        margin: 0 14px 16px;
+        background: rgba(30,41,59,.8);
+        border: 1px solid rgba(148,163,184,.2);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      .tiny {
+        color: #a5b4fc;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="board-shell">
+      <div class="topbar">🎲 TOHID LUDO</div>
+      <div class="meta">
+        <div class="meta-box"><span class="label">TURN</span><span class="text">${currentTurn}</span></div>
+        <div class="meta-box"><span class="label">DICE</span><span class="text">${lastDice}</span></div>
+        <div class="meta-box"><span class="label">STATE</span><span class="text">${status}</span></div>
+      </div>
+
+      <div class="grid">
+        ${Array.from({ length: 225 }, (_, index) => {
+          const row = Math.floor(index / 15);
+          const col = index % 15;
+          let cls = 'cell';
+          if (row === 7 && col === 7) cls += ' center';
+          if ((row >= 0 && row <= 5 && col >= 0 && col <= 5) || (row >= 9 && row <= 14 && col >= 9 && col <= 14)) cls += ' blue';
+          if ((row >= 0 && row <= 5 && col >= 9 && col <= 14) || (row >= 9 && row <= 14 && col >= 0 && col <= 5)) cls += ' red';
+          if (row >= 3 && row <= 7 && col >= 3 && col <= 7) cls += ' green';
+          if (row >= 8 && row <= 12 && col >= 8 && col <= 12) cls += ' yellow';
+          if ((row === 7 && col >= 0 && col <= 2) || (row >= 0 && row <= 2 && col === 7) || (row === 7 && col >= 12 && col <= 14) || (row >= 12 && row <= 14 && col === 7)) cls += ' start';
+          return `<div class="${cls}"></div>`;
+        }).join('')}
+      </div>
+
+      <div class="token-zone">
+        <div class="player-box">
+          <div class="player-name">${state.p1.name}</div>
+          <div class="tokens">${p1Tokens}</div>
+        </div>
+        <div class="player-box">
+          <div class="player-name">${state.p2.name}</div>
+          <div class="tokens">${p2Tokens}</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" data-action="roll">🎲 Roll</button>
+        <button class="warning" data-action="move">🔁 Move</button>
+        <button class="muted" data-action="reset">🔄 Reset</button>
+      </div>
+
+      <div class="status-bar">
+        <div class="tiny">ACTIONS</div>
+        Use the on-screen buttons for a fast match flow. If your client blocks the HTML controls, use: .ludo roll or .ludo move 0
+      </div>
+    </div>
+
+    <script>
+      const state = {
+        turn: '${currentTurn}',
+        dice: '${lastDice}',
+        status: '${status}',
+      };
+
+      function updateInfo() {
+        const el = document.querySelector('.meta-box .text');
+      }
+
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-action]');
+        if (!button) return;
+        const action = button.getAttribute('data-action');
+        const statusBox = document.querySelector('.status-bar');
+
+        if (action === 'roll') {
+          const dice = 1 + Math.floor(Math.random() * 6);
+          state.dice = String(dice);
+          state.status = 'Dice rolled: ' + dice + '. Choose a move.';
+          statusBox.innerHTML = '<div class="tiny">ACTIONS</div>Dice rolled: ' + dice + '. Choose a move.';
+        }
+
+        if (action === 'move') {
+          state.status = 'Move selected. Use the command fallback if your client blocks HTML controls.';
+          statusBox.innerHTML = '<div class="tiny">ACTIONS</div>Move selected. Use .ludo move 0 / .ludo move 1 if needed.';
+        }
+
+        if (action === 'reset') {
+          state.status = 'New match started.';
+          statusBox.innerHTML = '<div class="tiny">ACTIONS</div>New match started. Tap Roll to begin again.';
+        }
+      });
+    </script>
+  </body>
+</html>`;
 }
 
 async function handleBotTurn(sock, from, msg, room) {
@@ -128,7 +574,7 @@ module.exports = {
     }
 
     if (first === 'help') {
-      return reply('🎲 LUDO COMMANDS\n\n.ludo - open HTML modes\n.ludo bot [easy|medium|hard] - play vs AI\n.ludo online @user - group challenge\n.ludo accept ROOM_ID - join challenge\n.ludo roll - roll dice\n.ludo move 0..3 - move token\n.ludo status - show room state\n.ludo leave - leave current game');
+      return reply('🎲 LUDO COMMANDS\n\n.ludo - open HTML modes\n.ludo bot [easy|medium|hard] - play vs AI\n.ludo online @user - group challenge\n.ludo accept ROOM_ID - join challenge\n.ludo roll - roll the dice\n.ludo move 0..3 - move selected token\n.ludo status - view room details');
     }
 
     if (first === 'status') {
@@ -136,7 +582,7 @@ module.exports = {
       if (!current) return reply('No active Ludo room in this chat.');
       const summary = roomSummary(current);
       const active = summary.players[summary.currentTurn];
-      return reply(`🎲 LUDO STATUS\nRoom: ${summary.id}\nState: ${summary.status}\nTurn: ${active?.name || '—'}\nDice: ${summary.lastDice ?? '—'}\nPlayers: ${summary.players.map(p => `${p.name} (${p.finished}/4)`).join(' vs ')}`);
+      return reply(`🎲 LUDO STATUS\nRoom: ${summary.id}\nState: ${summary.status}\nTurn: ${active?.name || '—'}\nDice: ${summary.lastDice ?? '—'}\nPlayers: ${summary.players.map(p => `${p.name} (${p.color})`).join(', ')}`);
     }
 
     if (first === 'leave' || first === 'cancel' || first === 'close') {
@@ -165,7 +611,7 @@ module.exports = {
 
     if (first === 'roll') {
       const currentRoom = getRoomForJid(playerJid, from);
-      if (!currentRoom) return reply('No active Ludo room. Start with .ludo or .ludo @user');
+      if (!currentRoom) return reply('No active Ludo room. Start with .ludo or .ludo bot');
 
       if (currentRoom.players[currentRoom.currentTurn]?.type === 'bot') {
         const botReply = await handleBotTurn(sock, from, msg, currentRoom);
