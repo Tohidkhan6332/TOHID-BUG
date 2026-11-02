@@ -29,7 +29,7 @@ require('dotenv').config();
  */
 
 require('./setting/config');
-const { pingHtml, aliveHtml, ownerHtml } = require('./utils/status-html');
+const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
 const {
   default: makeWASocket,
