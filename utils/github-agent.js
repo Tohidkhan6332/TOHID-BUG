@@ -3,6 +3,7 @@
 const { execFile } = require('child_process');
 const { promisify } = require('util');
 const execFileAsync = promisify(execFile);
+const { tohidAI } = require('./tohid-ai-provider');
 
 const MAX_OUTPUT = 12000;
 const MAX_FILE = 18000;
@@ -123,6 +124,26 @@ async function searchCode(repo, query) {
   return matches.map(item => `${item.path} — ${item.url}`).join('\n');
 }
 
+async function aiCodeAssistant(request) {
+  const userRequest = String(request || '').trim();
+  if (!userRequest) throw new Error('Natural-language request is required.');
+  if (userRequest.length > 6000) throw new Error('Request is too long. Keep it under 6000 characters.');
+
+  const system = [
+    'You are TOHID-AI GitHub coding assistant.',
+    'Understand Hindi, Hinglish, and English requests.',
+    'Help with JavaScript/Node.js repositories, debugging, refactoring, tests, and code generation.',
+    'Return a practical answer with these headings: Understanding, Plan, Generated Code or Diff, Tests, Safety.',
+    'If repository files are not provided, clearly mark assumptions and do not pretend you edited or tested anything.',
+    'Generate complete, copy-pasteable code when the request is specific; preserve existing project conventions.',
+    'Never include API keys, tokens, passwords, cookies, or other secrets in generated code.',
+    'This first safe mode only proposes code. It does not commit, push, delete, merge, or change GitHub settings.',
+  ].join('\n');
+
+  const answer = await tohidAI(userRequest, system);
+  return String(answer || 'AI returned an empty response.').slice(0, 18000);
+}
+
 async function execute(input) {
   const parts = String(input || '').trim().split(/\s+/).filter(Boolean);
   const action = (parts.shift() || 'help').toLowerCase();
@@ -136,8 +157,10 @@ async function execute(input) {
       '.githubai info owner/repo',
       '.githubai read owner/repo path [branch]',
       '.githubai search owner/repo search-text',
+      '.githubai ask <normal-language coding request>',
       '',
-      'Read/search/inspect only. No code is written, committed, pushed, deleted or merged in safe mode.',
+      'AI can understand Hindi/Hinglish/English and generate code or diffs for review.',
+      'No code is written, committed, pushed, deleted or merged in safe mode.',
     ].join('\n');
   }
   if (action === 'me') return `Authenticated GitHub account: ${await assertReady()}`;
@@ -154,7 +177,12 @@ async function execute(input) {
     if (!parts[0] || !parts[1]) throw new Error('Usage: .githubai search owner/repo search-text');
     return searchCode(parts[0], parts.slice(1).join(' '));
   }
-  throw new Error(`Unknown action “${action}”. Use .githubai help`);
+  if (action === 'ask' || action === 'ai' || action === 'generate' || action === 'fix' || action === 'analyze' || action === 'review') {
+    return aiCodeAssistant([action, ...parts].join(' '));
+  }
+  // Natural language is the default: `.githubai login issue fix karo` should
+  // reach the AI instead of requiring a rigid subcommand.
+  return aiCodeAssistant(String(input || '').trim());
 }
 
-module.exports = { execute, validateRepo, assertReady };
+module.exports = { execute, validateRepo, assertReady, aiCodeAssistant };
