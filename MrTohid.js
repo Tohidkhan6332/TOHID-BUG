@@ -15858,46 +15858,31 @@ Possible cause: channel reactions are disabled/restricted, or this Baileys sessi
                 const { performance } = require('node:perf_hooks');
                 const timestampp = performance.now();
                 const latensi = speed() - timestampp;
+
+                // Preserve the original plain-text response first.
+                await reply(`⚡ TOHID-AI Ping\n\n📡 ${latensi.toFixed(2)} ms`);
+
+                // Send the additional HTML card from commands/status/.
                 try {
-                    await sendRichHtml({
-                        sock: devtrust,
-                        jid: m.chat,
-                        quoted: m,
-                        title: 'TOHID-AI PING',
-                        html: pingHtml({
-                            latency: Math.max(0, latensi).toFixed(2),
-                            mode: devtrust.public ? 'PUBLIC' : 'PRIVATE',
-                            nodeVersion: process.version,
-                            platform: process.platform,
-                            timestamp: new Date().toLocaleTimeString(),
-                        }),
-                    });
+                    const { sendPing } = require('./commands/status');
+                    await sendPing({ sock: devtrust, msg: m, latency: latensi });
                 } catch (error) {
-                    reply(`⚡ TOHID-AI Ping\n\n📡 ${latensi.toFixed(2)} ms`);
+                    console.error('[STATUS HTML] Ping card failed:', error.stack || error.message);
                 }
             }
                 break;
 
             case 'runtime':
             case 'alive': {
-                const memory = `${(process.memoryUsage().rss / 1024 / 1024).toFixed(1)} MB RSS`;
+                // Preserve the original plain-text response first.
+                await reply(`⚡ TOHID-AI Uptime\n\n⏱️ ${runtime(process.uptime())}`);
+
+                // Send the additional HTML card from commands/status/.
                 try {
-                    await sendRichHtml({
-                        sock: devtrust,
-                        jid: m.chat,
-                        quoted: m,
-                        title: 'TOHID-AI ALIVE',
-                        html: aliveHtml({
-                            uptime: runtime(process.uptime()),
-                            mode: devtrust.public ? 'PUBLIC' : 'PRIVATE',
-                            memory,
-                            version: require('./package.json').version,
-                            platform: process.platform,
-                            timestamp: new Date().toLocaleTimeString(),
-                        }),
-                    });
+                    const { sendAlive } = require('./commands/status');
+                    await sendAlive({ sock: devtrust, msg: m, runtime });
                 } catch (error) {
-                    reply(`⚡ TOHID-AI Uptime\n\n⏱️ ${runtime(process.uptime())}`);
+                    console.error('[STATUS HTML] Alive card failed:', error.stack || error.message);
                 }
             }
                 break;
