@@ -43,6 +43,7 @@ const { BOT_TOKEN } = require('./tohidstore/token');
 const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
 const { getActiveConnection, getActiveConnections, restartActiveConnection, stopActiveConnection, getConnectionHealth } = require('./pair');
+const { execute: executeGitHubAgent } = require('./utils/github-agent');
 const TUTORIAL_CONFIG_FILE = path.join(__dirname, 'tohidstore', 'tutorial.json');
 
 function getTutorialVideoUrl() {
@@ -3745,6 +3746,24 @@ bot.onText(/^\/update(?:@[\\w_]+)?$/i, async (msg) => {
             console.error('[UPDATE] Could not send failure message:', sendError.message);
         }
     }
+});
+// ==================== SAFE GITHUB AI AGENT ====================
+// This approved safe mode is owner-only and read/search/inspect only.
+bot.onText(/^\/githubai(?:@[\w_]+)?(?:\s+([\s\S]+))?$/i, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from?.id;
+  if (!isOwner(userId)) return sendOwnerContact(chatId, 'owner');
+  try {
+    const result = await executeGitHubAgent(match?.[1] || 'help');
+    return bot.sendMessage(chatId, `🤖 *GitHub AI Agent*\n\n${result}`, {
+      parse_mode: 'Markdown',
+      disable_web_page_preview: true,
+    });
+  } catch (error) {
+    return bot.sendMessage(chatId, `❌ *GitHub AI failed*\n\n${String(error?.message || error).slice(0, 2500)}`, {
+      parse_mode: 'Markdown',
+    });
+  }
 });
 // ==================== CALLBACK HANDLER ====================
 bot.on('callback_query', async (query) => commandResponseContext.run(true, async () => {

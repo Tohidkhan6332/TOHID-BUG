@@ -29,6 +29,7 @@ require('dotenv').config();
  */
 
 require('./setting/config');
+const { pingHtml, aliveHtml, ownerHtml } = require('./utils/status-html');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -189,6 +190,7 @@ async function tohidImageGen(prompt) {
 const { facebook: tohidFacebook, instagram: tohidInstagram, tiktok: tohidTikTok, youtube: tohidYouTube, play: tohidPlay } = require('./utils/tohid-downloaders');
 const { downloadAudioAsMp3 } = require('./utils/audio-normalizer');
 const { tohidAI } = require('./utils/tohid-ai-provider');
+const { execute: executeGitHubAgent } = require('./utils/github-agent');
 
 async function tohidGpt4(prompt, system = '') {
     return tohidAI(prompt, system);
@@ -10786,29 +10788,19 @@ break;
             
 
             case "owner": {
-                const ownerName = "*𝕄ℝ 𝕋𝕆ℍ𝕀𝔻*";
                 const ownerNumber = "917849917350";
-                const displayTag = "𝐓𝐎𝐇𝐈𝐃 𝐀𝐈";
-
-                let vcard = `BEGIN: VCARD
-                VERSION: 3.0
-                FN:${ownerName}
-                TEL; type = CELL; type = VOICE; waid = ${ownerNumber}: +${ownerNumber}
-                END: VCARD`;
-
-                let caption = `👑 * 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Owner *\n\n📱 wa.me / ${ownerNumber} \n💬 DM for support / requests`;
-
-                await devtrust.sendMessage(m.chat, {
-                    contacts: { displayName: displayTag, contacts: [{ vcard }] }
-                }, { quoted: m });
-
-                await devtrust.sendMessage(m.chat,
-                    addNewsletterContext({
-                        text: caption,
-                        mentions: [m.sender]
+                await sendRichHtml({
+                    sock: devtrust,
+                    jid: m.chat,
+                    quoted: m,
+                    title: 'TOHID-AI OWNER',
+                    html: ownerHtml({
+                        number: ownerNumber,
+                        name: 'MR TOHID',
+                        telegram: 'https://t.me/Tohidkhan6332',
+                        channel: 'https://t.me/Tohidtech6332',
                     }),
-                    { quoted: m }
-                );
+                });
             }
                 break;
 
@@ -15837,14 +15829,47 @@ Possible cause: channel reactions are disabled/restricted, or this Baileys sessi
                 const { performance } = require('node:perf_hooks');
                 const timestampp = performance.now();
                 const latensi = speed() - timestampp;
-
-                reply(`⚡ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Ping*\n\n📡 ${latensi.toFixed(4)} ms`);
+                try {
+                    await sendRichHtml({
+                        sock: devtrust,
+                        jid: m.chat,
+                        quoted: m,
+                        title: 'TOHID-AI PING',
+                        html: pingHtml({
+                            latency: Math.max(0, latensi).toFixed(2),
+                            mode: devtrust.public ? 'PUBLIC' : 'PRIVATE',
+                            nodeVersion: process.version,
+                            platform: process.platform,
+                            timestamp: new Date().toLocaleTimeString(),
+                        }),
+                    });
+                } catch (error) {
+                    reply(`⚡ TOHID-AI Ping\n\n📡 ${latensi.toFixed(2)} ms`);
+                }
             }
                 break;
 
             case 'runtime':
             case 'alive': {
-                reply(`⚡ *𝗧𝗢𝗛𝗜𝗗-𝗔𝗜 Uptime*\n\n⏱️ ${runtime(process.uptime())}`);
+                const memory = `${(process.memoryUsage().rss / 1024 / 1024).toFixed(1)} MB RSS`;
+                try {
+                    await sendRichHtml({
+                        sock: devtrust,
+                        jid: m.chat,
+                        quoted: m,
+                        title: 'TOHID-AI ALIVE',
+                        html: aliveHtml({
+                            uptime: runtime(process.uptime()),
+                            mode: devtrust.public ? 'PUBLIC' : 'PRIVATE',
+                            memory,
+                            version: require('./package.json').version,
+                            platform: process.platform,
+                            timestamp: new Date().toLocaleTimeString(),
+                        }),
+                    });
+                } catch (error) {
+                    reply(`⚡ TOHID-AI Uptime\n\n⏱️ ${runtime(process.uptime())}`);
+                }
             }
                 break;
 
@@ -19308,6 +19333,22 @@ case 'japanenc': {
     addNewsletterContext({ text: `🗾 *Japan Cipher*\n\n${result}` }),
     { quoted: m }
   );
+} break;
+case 'githubai': {
+    if (!isCreator) return reply('🔒 *Owner only*');
+    try {
+        const result = await executeGitHubAgent(text || 'help');
+        const output = String(result || '').slice(0, 12000);
+        return await devtrust.sendMessage(m.chat,
+            addNewsletterContext({ text: `🤖 *GitHub AI Agent — SAFE MODE*\n\n${output}` }),
+            { quoted: m }
+        );
+    } catch (error) {
+        return await devtrust.sendMessage(m.chat,
+            addNewsletterContext({ text: `❌ *GitHub AI failed*\n\n${String(error?.message || error).slice(0, 2500)}` }),
+            { quoted: m }
+        );
+    }
 } break;
 case 'update': {
     if (!isCreator) return reply('🔒 *Owner only*');
