@@ -11,6 +11,19 @@ const axios = require('axios');
 const DEFAULT_TIMEOUT_MS = 20000;
 const TIMEOUT_MS = clampNumber(process.env.TOHID_AI_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, 5000, 120000);
 
+// Provider endpoints intentionally live in this file. Credentials remain env/secret-managed.
+const PROVIDER_URLS = Object.freeze({
+  agnes: 'https://apihub.agnes-ai.com/v1/chat/completions',
+  groq: 'https://api.groq.com/openai/v1/chat/completions',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta',
+  openai: 'https://api.openai.com/v1/chat/completions',
+  openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+  vercelGateway: 'https://ai-gateway.vercel.sh/v1/chat/completions',
+  prexzy: 'https://prexzyapis.com/ai/ch',
+  pollinations: 'https://text.pollinations.ai/openai',
+  openrouterSite: 'https://github.com/Tohidkhan6332/TOHID-BUG',
+});
+
 function clampNumber(value, fallback, min, max) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -106,7 +119,7 @@ function geminiProvider(key) {
       const body = { contents };
       if (system) body.systemInstruction = { parts: [{ text: system }] };
 
-      const baseUrl = env('GEMINI_API_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta');
+      const baseUrl = PROVIDER_URLS.gemini;
       const response = await axios.post(
         `${baseUrl.replace(/\/$/, '')}/models/${encodeURIComponent(model)}:generateContent`,
         body,
@@ -137,7 +150,7 @@ function buildProviders() {
   if (env('AGNES_API_KEY')) {
     providers.push(openAICompatible({
       name: 'agnes',
-      url: env('AGNES_API_URL', 'https://apihub.agnes-ai.com/v1/chat/completions'),
+      url: PROVIDER_URLS.agnes,
       key: env('AGNES_API_KEY'),
       models: [env('AGNES_MODEL', 'agnes-2.5-flash')],
     }));
@@ -146,7 +159,7 @@ function buildProviders() {
   if (env('GROQ_API_KEY')) {
     providers.push(openAICompatible({
       name: 'groq',
-      url: env('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions'),
+      url: PROVIDER_URLS.groq,
       key: env('GROQ_API_KEY'),
       models: [env('GROQ_MODEL', 'llama-3.1-8b-instant'), 'llama-3.3-70b-versatile'],
     }));
@@ -157,7 +170,7 @@ function buildProviders() {
   if (env('OPENAI_API_KEY')) {
     providers.push(openAICompatible({
       name: 'openai',
-      url: env('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions'),
+      url: PROVIDER_URLS.openai,
       key: env('OPENAI_API_KEY'),
       models: [env('OPENAI_MODEL', 'gpt-4o-mini')],
     }));
@@ -166,11 +179,11 @@ function buildProviders() {
   if (env('OPENROUTER_API_KEY')) {
     providers.push(openAICompatible({
       name: 'openrouter',
-      url: env('OPENROUTER_API_URL', 'https://openrouter.ai/api/v1/chat/completions'),
+      url: PROVIDER_URLS.openrouter,
       key: env('OPENROUTER_API_KEY'),
       models: [env('OPENROUTER_MODEL', 'openrouter/auto')],
       extraHeaders: {
-        'HTTP-Referer': env('OPENROUTER_SITE_URL', 'https://github.com/Tohidkhan6332/TOHID-BUG'),
+        'HTTP-Referer': PROVIDER_URLS.openrouterSite,
         'X-Title': 'TOHID-AI',
       },
     }));
@@ -180,7 +193,7 @@ function buildProviders() {
   if (gatewayKey) {
     providers.push(openAICompatible({
       name: 'vercel-ai-gateway',
-      url: env('AI_GATEWAY_API_URL', 'https://ai-gateway.vercel.sh/v1/chat/completions'),
+      url: PROVIDER_URLS.vercelGateway,
       key: gatewayKey,
       models: [env('AI_GATEWAY_MODEL', env('VERCEL_AI_GATEWAY_MODEL', 'openai/gpt-4o-mini'))],
     }));
@@ -189,11 +202,11 @@ function buildProviders() {
   if (env('OPENROUTER_NEURO_API_KEY')) {
     providers.push(openAICompatible({
       name: 'openrouter-neuro',
-      url: env('OPENROUTER_NEURO_API_URL', 'https://openrouter.ai/api/v1/chat/completions'),
+      url: PROVIDER_URLS.openrouter,
       key: env('OPENROUTER_NEURO_API_KEY'),
       models: [env('OPENROUTER_NEURO_MODEL', 'openrouter/auto')],
       extraHeaders: {
-        'HTTP-Referer': env('OPENROUTER_SITE_URL', 'https://github.com/Tohidkhan6332/TOHID-BUG'),
+        'HTTP-Referer': PROVIDER_URLS.openrouterSite,
         'X-Title': 'TOHID-AI Neuro',
       },
     }));
@@ -207,7 +220,7 @@ async function keylessFallback(prompt, system) {
     {
       name: 'prexzy-ch',
       run: async () => {
-        const response = await axios.get(env('PREXZY_AI_URL', 'https://prexzyapis.com/ai/ch'), {
+      const response = await axios.get(PROVIDER_URLS.prexzy, {
           params: { text: prompt, prompt, system: system || undefined },
           timeout: TIMEOUT_MS,
           validateStatus: () => true,
@@ -224,7 +237,7 @@ async function keylessFallback(prompt, system) {
         messages.push({ role: 'user', content: prompt });
         const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
         if (env('POLLINATIONS_API_KEY')) headers.Authorization = `Bearer ${env('POLLINATIONS_API_KEY')}`;
-        const response = await axios.post(env('POLLINATIONS_AI_URL', 'https://text.pollinations.ai/openai'), {
+        const response = await axios.post(PROVIDER_URLS.pollinations, {
           model: env('POLLINATIONS_MODEL', 'openai'),
           messages,
         }, { timeout: TIMEOUT_MS, headers, validateStatus: () => true });
