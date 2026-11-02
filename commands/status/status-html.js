@@ -38,8 +38,37 @@ function pingHtml({ latency = '—', mode = 'UNKNOWN', nodeVersion = process.ver
   return card('⚡', 'TOHID-AI · LIVE DIAGNOSTICS', 'Pong — System Online', 'WhatsApp command received and processed successfully.', `<div class="grid">${metric('RESPONSE TIME', latency + ' ms', tone)}${metric('CONNECTION', status, 'ok')}${metric('BOT MODE', mode, 'accent')}${metric('RUNTIME', 'Node.js', 'ok')}${metric('NODE VERSION', nodeVersion)}${metric('PLATFORM', platform)}${metric('CHECKED AT', timestamp)}</div>`);
 }
 
+
+function ownerHtml({ number = '917849917350', name = 'MR TOHID' } = {}) {
+  const digits = String(number).replace(/[^0-9]/g, '');
+  const links = [
+    ['WhatsApp', digits ? 'https://wa.me/' + digits : '', '💬'],
+    ['Telegram', 'https://t.me/Tohidkhan6332', '✈️'],
+    ['GitHub', 'https://github.com/Tohidkhan6332', '💻'],
+    ['Instagram', 'https://www.instagram.com/tohidkhan6332/', '📸'],
+    ['Facebook', 'https://www.facebook.com/tohidkhan6332/', '📘']
+  ];
+  const anchors = links.filter(([, url]) => url).map(([label, url, icon]) =>
+    '<a class="link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' +
+    icon + ' ' + escapeHtml(label) + ' · @tohidkhan6332</a>'
+  ).join('');
+  return card('👑', 'TOHID-AI · OFFICIAL CONTACT', 'Owner & Developer',
+    'Official social media links for ' + escapeHtml(name) + '.',
+    '<div class="owner-name">' + escapeHtml(name) + '</div><div class="links">' + anchors + '</div>');
+}
+
+function statusHtml({ uptime = '—', mode = 'UNKNOWN', memory = '—', version = '—', platform = process.platform, timestamp = new Date().toLocaleTimeString() } = {}) {
+  return card('📊', 'TOHID-AI · SYSTEM STATUS', 'System Overview',
+    'Live runtime and service information for the WhatsApp bot.',
+    '<div class="grid">' +
+    metric('SERVICE', 'ONLINE', 'ok') + metric('UPTIME', uptime, 'ok') +
+    metric('BOT MODE', mode, 'accent') + metric('VERSION', version) +
+    metric('MEMORY', memory) + metric('PLATFORM', platform) +
+    metric('CHECKED AT', timestamp) + '</div>');
+}
+
 function aliveHtml({ uptime = '—', mode = 'UNKNOWN', memory = '—', version = '—', platform = process.platform, timestamp = new Date().toLocaleTimeString() } = {}) {
   return card('🟢', 'TOHID-AI · SERVICE MONITOR', 'Bot Is Alive', 'The WhatsApp bot process is running and ready to handle commands.', `<div class="grid">${metric('UPTIME', uptime, 'ok')}${metric('SERVICE STATUS', 'OPERATIONAL', 'ok')}${metric('BOT MODE', mode, 'accent')}${metric('VERSION', version)}${metric('MEMORY USAGE', memory)}${metric('PLATFORM', platform)}${metric('LAST CHECK', timestamp)}</div>`);
 }
 
-module.exports = { pingHtml, aliveHtml };
+module.exports = { pingHtml, aliveHtml, ownerHtml, statusHtml };
