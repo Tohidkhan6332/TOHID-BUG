@@ -190,7 +190,6 @@ async function tohidImageGen(prompt) {
 const { facebook: tohidFacebook, instagram: tohidInstagram, tiktok: tohidTikTok, youtube: tohidYouTube, play: tohidPlay } = require('./utils/tohid-downloaders');
 const { downloadAudioAsMp3 } = require('./utils/audio-normalizer');
 const { tohidAI } = require('./utils/tohid-ai-provider');
-const { execute: executeGitHubAgent } = require('./utils/github-agent');
 
 async function tohidGpt4(prompt, system = '') {
     return tohidAI(prompt, system);
@@ -2347,6 +2346,35 @@ const Premium = getPremium();
         // be resolved to the phone-number JID yet.
         const messageFromOwner = Boolean(m.key?.fromMe || m.fromMe);
         const isCreator = messageFromOwner || ownerNumbers.has(senderNumber) || ownerNumbers.has(chatNumber);
+        // AI commands are lazy-loaded from commands/ai so feature code does not
+        // grow inside this main WhatsApp handler.
+        if (isCmd) {
+            try {
+                const { executeAi } = require('./commands/ai');
+                const handledAi = await executeAi(command, {
+                    sock: devtrust,
+                    msg: m,
+                    from: m.chat,
+                    sender: m.sender,
+                    reply,
+                    args,
+                    text,
+                    prefix,
+                    isOwner: isCreator,
+                    pushName: m.pushName || 'User'
+                });
+                if (handledAi) {
+                    console.log('[AI COMMAND] Handled:', command);
+                    return;
+                }
+            } catch (aiCommandError) {
+                console.error('[AI COMMAND]', aiCommandError.stack || aiCommandError.message);
+                await devtrust.sendMessage(m.chat, {
+                    text: `⚠️ AI command failed to load.\n\n${aiCommandError.message || 'Unknown error'}`
+                }, { quoted: m }).catch(() => {});
+                return;
+            }
+        }
         const isDev = [...ownerNumbers].map(n => n + '@s.whatsapp.net');
         const isOwner = isCreator;
         const isPremium = messageFromOwner || ownerNumbers.has(senderNumber);
@@ -19333,22 +19361,6 @@ case 'japanenc': {
     addNewsletterContext({ text: `🗾 *Japan Cipher*\n\n${result}` }),
     { quoted: m }
   );
-} break;
-case 'githubai': {
-    if (!isCreator) return reply('🔒 *Owner only*');
-    try {
-        const result = await executeGitHubAgent(text || 'help');
-        const output = String(result || '').slice(0, 12000);
-        return await devtrust.sendMessage(m.chat,
-            addNewsletterContext({ text: `🤖 *GitHub AI Agent — SAFE MODE*\n\n${output}` }),
-            { quoted: m }
-        );
-    } catch (error) {
-        return await devtrust.sendMessage(m.chat,
-            addNewsletterContext({ text: `❌ *GitHub AI failed*\n\n${String(error?.message || error).slice(0, 2500)}` }),
-            { quoted: m }
-        );
-    }
 } break;
 case 'update': {
     if (!isCreator) return reply('🔒 *Owner only*');
