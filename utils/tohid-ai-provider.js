@@ -2,25 +2,60 @@
 
 /**
  * TOHID-AI multi-provider text AI.
- * Secrets are read only from environment variables.
- *
- * Priority:
- * 1. AGNES_API_KEY
- * 2. GROQ_API_KEY
- * 3. GEMINI_API_KEY
- * 4. OPENAI_API_KEY
- * 5. OPENROUTER_API_KEY
- * 6. Prexzy keyless fallback
- * 7. Pollinations keyless fallback
+ * Credentials are read only from environment variables.
+ * Provider failures are isolated so the next configured provider can run.
  */
 
 const axios = require('axios');
 
-const TIMEOUT_MS = Number(process.env.TOHID_AI_TIMEOUT_MS || 20000);
+const DEFAULT_TIMEOUT_MS = 20000;
+const TIMEOUT_MS = clampNumber(process.env.TOHID_AI_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, 5000, 120000);
 
-function openAICompatible({ name, url, key, models }) {
+function clampNumber(value, fallback, min, max) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function env(name, fallback = '') {
+  const value = process.env[name];
+  return value == null ? fallback : String(value).trim();
+}
+
+function providerError(status, data) {
+  const message = data?.error?.message || data?.message || data?.error;
+  return new Error(message ? `${status}: ${String(message).slice(0, 240)}` : `HTTP ${status}`);
+}
+
+function extractAnswer(data) {
+  if (typeof data === 'string') return data.trim() || null;
+  const candidates = [
+    data?.choices?.[0]?.message?.content,
+    data?.choices?.[0]?.text,
+    data?.candidates?.[0]?.content?.parts?.[0]?.text,
+    data?.response,
+    data?.answer,
+    data?.message,
+    data?.result,
+    data?.text,
+    data?.content,
+    data?.output,
+    data?.data?.response,
+    data?.data?.answer,
+    data?.data?.result,
+    data?.data?.text,
+    data?.data?.content,
+  ];
+  for (const value of candidates) {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+function openAICompatible({ name, url, key, models, extraHeaders = {} }) {
   return {
     name,
+    models: models.filter(Boolean),
     async call(model, messages) {
       const response = await axios.post(url, {
         model,
@@ -30,69 +65,68 @@ function openAICompatible({ name, url, key, models }) {
       }, {
         timeout: TIMEOUT_MS,
         headers: {
-          Authorization: 'Bearer ' + key,
+          Authorization: `Bearer ${key}`,
           'Content-Type': 'application/json',
           Accept: 'application/json',
           'User-Agent': 'TOHID-AI',
           'X-Title': 'TOHID-AI',
+          ...extraHeaders,
         },
         validateStatus: () => true,
       });
 
       if (response.status < 200 || response.status >= 300) {
-        throw new Error(response.data?.error?.message || 'HTTP ' + response.status);
+        throw providerError(response.status, response.data);
       }
 
-      const answer =
-        response.data?.choices?.[0]?.message?.content ??
-        response.data?.choices?.[0]?.text ??
-        response.data?.response ??
-        response.data?.result;
-
+      const answer = extractAnswer(response.data);
       if (!answer) throw new Error('Provider returned no usable answer');
-      return typeof answer === 'string' ? answer.trim() : JSON.stringify(answer);
+      return answer;
     },
-    models,
   };
 }
 
 function geminiProvider(key) {
   return {
     name: 'gemini',
-    models: ['gemini-2.5-flash', 'gemini-2.0-flash'],
+    models: [env('GEMINI_MODEL', 'gemini-2.5-flash'), 'gemini-2.0-flash'],
     async call(model, messages) {
       const system = messages
-        .filter(m => m.role === 'system')
-        .map(m => m.content)
+        .filter(message => message.role === 'system')
+        .map(message => String(message.content || ''))
         .join('\n');
 
       const contents = messages
-        .filter(m => m.role !== 'system')
-        .map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: String(m.content || '') }],
+        .filter(message => message.role !== 'system')
+        .map(message => ({
+          role: message.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: String(message.content || '') }],
         }));
 
       const body = { contents };
       if (system) body.systemInstruction = { parts: [{ text: system }] };
 
+      const baseUrl = env('GEMINI_API_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta');
       const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,
+        `${baseUrl.replace(/\/$/, '')}/models/${encodeURIComponent(model)}:generateContent`,
         body,
         {
           timeout: TIMEOUT_MS,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': key,
+          },
           validateStatus: () => true,
         }
       );
 
       if (response.status < 200 || response.status >= 300) {
-        throw new Error(response.data?.error?.message || 'HTTP ' + response.status);
+        throw providerError(response.status, response.data);
       }
 
-      const answer = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const answer = extractAnswer(response.data);
       if (!answer) throw new Error('Gemini returned no usable answer');
-      return String(answer).trim();
+      return answer;
     },
   };
 }
@@ -100,43 +134,68 @@ function geminiProvider(key) {
 function buildProviders() {
   const providers = [];
 
-  if (process.env.AGNES_API_KEY) {
+  if (env('AGNES_API_KEY')) {
     providers.push(openAICompatible({
       name: 'agnes',
-      url: 'https://apihub.agnes-ai.com/v1/chat/completions',
-      key: process.env.AGNES_API_KEY,
-      models: [process.env.AGNES_MODEL || 'agnes-2.5-flash'],
+      url: env('AGNES_API_URL', 'https://apihub.agnes-ai.com/v1/chat/completions'),
+      key: env('AGNES_API_KEY'),
+      models: [env('AGNES_MODEL', 'agnes-2.5-flash')],
     }));
   }
 
-  if (process.env.GROQ_API_KEY) {
+  if (env('GROQ_API_KEY')) {
     providers.push(openAICompatible({
       name: 'groq',
-      url: 'https://api.groq.com/openai/v1/chat/completions',
-      key: process.env.GROQ_API_KEY,
-      models: [process.env.GROQ_MODEL || 'llama-3.1-8b-instant', 'llama-3.3-70b-versatile'],
+      url: env('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions'),
+      key: env('GROQ_API_KEY'),
+      models: [env('GROQ_MODEL', 'llama-3.1-8b-instant'), 'llama-3.3-70b-versatile'],
     }));
   }
 
-  if (process.env.GEMINI_API_KEY) {
-    providers.push(geminiProvider(process.env.GEMINI_API_KEY));
-  }
+  if (env('GEMINI_API_KEY')) providers.push(geminiProvider(env('GEMINI_API_KEY')));
 
-  if (process.env.OPENAI_API_KEY) {
+  if (env('OPENAI_API_KEY')) {
     providers.push(openAICompatible({
       name: 'openai',
-      url: 'https://api.openai.com/v1/chat/completions',
-      key: process.env.OPENAI_API_KEY,
-      models: [process.env.OPENAI_MODEL || 'gpt-4o-mini'],
+      url: env('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions'),
+      key: env('OPENAI_API_KEY'),
+      models: [env('OPENAI_MODEL', 'gpt-4o-mini')],
     }));
   }
 
-  if (process.env.OPENROUTER_API_KEY) {
+  if (env('OPENROUTER_API_KEY')) {
     providers.push(openAICompatible({
       name: 'openrouter',
-      url: 'https://openrouter.ai/api/v1/chat/completions',
-      key: process.env.OPENROUTER_API_KEY,
-      models: [process.env.OPENROUTER_MODEL || 'openrouter/auto'],
+      url: env('OPENROUTER_API_URL', 'https://openrouter.ai/api/v1/chat/completions'),
+      key: env('OPENROUTER_API_KEY'),
+      models: [env('OPENROUTER_MODEL', 'openrouter/auto')],
+      extraHeaders: {
+        'HTTP-Referer': env('OPENROUTER_SITE_URL', 'https://github.com/Tohidkhan6332/TOHID-BUG'),
+        'X-Title': 'TOHID-AI',
+      },
+    }));
+  }
+
+  const gatewayKey = env('AI_GATEWAY_API_KEY') || env('VERCEL_AI_GATEWAY_KEY');
+  if (gatewayKey) {
+    providers.push(openAICompatible({
+      name: 'vercel-ai-gateway',
+      url: env('AI_GATEWAY_API_URL', 'https://ai-gateway.vercel.sh/v1/chat/completions'),
+      key: gatewayKey,
+      models: [env('AI_GATEWAY_MODEL', env('VERCEL_AI_GATEWAY_MODEL', 'openai/gpt-4o-mini'))],
+    }));
+  }
+
+  if (env('OPENROUTER_NEURO_API_KEY')) {
+    providers.push(openAICompatible({
+      name: 'openrouter-neuro',
+      url: env('OPENROUTER_NEURO_API_URL', 'https://openrouter.ai/api/v1/chat/completions'),
+      key: env('OPENROUTER_NEURO_API_KEY'),
+      models: [env('OPENROUTER_NEURO_MODEL', 'openrouter/auto')],
+      extraHeaders: {
+        'HTTP-Referer': env('OPENROUTER_SITE_URL', 'https://github.com/Tohidkhan6332/TOHID-BUG'),
+        'X-Title': 'TOHID-AI Neuro',
+      },
     }));
   }
 
@@ -146,109 +205,51 @@ function buildProviders() {
 async function keylessFallback(prompt, system) {
   const providers = [
     {
-      name: 'prexzy-chatex',
+      name: 'prexzy-ch',
       run: async () => {
-        const r = await axios.get('https://prexzyapis.com/ai/chatex', {
-          params: { text: prompt },
+        const response = await axios.get(env('PREXZY_AI_URL', 'https://prexzyapis.com/ai/ch'), {
+          params: { text: prompt, prompt, system: system || undefined },
           timeout: TIMEOUT_MS,
+          validateStatus: () => true,
         });
-        return r.data;
+        if (response.status < 200 || response.status >= 300) throw providerError(response.status, response.data);
+        return response.data;
       },
     },
     {
-      name: 'prexzy-ai4chat',
+      name: 'pollinations',
       run: async () => {
-        const r = await axios.get('https://prexzyapis.com/ai/ai4chat', {
-          params: { prompt },
-          timeout: TIMEOUT_MS,
-        });
-        return r.data;
-      },
-    },
-    {
-      name: 'prexzy-gemini',
-      run: async () => {
-        const r = await axios.get('https://prexzyapis.com/ai/gemini', {
-          params: { prompt },
-          timeout: TIMEOUT_MS,
-        });
-        return r.data;
+        const messages = [];
+        if (system) messages.push({ role: 'system', content: system });
+        messages.push({ role: 'user', content: prompt });
+        const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+        if (env('POLLINATIONS_API_KEY')) headers.Authorization = `Bearer ${env('POLLINATIONS_API_KEY')}`;
+        const response = await axios.post(env('POLLINATIONS_AI_URL', 'https://text.pollinations.ai/openai'), {
+          model: env('POLLINATIONS_MODEL', 'openai'),
+          messages,
+        }, { timeout: TIMEOUT_MS, headers, validateStatus: () => true });
+        if (response.status < 200 || response.status >= 300) throw providerError(response.status, response.data);
+        return response.data;
       },
     },
   ];
 
-  const extract = (data) => {
-    if (typeof data === 'string') return data.trim();
-    const candidates = [
-      data?.response,
-      data?.answer,
-      data?.message,
-      data?.result,
-      data?.text,
-      data?.data,
-      data?.content,
-      data?.output,
-      data?.choices?.[0]?.message?.content,
-      data?.choices?.[0]?.text,
-      data?.candidates?.[0]?.content?.parts?.[0]?.text,
-      data?.data?.response,
-      data?.data?.answer,
-      data?.data?.result,
-      data?.data?.text,
-      data?.data?.content,
-    ];
-    for (const value of candidates) {
-      if (typeof value === 'string' && value.trim()) return value.trim();
-    }
-    return null;
-  };
-
   let lastError = null;
   for (const provider of providers) {
     try {
-      const answer = extract(await provider.run());
+      const answer = extractAnswer(await provider.run());
       if (answer) {
-        console.log('[TOHID-AI] Keyless provider:', provider.name);
+        console.log('[TOHID-AI] Fallback provider:', provider.name);
         return answer;
       }
-      lastError = new Error(provider.name + ' returned empty response');
+      lastError = new Error(`${provider.name} returned empty response`);
     } catch (error) {
       lastError = error;
-      console.error('[TOHID-AI] Keyless provider failed:', provider.name, error?.message || error);
+      console.error('[TOHID-AI] Fallback failed:', provider.name, 'request unsuccessful');
     }
   }
 
-  // Pollinations now requires authentication for generation. Only use it
-  // when a key is explicitly configured; never assume a keyless endpoint.
-  if (process.env.POLLINATIONS_API_KEY) {
-    const messages = [];
-    if (system) messages.push({ role: 'system', content: system });
-    messages.push({ role: 'user', content: prompt });
-
-    try {
-      const response = await axios.post('https://gen.pollinations.ai/v1/chat/completions', {
-        model: 'openai',
-        messages,
-      }, {
-        timeout: TIMEOUT_MS,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + process.env.POLLINATIONS_API_KEY,
-        },
-        validateStatus: () => true,
-      });
-
-      if (response.status >= 200 && response.status < 300) {
-        const answer = extract(response.data);
-        if (answer) return answer;
-      }
-    } catch (error) {
-      lastError = error;
-      console.error('[TOHID-AI] Pollinations failed:', error?.message || error);
-    }
-  }
-
-  throw lastError || new Error('All keyless AI providers failed');
+  throw lastError || new Error('All AI providers failed');
 }
 
 async function tohidAI(prompt, system = '') {
@@ -259,33 +260,33 @@ async function tohidAI(prompt, system = '') {
   if (system) messages.push({ role: 'system', content: String(system) });
   messages.push({ role: 'user', content: text });
 
-  const providers = buildProviders();
-
-  for (const provider of providers) {
+  for (const provider of buildProviders()) {
     for (const model of provider.models || ['default']) {
       try {
         const answer = await provider.call(model, messages);
         if (answer) {
-          console.log('[TOHID-AI] Provider:', provider.name, 'Model:', model);
+          console.log('[TOHID-AI] Provider succeeded:', provider.name);
           return answer;
         }
       } catch (error) {
-        console.error('[TOHID-AI] Provider failed:', provider.name, error?.message || error);
+        console.error('[TOHID-AI] Provider failed:', provider.name, 'model:', model);
       }
     }
   }
 
-  return keylessFallback(text, system);
+  return keylessFallback(text, String(system || ''));
 }
 
 function configuredProviders() {
   return [
-    ['AGNES_API_KEY', Boolean(process.env.AGNES_API_KEY)],
-    ['GROQ_API_KEY', Boolean(process.env.GROQ_API_KEY)],
-    ['GEMINI_API_KEY', Boolean(process.env.GEMINI_API_KEY)],
-    ['OPENAI_API_KEY', Boolean(process.env.OPENAI_API_KEY)],
-    ['OPENROUTER_API_KEY', Boolean(process.env.OPENROUTER_API_KEY)],
-  ].filter(([, configured]) => configured).map(([name]) => name);
+    ['AGNES_API_KEY', env('AGNES_API_KEY')],
+    ['GROQ_API_KEY', env('GROQ_API_KEY')],
+    ['GEMINI_API_KEY', env('GEMINI_API_KEY')],
+    ['OPENAI_API_KEY', env('OPENAI_API_KEY')],
+    ['OPENROUTER_API_KEY', env('OPENROUTER_API_KEY')],
+    ['AI_GATEWAY_API_KEY', env('AI_GATEWAY_API_KEY') || env('VERCEL_AI_GATEWAY_KEY')],
+    ['OPENROUTER_NEURO_API_KEY', env('OPENROUTER_NEURO_API_KEY')],
+  ].filter(([, value]) => Boolean(value)).map(([name]) => name);
 }
 
 module.exports = { tohidAI, configuredProviders };
