@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+utils/.local-ai-secrets.js
 *.pem
 *.key
 

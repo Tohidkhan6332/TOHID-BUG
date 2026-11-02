@@ -8,6 +8,20 @@
 
 const axios = require('axios');
 
+// Optional local testing file. It is ignored by Git and must never be committed.
+try {
+  const localSecrets = require('./.local-ai-secrets');
+  for (const name of [
+    'AGNES_API_KEY', 'GROQ_API_KEY', 'GEMINI_API_KEY', 'OPENAI_API_KEY',
+    'OPENROUTER_API_KEY', 'AI_GATEWAY_API_KEY', 'VERCEL_AI_GATEWAY_KEY',
+    'OPENROUTER_NEURO_API_KEY', 'POLLINATIONS_API_KEY',
+  ]) {
+    if (!process.env[name] && localSecrets?.[name]) process.env[name] = String(localSecrets[name]);
+  }
+} catch (_) {
+  // Local secrets file is optional; production uses hosting environment secrets.
+}
+
 const DEFAULT_TIMEOUT_MS = 20000;
 const TIMEOUT_MS = clampNumber(process.env.TOHID_AI_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, 5000, 120000);
 
