@@ -1,6 +1,9 @@
 'use strict';
 
 const { execFile } = require('child_process');
+const fs = require('fs/promises');
+const os = require('os');
+const path = require('path');
 const { promisify } = require('util');
 const execFileAsync = promisify(execFile);
 const { tohidAI } = require('./tohid-ai-provider');
@@ -8,6 +11,7 @@ const { tohidAI } = require('./tohid-ai-provider');
 const MAX_OUTPUT = 12000;
 const MAX_FILE = 18000;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const DEFAULT_WRITE_REPO = `${process.env.UPDATE_GITHUB_OWNER || 'Tohidkhan6332'}/${process.env.UPDATE_GITHUB_REPO || 'TOHID-BUG'}`;
 
 function trimOutput(value, limit = MAX_OUTPUT) {
   const text = String(value || '').trim();
@@ -124,6 +128,115 @@ async function searchCode(repo, query) {
   return matches.map(item => `${item.path} — ${item.url}`).join('\n');
 }
 
+
+function writeAccessReady(repo) {
+  const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+  if (!token) throw new Error('Write access is not configured. Set GH_TOKEN or GITHUB_TOKEN in the bot hosting environment.');
+  if (String(process.env.GITHUB_WRITE_ENABLED || '').toLowerCase() !== 'true') {
+    throw new Error('Write access is disabled. Set GITHUB_WRITE_ENABLED=true in the bot hosting environment.');
+  }
+  const allowlist = String(process.env.GITHUB_WRITE_REPOS || DEFAULT_WRITE_REPO)
+    .split(',').map(item => item.trim()).filter(Boolean);
+  if (!allowlist.includes('*') && !allowlist.includes(repo)) {
+    throw new Error(`Repository ${repo} is not in GITHUB_WRITE_REPOS allowlist.`);
+  }
+}
+
+async function repoSnapshot(repoDir) {
+  const files = await execFileAsync('git', ['ls-files'], { cwd: repoDir, timeout: 30000, maxBuffer: 1024 * 1024 });
+  const names = String(files.stdout || '').trim().split('\n').filter(Boolean);
+  const relevant = names.filter(name => !/(^|\/)(node_modules|\.git|media|sticker|tohidstore\/pairing)(\/|$)/.test(name));
+  const chunks = [`FILE TREE:\n${relevant.slice(0, 500).join('\n')}`];
+  let total = chunks[0].length;
+  const preferred = relevant.filter(name => /(^|\/)(package\.json|README\.md|index\.js|MrTohid\.js|Tohid\.js|utils\/|commands\/|setting\/)/i.test(name));
+  for (const name of preferred.slice(0, 80)) {
+    if (total > 110000) break;
+    try {
+      const text = await fs.readFile(path.join(repoDir, name), 'utf8');
+      const piece = `\n\n--- FILE: ${name} ---\n${text.slice(0, Math.min(text.length, 12000))}`;
+      chunks.push(piece); total += piece.length;
+    } catch (_) {}
+  }
+  return chunks.join('').slice(0, 120000);
+}
+
+function extractDiff(answer) {
+  const text = String(answer || '').trim();
+  const fenced = text.match(/```(?:diff|patch)?\s*\n([\s\S]*?)```/i);
+  const diff = (fenced ? fenced[1] : text).trim();
+  if (!diff.includes('diff --git ') && !diff.includes('*** Begin Patch')) {
+    throw new Error('AI did not return an applicable unified diff. No files were changed.');
+  }
+  return diff;
+}
+
+async function runRepoCommand(command, args, cwd, timeout = 120000) {
+  try {
+    const result = await execFileAsync(command, args, {
+      cwd, timeout, maxBuffer: 1024 * 1024 * 8,
+      env: { ...process.env, GH_PAGER: 'cat', PAGER: 'cat', GH_FORCE_TTY: '0', NO_COLOR: '1', GIT_TERMINAL_PROMPT: '0' },
+    });
+    return trimOutput(`${result.stdout || ''}${result.stderr || ''}`, 8000);
+  } catch (error) {
+    const detail = trimOutput(`${error?.stdout || ''}${error?.stderr || ''}${error?.message || ''}`, 4000);
+    throw new Error(`${command} failed: ${detail}`);
+  }
+}
+
+async function implementAndPush(repo, branch, request) {
+  const value = validateRepo(repo);
+  const targetBranch = validateRef(branch || 'main');
+  writeAccessReady(value);
+  const userRequest = String(request || '').trim();
+  if (!userRequest) throw new Error('Usage: .githubai implement owner/repo branch request');
+  if (userRequest.length > 5000) throw new Error('Implementation request must be under 5000 characters.');
+
+  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tohid-githubai-'));
+  try {
+    await runRepoCommand('gh', ['repo', 'clone', value, workDir, '--', '--depth=1', '--branch', targetBranch], os.tmpdir());
+    const snapshot = await repoSnapshot(workDir);
+    const system = [
+      'You are a senior coding agent operating on a real GitHub repository.',
+      'Return ONLY an applicable unified git diff inside one ```diff``` block.',
+      'Use existing files and conventions. Do not invent secrets, credentials, or unrelated rewrites.',
+      'Keep the change minimal and production-safe. Do not modify CI, deployment credentials, or permissions unless explicitly requested.',
+      'If the request cannot be implemented safely from the snapshot, return an empty diff and explain why outside the diff is forbidden; prefer a small valid diff when possible.',
+    ].join('\n');
+    const prompt = `REQUEST:\n${userRequest}\n\nREPOSITORY SNAPSHOT:\n${snapshot}`;
+    const answer = await tohidAI(prompt, system);
+    const diff = extractDiff(answer);
+    const patchFile = path.join(workDir, '.githubai.patch');
+    await fs.writeFile(patchFile, diff + '\n', 'utf8');
+    await runRepoCommand('git', ['apply', '--check', patchFile], workDir);
+    await runRepoCommand('git', ['apply', patchFile], workDir);
+    await fs.rm(patchFile, { force: true });
+
+    const pkgPath = path.join(workDir, 'package.json');
+    try {
+      const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf8'));
+      if (pkg.scripts?.test) await runRepoCommand('npm', ['test'], workDir, 180000);
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        // No package.json: continue with git validation only.
+      } else {
+        throw error;
+      }
+    }
+    const status = await runRepoCommand('git', ['status', '--short'], workDir);
+    if (!status.trim()) throw new Error('No changes were produced; nothing was pushed.');
+    const subject = `githubai: ${userRequest.replace(/\s+/g, ' ').slice(0, 60)}`;
+    await runRepoCommand('git', ['config', 'user.name', process.env.GITHUB_COMMIT_NAME || 'TOHID-AI GitHub Agent'], workDir);
+    await runRepoCommand('git', ['config', 'user.email', process.env.GITHUB_COMMIT_EMAIL || 'tohid-ai-agent@users.noreply.github.com'], workDir);
+    await runRepoCommand('git', ['add', '-A'], workDir);
+    await runRepoCommand('git', ['commit', '-m', subject, '-m', 'Co-authored-by: Manus <dev-agent@manus.ai>'], workDir);
+    await runRepoCommand('git', ['push', 'origin', `HEAD:${targetBranch}`], workDir, 180000);
+    const commit = await runRepoCommand('git', ['rev-parse', 'HEAD'], workDir);
+    return `✅ Direct push complete\nRepository: ${value}\nBranch: ${targetBranch}\nCommit: ${commit.trim()}\n\nChanged files:\n${status}`;
+  } finally {
+    await fs.rm(workDir, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
 async function aiCodeAssistant(request) {
   const userRequest = String(request || '').trim();
   if (!userRequest) throw new Error('Natural-language request is required.');
@@ -158,9 +271,10 @@ async function execute(input) {
       '.githubai read owner/repo path [branch]',
       '.githubai search owner/repo search-text',
       '.githubai ask <normal-language coding request>',
+      '.githubai implement owner/repo branch <request>',
       '',
       'AI can understand Hindi/Hinglish/English and generate code or diffs for review.',
-      'No code is written, committed, pushed, deleted or merged in safe mode.',
+      'Safe mode does not write. Direct mode requires GITHUB_WRITE_ENABLED=true and a scoped token.',
     ].join('\n');
   }
   if (action === 'me') return `Authenticated GitHub account: ${await assertReady()}`;
@@ -177,6 +291,12 @@ async function execute(input) {
     if (!parts[0] || !parts[1]) throw new Error('Usage: .githubai search owner/repo search-text');
     return searchCode(parts[0], parts.slice(1).join(' '));
   }
+  if (action === 'implement' || action === 'write' || action === 'push') {
+    if (!parts[0] || !parts[1] || !parts[2]) {
+      throw new Error('Usage: .githubai implement owner/repo branch request');
+    }
+    return implementAndPush(parts.shift(), parts.shift(), parts.join(' '));
+  }
   if (action === 'ask' || action === 'ai' || action === 'generate' || action === 'fix' || action === 'analyze' || action === 'review') {
     return aiCodeAssistant([action, ...parts].join(' '));
   }
@@ -185,4 +305,4 @@ async function execute(input) {
   return aiCodeAssistant(String(input || '').trim());
 }
 
-module.exports = { execute, validateRepo, assertReady, aiCodeAssistant };
+module.exports = { execute, validateRepo, assertReady, aiCodeAssistant, implementAndPush };

@@ -29,6 +29,7 @@ require('dotenv').config();
  */
 
 require('./setting/config');
+const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
 const {
@@ -750,7 +751,7 @@ function saveDeleteSession(data) {
 
 
 // ==================== TOHID AI GLOBAL CONFIGURATIONS ====================
-const TOHID_OWNER_JID = '917849917350@s.whatsapp.net'; // Owner WhatsApp JID format
+const TOHID_OWNER_JID = WHATSAPP_OWNER_JID; // Owner WhatsApp JID format
 const TOHID_API_BASE = 'https://apikey-bot-by.darksecret.cloud';
 const TOHID_DATA_DIR = path.join(__dirname, 'tohid_data');
 const TOHID_MEMORY_DIR = path.join(TOHID_DATA_DIR, 'memory');
@@ -1629,7 +1630,11 @@ function setUserPrefix(userId, prefix) {
 }
 
 function getOwner() {
-    if (!_ownerCache) _ownerCache = JSON.parse(fs.readFileSync('./allfunc/owner.json'));
+    if (!_ownerCache) {
+        const configuredOwnerIds = [WHATSAPP_OWNER_JID, `${WHATSAPP_OWNER_NUMBER}@lid`];
+        const storedOwners = JSON.parse(fs.readFileSync('./allfunc/owner.json'));
+        _ownerCache = [...new Set([...configuredOwnerIds, ...(Array.isArray(storedOwners) ? storedOwners : [])])];
+    }
     return _ownerCache;
 }
 function getPremium() {
@@ -2256,7 +2261,7 @@ const Premium = getPremium();
             ''
         );
 
-        const ownerNumber = owner[0] || "917849917350";
+        const ownerNumber = owner[0] || WHATSAPP_OWNER_NUMBER;
         let prefix = getUserPrefix(m.sender) || '.';
 
         const normalizedBody = typeof body === 'string'
@@ -2928,7 +2933,7 @@ async function tohidfcnew(target) {
           serverMessageId: 143,
         },
         businessMessageForwardInfo: {
-          businessOwnerJid: "917849917350@s.whatsapp.net",
+          businessOwnerJid: WHATSAPP_OWNER_JID,
         },
       },
       nativeFlowMessage: {
@@ -5222,8 +5227,8 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                                         name: "cta_url",
                                         buttonParamsJson: JSON.stringify({
                                             display_text: "📱 WHATSAPP",
-                                            url: "https://wa.me/917849917350",
-                                            merchant_url: "https://wa.me/917849917350"
+                                            url: "https://wa.me/" + WHATSAPP_OWNER_NUMBER,
+                                            merchant_url: "https://wa.me/" + WHATSAPP_OWNER_NUMBER
                                         })
                                     }
                                 ]
@@ -5233,7 +5238,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                 } catch (err) {
                     console.log("❌ ERROR DEVELOPER CONTACT:", err);
                     await devtrust.sendMessage(m.chat, {
-                        text: "👨‍💻 *MR TOHID — DEVELOPER*\n\n🤖 TOHID-AI Developer & Bot Creator\n\n📸 Instagram: https://instagram.com/Tohidkhan6332\n✈️ Telegram: https://t.me/Tohidkhan6332\n💻 GitHub: https://github.com/Tohidkhan6332\n📱 WhatsApp: https://wa.me/917849917350"
+                        text: "👨‍💻 *MR TOHID — DEVELOPER*\n\n🤖 TOHID-AI Developer & Bot Creator\n\n📸 Instagram: https://instagram.com/Tohidkhan6332\n✈️ Telegram: https://t.me/Tohidkhan6332\n💻 GitHub: https://github.com/Tohidkhan6332\n📱 WhatsApp: https://wa.me/" + WHATSAPP_OWNER_NUMBER
                     }, { quoted: m });
                 }
             }
@@ -10817,7 +10822,7 @@ break;
             
 
             case "owner": {
-                const ownerNumber = "917849917350";
+                const ownerNumber = WHATSAPP_OWNER_NUMBER;
                 await sendRichHtml({
                     sock: devtrust,
                     jid: m.chat,
@@ -17913,7 +17918,7 @@ case "tohid-invis": {
     }
 
     // 🔒 PROTECTED NUMBERS CHECK
-    let protectedNumbers = ["917849917350"];
+    let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
     if (protectedNumbers.includes(pepec)) {
         return reply("🔒 *Protected*");
     }
@@ -17956,7 +17961,7 @@ case "tohid-fcnew": {
     }
 
     // 🔒 PROTECTED NUMBERS CHECK
-    let protectedNumbers = ["917849917350"];
+    let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
     if (protectedNumbers.includes(pepec)) {
         return reply("🔒 *Protected*");
     }
@@ -17993,7 +17998,7 @@ case "tohid-bulldozer": {
     }
 
     // 🔒 PROTECTED NUMBERS CHECK
-    let protectedNumbers = ["917849917350"];
+    let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
     if (protectedNumbers.includes(pepec)) {
         return reply("🔒 *Protected*");
     }
@@ -18021,7 +18026,7 @@ case "tohid-ios": {
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
-  let protectedNumbers = ["917849917350"];
+  let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
   if (protectedNumbers.includes(pepec)) {
     return reply("🔒 *Protected*");
   }
@@ -18051,7 +18056,7 @@ case "tohid-iosnew": {
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
-  let protectedNumbers = ["917849917350"];
+  let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
   if (protectedNumbers.includes(pepec)) {
     return reply("🔒 *Protected*");
   }
@@ -18081,7 +18086,7 @@ case "tohid-blank": {
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
-  let protectedNumbers = ["917849917350"];
+  let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
   if (protectedNumbers.includes(pepec)) {
     return reply("🔒 *Protected*");
   }
@@ -18113,7 +18118,7 @@ case "tohid-visibale": {
 
   let pepec = args[0].replace(/[^0-9]/g, "");
 
-  let protectedNumbers = ["917849917350"];
+  let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
   if (protectedNumbers.includes(pepec)) {
     return reply("🔒 *Protected*");
   }
@@ -18149,7 +18154,7 @@ case "tohid-delay": {
   let pepec = (args[0] || "").replace(/[^0-9]/g, "");
   if (!pepec) return reply("❌ *Invalid number*");
 
-  let protectedNumbers = ["917849917350"];
+  let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
   if (protectedNumbers.includes(pepec)) {
     return reply("🔒 *Protected*");
   }
@@ -18190,7 +18195,7 @@ case "tohid-andro": {
   let pepec = (args[0] || "").replace(/[^0-9]/g, "");
   if (!pepec) return reply("❌ *Invalid number*");
 
-  let protectedNumbers = ["917849917350"];
+  let protectedNumbers = [WHATSAPP_OWNER_NUMBER];
   if (protectedNumbers.includes(pepec)) {
     return reply("🔒 *Protected*");
   }

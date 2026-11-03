@@ -1,15 +1,16 @@
 const fs = require('fs')
+const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./owner-config')
 
 global.status = false //"self/public" section of the bot
-global.owner = ['917849917350']
+global.owner = [WHATSAPP_OWNER_NUMBER]
 global.xprefix = '.'
 global.gambar = "https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/media/Tohid.jpg"
 global.OWNER_NAME = "@Tohidkhan6332" //
-global.DEVELOPER = ["917849917350"] //
+global.DEVELOPER = [WHATSAPP_OWNER_NUMBER] //
 global.BOT_NAME = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈"
 global.bankowner = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈"
 global.creatorName = "𝕄ℝ 𝕋𝕆ℍ𝕀𝔻™"
-global.ownernumber = '917849917350'  //creator number
+global.ownernumber = WHATSAPP_OWNER_NUMBER  //creator number
 global.location = "Asia/Kolkata"
 global.prefa = ['','!','.','#','&']
 // Config - TOHID-AI Official
@@ -24,7 +25,7 @@ global.thumbnail = 'https://cdn.jsdelivr.net/gh/Tohidkhan6332/TOHID-BUG@main/med
 global.richpp = ' '
 global.packname = "ꜱᴛɪᴄᴋᴇʀ ʙʏ ᴛᴏʜɪᴅ ᴀɪ"
 global.author = "𝐓𝐎𝐇𝐈𝐃-𝐀𝐈"
-global.creator = "917849917350@s.whatsapp.net"
+global.creator = WHATSAPP_OWNER_JID
 global.ownername = '𝕄ℝ 𝕋𝕆ℍ𝕀𝔻' 
 global.onlyowner = `Only Tohid dev can use this Command 🥶🥷`
   // reply 

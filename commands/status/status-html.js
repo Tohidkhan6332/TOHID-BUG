@@ -4,6 +4,8 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+const { WHATSAPP_OWNER_NUMBER } = require('../../setting/owner-config');
+
 const css = `
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:#071018;color:#eef2ff;font-family:Arial,Helvetica,sans-serif}
@@ -39,7 +41,7 @@ function pingHtml({ latency = '—', mode = 'UNKNOWN', nodeVersion = process.ver
 }
 
 
-function ownerHtml({ number = '917849917350', name = 'MR TOHID' } = {}) {
+function ownerHtml({ number = WHATSAPP_OWNER_NUMBER, name = 'MR TOHID' } = {}) {
   const digits = String(number).replace(/[^0-9]/g, '');
   const links = [
     ['WhatsApp', digits ? 'https://wa.me/' + digits : '', '💬'],

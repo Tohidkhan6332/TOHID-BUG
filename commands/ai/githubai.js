@@ -4,7 +4,7 @@ const { execute: executeGitHubAgent } = require('../../utils/github-agent');
 
 const name = 'githubai';
 const aliases = ['github-ai'];
-const description = 'Owner-only safe GitHub repository read, inspect and code-search agent';
+const description = 'Owner-only GitHub repository read, inspect, code-search and direct-push agent';
 
 async function execute(context = {}) {
   const { sock, msg, from, reply, text, args, isOwner } = context;

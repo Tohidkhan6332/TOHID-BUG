@@ -3,6 +3,7 @@ const path = require('path');
 const os = require('os');
 const { performance } = require('perf_hooks');
 const chalk = require('chalk');
+const { TELEGRAM_OWNER_IDS } = require('./setting/owner-config');
 
 const START_TIME = Date.now();
 
@@ -349,14 +350,7 @@ function initDebug(bot) {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
 
-    let OWNERS_ALL;
-    try {
-      OWNERS_ALL = require('./tohidstore/token').BOT_TOKEN
-        ? [8582350365]
-        : [8582350365];
-    } catch (e) {
-      OWNERS_ALL = [];
-    }
+    const OWNERS_ALL = TELEGRAM_OWNER_IDS;
 
     const isOwner = OWNERS_ALL.includes(userId);
     const isAdmin = (() => {
@@ -394,8 +388,7 @@ function initDebug(bot) {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
 
-    let OWNERS_ALL;
-    try { OWNERS_ALL = [8582350365]; } catch (e) { OWNERS_ALL = []; }
+    const OWNERS_ALL = TELEGRAM_OWNER_IDS;
 
     if (!OWNERS_ALL.includes(userId)) {
       return bot.sendMessage(chatId,
@@ -415,8 +408,7 @@ function initDebug(bot) {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
 
-    let OWNERS_ALL;
-    try { OWNERS_ALL = [8582350365]; } catch (e) { OWNERS_ALL = []; }
+    const OWNERS_ALL = TELEGRAM_OWNER_IDS;
 
     const isOwner = OWNERS_ALL.includes(userId);
     if (!isOwner) {
@@ -450,8 +442,7 @@ function initDebug(bot) {
     const chatId = msg.chat.id;
     const userId = msg.from?.id;
 
-    let OWNERS_ALL;
-    try { OWNERS_ALL = [8582350365]; } catch (e) { OWNERS_ALL = []; }
+    const OWNERS_ALL = TELEGRAM_OWNER_IDS;
 
     if (!OWNERS_ALL.includes(userId)) {
       return bot.sendMessage(chatId,

@@ -40,6 +40,7 @@ const chalk = require('chalk');
 const { performance } = require('perf_hooks');
 const os = require('os');
 const { BOT_TOKEN } = require('./tohidstore/token');
+const { TELEGRAM_OWNER_IDS } = require('./setting/owner-config');
 const { sleep } = require('./tohidstore/utils');
 const { autoLoadPairs } = require('./autoload');
 const { getActiveConnection, getActiveConnections, restartActiveConnection, stopActiveConnection, getConnectionHealth } = require('./pair');
@@ -113,10 +114,10 @@ const SYSTEM = {
 
 // Owner Configuration
 const OWNERS = {
-  primary: 8582350365,
-  secondary: 8582350365,
-  dev: 8582350365,
-  all: [8582350365]
+  primary: TELEGRAM_OWNER_IDS[0],
+  secondary: TELEGRAM_OWNER_IDS[1] || TELEGRAM_OWNER_IDS[0],
+  dev: TELEGRAM_OWNER_IDS[0],
+  all: TELEGRAM_OWNER_IDS
 };
 
 // Developer Contact Information
