@@ -2352,6 +2352,25 @@ const Premium = getPremium();
         // be resolved to the phone-number JID yet.
         const messageFromOwner = Boolean(m.key?.fromMe || m.fromMe);
         const isCreator = messageFromOwner || ownerNumbers.has(senderNumber) || ownerNumbers.has(chatNumber);
+        // GROUP COMMAND FAST-PATH
+        if (isCmd) {
+            try {
+                const { executeGroup } = require('./commands/group/group');
+                const handledGroup = await executeGroup(command, {
+                    sock: devtrust, msg: m, from: m.chat, sender: m.sender,
+                    reply, args, text, prefix, isOwner: isCreator,
+                    isAdmin: m.isGroup ? groupAdmins.includes(m.sender) : false
+                });
+                if (handledGroup) return;
+            } catch (groupCommandError) {
+                console.error('[GROUP COMMAND]', groupCommandError.stack || groupCommandError.message);
+                await devtrust.sendMessage(m.chat, {
+                    text: '⚠️ Group command failed.\\n\\n' + (groupCommandError.message || 'Unknown error')
+                }, { quoted: m }).catch(() => {});
+                return;
+            }
+        }
+
         // AI commands are lazy-loaded from commands/ai so feature code does not
         // grow inside this main WhatsApp handler.
         if (isCmd) {
@@ -4743,6 +4762,14 @@ function isAntiDeleteActive(db, jid) {
     if (!Array.isArray(db)) return false;
     const session = db.find(s => s.sesi === jid);
     return session?.Aktif === 'yes';
+}
+
+// Mention digest runs independently for every paired WhatsApp session.
+try {
+    const { attachMentionDigest } = require('./commands/group/group');
+    attachMentionDigest(devtrust, WHATSAPP_OWNER_JID);
+} catch (mentionDigestError) {
+    console.error('[MENTION DIGEST] Could not attach:', mentionDigestError.message);
 }
 
 global.__TOHID_DELETE_EVENT_SOCKETS ||= new WeakSet();
