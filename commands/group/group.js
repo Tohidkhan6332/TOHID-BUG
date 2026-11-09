@@ -43,6 +43,7 @@ function isMentioned(message) {
     visited.add(value);
     if (Array.isArray(value.mentionedJid) && value.mentionedJid.length) return true;
     for (const [key, child] of Object.entries(value)) {
+      if (['quotedMessage', 'quotedAd', 'externalAdReply'].includes(key)) continue;
       if (key === 'contextInfo' && child && Array.isArray(child.mentionedJid) && child.mentionedJid.length) return true;
       if (child && typeof child === 'object' && scan(child, depth + 1)) return true;
     }
