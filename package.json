@@ -7,7 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "bot": "node Tohid.js",
-    "test": "node --check index.js && node --check MrTohid.js && node --check pair.js && node --check Tohid.js"
+    "test": "node --check index.js && node --check MrTohid.js && node --check pair.js && node --check Tohid.js && node --check commands/group/group.js"
   },
   "keywords": [
     "whiskeysockets",
