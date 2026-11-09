@@ -32,7 +32,7 @@ function getClock(date = new Date()) {
   return hour * 60 + minute;
 }
 function parseTime(value) {
-  if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(value || ''))) return null;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''))) return null;
   const [h, m] = value.split(':').map(Number);
   return h * 60 + m;
 }
@@ -77,12 +77,14 @@ async function flushDue(sock, ownerJid) {
     if (!pending.length) continue;
     // Remove from memory only after successful forwarding; failures retain the batch.
     try {
-      for (const original of pending) {
+      while (pending.length) {
+        const original = pending[0];
         if (typeof sock.copyNForward === 'function') {
           await sock.copyNForward(ownerJid, original, true);
         } else {
           await sock.sendMessage(ownerJid, { forward: original });
         }
+        pending.shift();
         await new Promise(resolve => setTimeout(resolve, 250));
       }
       queues.set(groupId, []);
@@ -148,14 +150,14 @@ async function executeGroup(command, context = {}) {
     const startMinutes = parseTime(start);
     const endMinutes = parseTime(end);
     if (startMinutes === null || endMinutes === null || startMinutes >= endMinutes) {
-      await reply('⏰ Format: .mentiontime 09:00 18:00\\nStart aur end 24-hour IST format mein hon; end time start se baad hona chahiye.');
+      await reply('⏰ Format: .mentiontime 09:00 18:00\nStart aur end 24-hour IST format mein hon; end time start se baad hona chahiye.');
       return true;
     }
     config[groupId] = { ...current, start, end };
     writeConfig(config);
     await reply('✅ Daily timing set: ' + start + ' se ' + end + ' IST. End time par collected mentions owner DM mein batch mein bheje jayenge.');
   } else {
-    await reply('📋 *Mention Digest Status*\\nStatus: ' + (current.enabled ? 'ON' : 'OFF') + '\\nDaily time: ' + current.start + ' - ' + current.end + ' IST\\nPending messages: ' + (queues.get(groupId)?.length || 0));
+    await reply('📋 *Mention Digest Status*\nStatus: ' + (current.enabled ? 'ON' : 'OFF') + '\nDaily time: ' + current.start + ' - ' + current.end + ' IST\nPending messages: ' + (queues.get(groupId)?.length || 0));
   }
   return true;
 }
