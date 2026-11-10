@@ -51,19 +51,22 @@ function normalizeStyledMenuText(value) {
 function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
   const original = Array.isArray(existingButtons) ? existingButtons : [];
   const selectors = original.filter(button => button?.name === 'single_select');
-  const makeList = (title, sectionTitle, rows) => ({
+  const makeList = (title, sections) => ({
     name: 'single_select',
-    buttonParamsJson: JSON.stringify({ title, sections: [{ title: sectionTitle, rows }] })
+    buttonParamsJson: JSON.stringify({ title, sections })
   });
-
-  const categorySelector = selectors[0] || makeList('📂 CATEGORY SELECTION', 'BOT CATEGORIES', [
-    { title: '📚 ALL MENU', id: prefix + 'allmenu' },
-    { title: '🎮 GAME MENU', id: prefix + 'gamemenu' },
-    { title: '👥 GROUP MENU', id: prefix + 'groupmenu' }
-  ]);
-  const developerSelector = makeList('👨‍💻 DEVELOPER CONTACT', 'CONTACT MR TOHID', [
-    { title: '👨‍💻 OPEN DEVELOPER CONTACT', description: 'Developer profiles and contact', id: prefix + 'developercontact' }
-  ]);
+  const categorySelector = selectors[0] || makeList('📂 CATEGORY SELECTION', [{
+    title: 'BOT CATEGORIES',
+    rows: [
+      { title: '📚 ALL MENU', id: prefix + 'allmenu' },
+      { title: '🎮 GAME MENU', id: prefix + 'gamemenu' },
+      { title: '👥 GROUP MENU', id: prefix + 'groupmenu' }
+    ]
+  }]);
+  const developerSelector = makeList('👨‍💻 DEVELOPER CONTACT', [{
+    title: 'CONTACT MR TOHID',
+    rows: [{ title: '👨‍💻 OPEN DEVELOPER CONTACT', description: 'Developer profiles and contact', id: prefix + 'developercontact' }]
+  }]);
   const supportGroupButton = {
     name: 'cta_url',
     buttonParamsJson: JSON.stringify({
@@ -80,9 +83,9 @@ function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
       merchant_url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
     })
   };
-
   if (menuType === 'gamemenu') {
-    const gameSelector = makeList('🎮 GAME SELECTION', 'CHOOSE A GAME', [
+    const categoryParams = JSON.parse(categorySelector.buttonParamsJson);
+    const gameRows = [
       { title: '🐍 Snake', description: 'Interactive HTML game', id: prefix + 'snake' },
       { title: '🔢 2048', description: 'Number merge game', id: prefix + '2048' },
       { title: '⭕ Tic Tac Toe', description: 'Classic game', id: prefix + 'ttt' },
@@ -101,10 +104,13 @@ function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
       { title: '🔤 Scrabble', description: 'Word game', id: prefix + 'scrabble' },
       { title: '🔢 Sudoku', description: 'Puzzle game', id: prefix + 'sudoku' },
       { title: '🔀 Word Scramble', description: 'Word game', id: prefix + 'wordscramble' }
+    ];
+    const gameCategorySelector = makeList('🎮 GAME & CATEGORY SELECTION', [
+      { title: '🎮 GAME SELECTION', rows: gameRows },
+      ...categoryParams.sections
     ]);
-    return [gameSelector, categorySelector, developerSelector, supportGroupButton, officialChannelButton];
+    return [gameCategorySelector, developerSelector, supportGroupButton, officialChannelButton];
   }
-
   return [categorySelector, developerSelector, supportGroupButton, officialChannelButton];
 }
 module.exports = { randomizeMenuFont, normalizeStyledMenuText, completeMenuButtons };
