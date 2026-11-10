@@ -73,7 +73,7 @@ function completeMenuButtons(existingButtons, prefix = '.') {
     });
   }
 
-  if (!hasGroupLink && buttons.length < 4) {
+  if (!hasGroupLink && buttons.length < 3) {
     buttons.push({
       name: 'cta_url',
       buttonParamsJson: JSON.stringify({
