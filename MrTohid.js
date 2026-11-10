@@ -5198,6 +5198,15 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
             }
             break;
 
+            case 'supportgroup': {
+                await devtrust.sendMessage(m.chat, { text: '👥 *TOHID-AI SUPPORT GROUP*\n\nhttps://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud' }, { quoted: m });
+            }
+                break;
+
+            case 'officialchannel': {
+                await devtrust.sendMessage(m.chat, { text: '📢 *TOHID-AI OFFICIAL CHANNEL*\n\nhttps://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T' }, { quoted: m });
+            }
+                break;
             case 'developercontact':
             case 'devcontact': {
                 const developerImages = [
