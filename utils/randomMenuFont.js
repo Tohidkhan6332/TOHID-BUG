@@ -61,31 +61,50 @@ function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
     { title: '🎮 GAME MENU', id: prefix + 'gamemenu' },
     { title: '👥 GROUP MENU', id: prefix + 'groupmenu' }
   ]);
-
   const developerSelector = makeList('👨‍💻 DEVELOPER CONTACT', 'CONTACT MR TOHID', [
     { title: '👨‍💻 OPEN DEVELOPER CONTACT', description: 'Developer profiles and contact', id: prefix + 'developercontact' }
   ]);
-
-  const linksSelector = makeList('🔗 SUPPORT & OFFICIAL LINKS', 'TOHID-AI LINKS', [
-    { title: '👥 SUPPORT GROUP', description: 'Join the official support group', id: prefix + 'supportgroup' },
-    { title: '📢 OFFICIAL CHANNEL', description: 'Follow the official WhatsApp channel', id: prefix + 'officialchannel' }
-  ]);
+  const supportGroupButton = {
+    name: 'cta_url',
+    buttonParamsJson: JSON.stringify({
+      display_text: '👥 SUPPORT GROUP',
+      url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
+      merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
+    })
+  };
+  const officialChannelButton = {
+    name: 'cta_url',
+    buttonParamsJson: JSON.stringify({
+      display_text: '📢 OFFICIAL CHANNEL',
+      url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
+      merchant_url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
+    })
+  };
 
   if (menuType === 'gamemenu') {
     const gameSelector = makeList('🎮 GAME SELECTION', 'CHOOSE A GAME', [
-      { title: '🐍 Snake', description: 'Interactive Snake game', id: prefix + 'snake' },
+      { title: '🐍 Snake', description: 'Interactive HTML game', id: prefix + 'snake' },
       { title: '🔢 2048', description: 'Number merge game', id: prefix + '2048' },
       { title: '⭕ Tic Tac Toe', description: 'Classic game', id: prefix + 'ttt' },
       { title: '✊ Rock Paper Scissors', description: 'Quick game', id: prefix + 'rps' },
       { title: '🧠 Quiz', description: 'Knowledge quiz', id: prefix + 'quiz' },
-      { title: '🎯 Guess', description: 'Guessing game', id: prefix + 'guess' },
-      { title: '🪢 Hangman', description: 'Word guessing game', id: prefix + 'hangman' },
-      { title: '🎲 Dice', description: 'Roll the dice', id: prefix + 'dice' }
+      { title: '➗ Math Rush', description: 'Fast arithmetic', id: prefix + 'mathrush' },
+      { title: '😀 Emoji Guess', description: 'Guess the movie', id: prefix + 'emojiguess' },
+      { title: '🎭 Truth or Dare', description: 'Group-friendly game', id: prefix + 'truthordare' },
+      { title: '🎲 Dice Battle', description: 'Roll and battle', id: prefix + 'dicebattle' },
+      { title: '🔮 Number Guess', description: 'Guess the hidden number', id: prefix + 'numberguess' },
+      { title: '💻 Matrix', description: 'Interactive arcade', id: prefix + 'matrix' },
+      { title: '👹 Doom', description: 'Interactive arcade', id: prefix + 'doom' },
+      { title: '🧛 Vampire', description: 'Interactive arcade', id: prefix + 'vampire' },
+      { title: '⚡ Cyber', description: 'Interactive arcade', id: prefix + 'cyber' },
+      { title: '🎹 Piano', description: 'Interactive game', id: prefix + 'piano' },
+      { title: '🔤 Scrabble', description: 'Word game', id: prefix + 'scrabble' },
+      { title: '🔢 Sudoku', description: 'Puzzle game', id: prefix + 'sudoku' },
+      { title: '🔀 Word Scramble', description: 'Word game', id: prefix + 'wordscramble' }
     ]);
-    return [gameSelector, categorySelector, linksSelector];
+    return [gameSelector, categorySelector, developerSelector, supportGroupButton, officialChannelButton];
   }
 
-  return [categorySelector, developerSelector, linksSelector];
+  return [categorySelector, developerSelector, supportGroupButton, officialChannelButton];
 }
-
 module.exports = { randomizeMenuFont, normalizeStyledMenuText, completeMenuButtons };
