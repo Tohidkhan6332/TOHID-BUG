@@ -47,8 +47,9 @@ function randomizeMenuFont(value, prefix = '.') {
     'g'
   );
 
-  // Keep links and executable command names in their original form.
-  let output = source.replace(protectedPattern, (match) => {
+  // Keep URLs intact; menu commands (including their dot prefix) are styled too.
+  const urlPattern = /https?:\\/\\/[^\\s]+/g;
+  let output = source.replace(urlPattern, (match) => {
     const index = protectedParts.push(match) - 1;
     return '\uE000' + index + '\uE001';
   });
@@ -69,4 +70,38 @@ function randomizeMenuFont(value, prefix = '.') {
   return output.replace(/\uE000(\d+)\uE001/g, (_, index) => protectedParts[Number(index)]);
 }
 
-module.exports = { randomizeMenuFont };
+function normalizeStyledMenuText(value) {
+  const reverseRanges = [
+    [0x1D400, 0x1D419], [0x1D41A, 0x1D433],
+    [0x1D434, 0x1D44D], [0x1D44E, 0x1D467],
+    [0x1D468, 0x1D481], [0x1D482, 0x1D49B],
+    [0x1D5A0, 0x1D5B9], [0x1D5BA, 0x1D5D3],
+    [0x1D5D4, 0x1D5ED], [0x1D5EE, 0x1D607],
+    [0x1D608, 0x1D621], [0x1D622, 0x1D63B],
+    [0x1D670, 0x1D689], [0x1D68A, 0x1D6A3],
+    [0x1D4D0, 0x1D4E9], [0x1D4EA, 0x1D503],
+    [0x1D56C, 0x1D585], [0x1D586, 0x1D59F],
+    [0x1D538, 0x1D551], [0x1D552, 0x1D56B]
+  ];
+  const special = new Map([
+    [0x210E, 'h'], [0x2102, 'C'], [0x210D, 'H'],
+    [0x2115, 'N'], [0x2119, 'P'], [0x211A, 'Q'],
+    [0x211D, 'R'], [0x2124, 'Z']
+  ]);
+  return Array.from(String(value ?? ''), (character) => {
+    const code = character.codePointAt(0);
+    if (special.has(code)) return special.get(code);
+    for (const [start, end] of reverseRanges) {
+      if (code >= start && code <= end) {
+        const offset = code - start;
+        return String.fromCharCode((start === 0x1D400 || start === 0x1D434 ||
+          start === 0x1D468 || start === 0x1D5A0 || start === 0x1D5D4 ||
+          start === 0x1D608 || start === 0x1D670 || start === 0x1D4D0 ||
+          start === 0x1D56C || start === 0x1D538) ? 65 + offset : 97 + offset);
+      }
+    }
+    return character;
+  }).join('');
+}
+
+module.exports = { randomizeMenuFont, normalizeStyledMenuText };
