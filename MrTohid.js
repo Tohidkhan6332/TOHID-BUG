@@ -5410,7 +5410,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                                             merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
                                         })
                                     }
-                                ], prefix)
+                                ], prefix, 'menu')
                             },
                             contextInfo: {
                                 mentionedJid: [m.sender],
@@ -6112,7 +6112,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                               merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
                             })
                           }
-                        ], prefix)
+                        ], prefix, 'allmenu')
                       },
                       contextInfo: {
                         mentionedJid: [m.sender],
@@ -6334,7 +6334,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'aimenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -6608,7 +6608,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'animemenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -6768,7 +6768,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'bugmenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -6945,7 +6945,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'downloadmenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7115,7 +7115,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'funmenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7334,7 +7334,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'gamemenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7531,7 +7531,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'groupmenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7722,7 +7722,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'logomenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7904,7 +7904,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'ownermenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -8089,7 +8089,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'stickermenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -8297,7 +8297,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'toolsmenu')
           },
           contextInfo: {
             forwardingScore: 999,
@@ -8461,7 +8461,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ], prefix)
+            ], prefix, 'voicemenu')
           },
           contextInfo: {
             forwardingScore: 999,
