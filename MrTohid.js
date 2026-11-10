@@ -32,7 +32,7 @@ require('./setting/config');
 const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
-const { randomizeMenuFont } = require('./utils/randomMenuFont');
+const { randomizeMenuFont, normalizeStyledMenuText } = require('./utils/randomMenuFont');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -2265,9 +2265,9 @@ const Premium = getPremium();
         const ownerNumber = owner[0] || WHATSAPP_OWNER_NUMBER;
         let prefix = getUserPrefix(m.sender) || '.';
 
-        const normalizedBody = typeof body === 'string'
-            ? body.trim()
-            : String(body || '').trim();
+        const normalizedBody = normalizeStyledMenuText(
+            typeof body === 'string' ? body.trim() : String(body || '').trim()
+        );
 
         const defaultPrefixes = prefix === '.' ? ['.', '!', '?', '/'] : [prefix];
         const commandPrefix = prefix === ''
