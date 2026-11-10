@@ -37,7 +37,7 @@ function randomizeMenuFont(value) {
   const lowerMap = new Map(Array.from(NORMAL_LOWER, (ch, i) => [ch, Array.from(lower)[i]]));
 
   // URLs are left untouched. Dot-prefixed command names are styled too.
-  return source.replace(/https?:\\/\\/[^\\s]+|[A-Za-z]/g, (token) => {
+  return source.replace(/https?:\/\/[^\s]+|[A-Za-z]/g, (token) => {
     if (/^https?:\\/\\//i.test(token)) return token;
     return upperMap.get(token) || lowerMap.get(token) || token;
   });
