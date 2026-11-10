@@ -1,107 +1,50 @@
 'use strict';
 
-// Ten Unicode text styles for WhatsApp menu descriptions.
-// Command tokens and URLs stay unchanged so users can still copy commands.
-const FONT_STYLES = [
-  { upper: 0x1D400, lower: 0x1D41A }, // bold
-  { upper: 0x1D434, lower: 0x1D44E, lowerOverrides: { 7: '\u210E' } }, // italic
-  { upper: 0x1D468, lower: 0x1D482 }, // bold italic
-  { upper: 0x1D5A0, lower: 0x1D5BA }, // sans serif
-  { upper: 0x1D5D4, lower: 0x1D5EE }, // sans serif bold
-  { upper: 0x1D608, lower: 0x1D622 }, // sans serif italic
-  { upper: 0x1D670, lower: 0x1D68A }, // monospace
-  {
-    upper: 0x1D538,
-    lower: 0x1D552,
-    upperOverrides: {
-      2: '\u2102', 7: '\u210D', 13: '\u2115',
-      15: '\u2119', 16: '\u211A', 17: '\u211D', 25: '\u2124'
-    }
-  }, // double-struck
-  { upper: 0x1D4D0, lower: 0x1D4EA }, // bold script
-  { upper: 0x1D56C, lower: 0x1D586 } // bold fraktur
+// Ten Unicode alphabets. A random alphabet is used for each menu message.
+const ALPHABETS = [
+  ['𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙','𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳'],
+  ['𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍','𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧'],
+  ['𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁','𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛'],
+  ['𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹','𝖺𝖻𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄𝗅𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓'],
+  ['𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭','𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇'],
+  ['𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡','𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻'],
+  ['𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉','𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣'],
+  ['𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ','𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫'],
+  ['𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩','𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃'],
+  ['𝕬𝕭𝕮𝕯𝕰𝕱𝕲𝕳𝕴𝕵𝕶𝕷𝕸𝕹𝕺𝕻𝕼𝕽𝕾𝕿𝖀𝖁𝖂𝖃𝖄𝖅','𝖆𝖇𝖈𝖉𝖊𝖋𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟']
 ];
+
+const NORMAL_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const NORMAL_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const TO_NORMAL = new Map();
+for (const [upper, lower] of ALPHABETS) {
+  Array.from(upper).forEach((ch, i) => TO_NORMAL.set(ch, NORMAL_UPPER[i]));
+  Array.from(lower).forEach((ch, i) => TO_NORMAL.set(ch, NORMAL_LOWER[i]));
+}
 
 let lastFontIndex = -1;
 
-function escapeRegex(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function randomizeMenuFont(value, prefix = '.') {
+function randomizeMenuFont(value) {
   const source = String(value ?? '');
   if (!source) return source;
 
-  // Avoid using the same style twice in a row during this process lifetime.
-  let fontIndex = Math.floor(Math.random() * FONT_STYLES.length);
-  if (FONT_STYLES.length > 1 && fontIndex === lastFontIndex) {
-    fontIndex = (fontIndex + 1 + Math.floor(Math.random() * (FONT_STYLES.length - 1))) % FONT_STYLES.length;
-  }
-  lastFontIndex = fontIndex;
+  let index = Math.floor(Math.random() * ALPHABETS.length);
+  if (index === lastFontIndex) index = (index + 1) % ALPHABETS.length;
+  lastFontIndex = index;
 
-  const style = FONT_STYLES[fontIndex];
-  const protectedParts = [];
-  const escapedPrefix = escapeRegex(prefix || '.');
-  const protectedPattern = new RegExp(
-    'https?:\\/\\/[^\\s]+|(?:^|\\s)' + escapedPrefix + '[A-Za-z0-9][A-Za-z0-9_-]*',
-    'g'
-  );
+  const [upper, lower] = ALPHABETS[index];
+  const upperMap = new Map(Array.from(NORMAL_UPPER, (ch, i) => [ch, Array.from(upper)[i]]));
+  const lowerMap = new Map(Array.from(NORMAL_LOWER, (ch, i) => [ch, Array.from(lower)[i]]));
 
-  // Keep URLs intact; menu commands (including their dot prefix) are styled too.
-  const urlPattern = /https?:\\/\\/[^\\s]+/g;
-  let output = source.replace(urlPattern, (match) => {
-    const index = protectedParts.push(match) - 1;
-    return '\uE000' + index + '\uE001';
+  // URLs are left untouched. Dot-prefixed command names are styled too.
+  return source.replace(/https?:\\/\\/[^\\s]+|[A-Za-z]/g, (token) => {
+    if (/^https?:\\/\\//i.test(token)) return token;
+    return upperMap.get(token) || lowerMap.get(token) || token;
   });
-
-  output = Array.from(output, (character) => {
-    const code = character.codePointAt(0);
-    if (code >= 65 && code <= 90) {
-      const index = code - 65;
-      return style.upperOverrides?.[index] || String.fromCodePoint(style.upper + index);
-    }
-    if (code >= 97 && code <= 122) {
-      const index = code - 97;
-      return style.lowerOverrides?.[index] || String.fromCodePoint(style.lower + index);
-    }
-    return character;
-  }).join('');
-
-  return output.replace(/\uE000(\d+)\uE001/g, (_, index) => protectedParts[Number(index)]);
 }
 
 function normalizeStyledMenuText(value) {
-  const reverseRanges = [
-    [0x1D400, 0x1D419], [0x1D41A, 0x1D433],
-    [0x1D434, 0x1D44D], [0x1D44E, 0x1D467],
-    [0x1D468, 0x1D481], [0x1D482, 0x1D49B],
-    [0x1D5A0, 0x1D5B9], [0x1D5BA, 0x1D5D3],
-    [0x1D5D4, 0x1D5ED], [0x1D5EE, 0x1D607],
-    [0x1D608, 0x1D621], [0x1D622, 0x1D63B],
-    [0x1D670, 0x1D689], [0x1D68A, 0x1D6A3],
-    [0x1D4D0, 0x1D4E9], [0x1D4EA, 0x1D503],
-    [0x1D56C, 0x1D585], [0x1D586, 0x1D59F],
-    [0x1D538, 0x1D551], [0x1D552, 0x1D56B]
-  ];
-  const special = new Map([
-    [0x210E, 'h'], [0x2102, 'C'], [0x210D, 'H'],
-    [0x2115, 'N'], [0x2119, 'P'], [0x211A, 'Q'],
-    [0x211D, 'R'], [0x2124, 'Z']
-  ]);
-  return Array.from(String(value ?? ''), (character) => {
-    const code = character.codePointAt(0);
-    if (special.has(code)) return special.get(code);
-    for (const [start, end] of reverseRanges) {
-      if (code >= start && code <= end) {
-        const offset = code - start;
-        return String.fromCharCode((start === 0x1D400 || start === 0x1D434 ||
-          start === 0x1D468 || start === 0x1D5A0 || start === 0x1D5D4 ||
-          start === 0x1D608 || start === 0x1D670 || start === 0x1D4D0 ||
-          start === 0x1D56C || start === 0x1D538) ? 65 + offset : 97 + offset);
-      }
-    }
-    return character;
-  }).join('');
+  return Array.from(String(value ?? ''), (character) => TO_NORMAL.get(character) || character).join('');
 }
 
 module.exports = { randomizeMenuFont, normalizeStyledMenuText };
