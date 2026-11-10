@@ -73,38 +73,40 @@ function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
     ]
   }]);
   const supportGroupButton = { name: 'cta_url', buttonParamsJson: JSON.stringify({
-    display_text: '👥 GROUP',
+    display_text: '👥 SUPPORT GROUP',
     url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
     merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
   }) };
   const officialChannelButton = { name: 'cta_url', buttonParamsJson: JSON.stringify({
-    display_text: '📢 CHANNEL',
+    display_text: '📢 OFFICIAL CHANNEL',
     url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
     merchant_url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
   }) };
   if (menuType === 'gamemenu') {
-    const gameSection = { title: '🎮 GAME SELECTION', rows: [
-      { title: '🐍 Snake', description: 'Interactive HTML game', id: prefix + 'snake' },
-      { title: '🔢 2048', description: 'Number merge game', id: prefix + '2048' },
-      { title: '⭕ Tic Tac Toe', description: 'Classic game', id: prefix + 'ttt' },
-      { title: '✊ Rock Paper Scissors', description: 'Quick game', id: prefix + 'rps' },
-      { title: '🧠 Quiz', description: 'Knowledge quiz', id: prefix + 'quiz' },
-      { title: '➗ Math Rush', description: 'Fast arithmetic', id: prefix + 'mathrush' },
-      { title: '😀 Emoji Guess', description: 'Guess the movie', id: prefix + 'emojiguess' },
-      { title: '🎭 Truth or Dare', description: 'Group-friendly game', id: prefix + 'truthordare' },
-      { title: '🎲 Dice Battle', description: 'Roll and battle', id: prefix + 'dicebattle' },
-      { title: '🔮 Number Guess', description: 'Guess the hidden number', id: prefix + 'numberguess' },
-      { title: '💻 Matrix', description: 'Interactive arcade', id: prefix + 'matrix' },
-      { title: '👹 Doom', description: 'Interactive arcade', id: prefix + 'doom' },
-      { title: '🧛 Vampire', description: 'Interactive arcade', id: prefix + 'vampire' },
-      { title: '⚡ Cyber', description: 'Interactive arcade', id: prefix + 'cyber' },
-      { title: '🎹 Piano', description: 'Interactive game', id: prefix + 'piano' },
-      { title: '🔤 Scrabble', description: 'Word game', id: prefix + 'scrabble' },
-      { title: '🔢 Sudoku', description: 'Puzzle game', id: prefix + 'sudoku' },
-      { title: '🔀 Word Scramble', description: 'Word game', id: prefix + 'wordscramble' }
-    ] };
-    const combinedSelection = makeSelector('🎮 GAME & CATEGORY SELECTION', [gameSection, ...categorySections]);
-    return [combinedSelection, developerSelector, supportGroupButton, officialChannelButton];
+    const gameSelector = makeSelector('🎮 GAME SELECTION', [{
+      title: 'CHOOSE A GAME', rows: [
+        { title: '🐍 Snake', description: 'Interactive HTML game', id: prefix + 'snake' },
+        { title: '🔢 2048', description: 'Number merge game', id: prefix + '2048' },
+        { title: '⭕ Tic Tac Toe', description: 'Classic game', id: prefix + 'ttt' },
+        { title: '✊ Rock Paper Scissors', description: 'Quick game', id: prefix + 'rps' },
+        { title: '🧠 Quiz', description: 'Knowledge quiz', id: prefix + 'quiz' },
+        { title: '➗ Math Rush', description: 'Fast arithmetic', id: prefix + 'mathrush' },
+        { title: '😀 Emoji Guess', description: 'Guess the movie', id: prefix + 'emojiguess' },
+        { title: '🎭 Truth or Dare', description: 'Group-friendly game', id: prefix + 'truthordare' },
+        { title: '🎲 Dice Battle', description: 'Roll and battle', id: prefix + 'dicebattle' },
+        { title: '🔮 Number Guess', description: 'Guess the hidden number', id: prefix + 'numberguess' },
+        { title: '💻 Matrix', description: 'Interactive arcade', id: prefix + 'matrix' },
+        { title: '👹 Doom', description: 'Interactive arcade', id: prefix + 'doom' },
+        { title: '🧛 Vampire', description: 'Interactive arcade', id: prefix + 'vampire' },
+        { title: '⚡ Cyber', description: 'Interactive arcade', id: prefix + 'cyber' },
+        { title: '🎹 Piano', description: 'Interactive game', id: prefix + 'piano' },
+        { title: '🔤 Scrabble', description: 'Word game', id: prefix + 'scrabble' },
+        { title: '🔢 Sudoku', description: 'Puzzle game', id: prefix + 'sudoku' },
+        { title: '🔀 Word Scramble', description: 'Word game', id: prefix + 'wordscramble' }
+      ]
+    }]);
+    const categorySelector = makeSelector('📂 CATEGORY SELECTION', categorySections);
+    return [gameSelector, categorySelector, developerSelector, supportGroupButton, officialChannelButton];
   }
   const categorySelector = makeSelector('📂 CATEGORY SELECTION', categorySections);
   return [categorySelector, developerSelector, supportGroupButton, officialChannelButton];
