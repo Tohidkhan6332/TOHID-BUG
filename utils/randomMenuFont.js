@@ -38,7 +38,7 @@ function randomizeMenuFont(value) {
 
   // URLs are left untouched. Dot-prefixed command names are styled too.
   return source.replace(/https?:\/\/[^\s]+|[A-Za-z]/g, (token) => {
-    if (/^https?:\\/\\//i.test(token)) return token;
+    if (/^https?:\/\//i.test(token)) return token;
     return upperMap.get(token) || lowerMap.get(token) || token;
   });
 }
