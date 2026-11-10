@@ -48,43 +48,44 @@ function normalizeStyledMenuText(value) {
 }
 
 
-function completeMenuButtons(existingButtons, prefix = '.') {
-  const buttons = Array.isArray(existingButtons) ? [...existingButtons] : [];
-  const hasQuickReply = buttons.some(button => button?.name === 'quick_reply');
-  const hasGroupLink = buttons.some(button => {
-    if (button?.name !== 'cta_url') return false;
-    try {
-      const params = typeof button.buttonParamsJson === 'string'
-        ? JSON.parse(button.buttonParamsJson)
-        : button.buttonParamsJson;
-      return String(params?.url || '').includes('chat.whatsapp.com/');
-    } catch (_) {
-      return false;
-    }
+function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
+  const original = Array.isArray(existingButtons) ? existingButtons : [];
+  const selectors = original.filter(button => button?.name === 'single_select');
+  const makeList = (title, sectionTitle, rows) => ({
+    name: 'single_select',
+    buttonParamsJson: JSON.stringify({ title, sections: [{ title: sectionTitle, rows }] })
   });
 
-  if (!hasQuickReply && buttons.length < 3) {
-    buttons.push({
-      name: 'quick_reply',
-      buttonParamsJson: JSON.stringify({
-        display_text: '🏠 MAIN MENU',
-        id: `${prefix || '.'}menu`
-      })
-    });
+  const categorySelector = selectors[0] || makeList('📂 CATEGORY SELECTION', 'BOT CATEGORIES', [
+    { title: '📚 ALL MENU', id: prefix + 'allmenu' },
+    { title: '🎮 GAME MENU', id: prefix + 'gamemenu' },
+    { title: '👥 GROUP MENU', id: prefix + 'groupmenu' }
+  ]);
+
+  const developerSelector = makeList('👨‍💻 DEVELOPER CONTACT', 'CONTACT MR TOHID', [
+    { title: '👨‍💻 OPEN DEVELOPER CONTACT', description: 'Developer profiles and contact', id: prefix + 'developercontact' }
+  ]);
+
+  const linksSelector = makeList('🔗 SUPPORT & OFFICIAL LINKS', 'TOHID-AI LINKS', [
+    { title: '👥 SUPPORT GROUP', description: 'Join the official support group', id: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud' },
+    { title: '📢 OFFICIAL CHANNEL', description: 'Follow the official WhatsApp channel', id: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T' }
+  ]);
+
+  if (menuType === 'gamemenu') {
+    const gameSelector = makeList('🎮 GAME SELECTION', 'CHOOSE A GAME', [
+      { title: '🐍 Snake', description: 'Interactive Snake game', id: prefix + 'snake' },
+      { title: '🔢 2048', description: 'Number merge game', id: prefix + '2048' },
+      { title: '⭕ Tic Tac Toe', description: 'Classic game', id: prefix + 'ttt' },
+      { title: '✊ Rock Paper Scissors', description: 'Quick game', id: prefix + 'rps' },
+      { title: '🧠 Quiz', description: 'Knowledge quiz', id: prefix + 'quiz' },
+      { title: '🎯 Guess', description: 'Guessing game', id: prefix + 'guess' },
+      { title: '🪢 Hangman', description: 'Word guessing game', id: prefix + 'hangman' },
+      { title: '🎲 Dice', description: 'Roll the dice', id: prefix + 'dice' }
+    ]);
+    return [gameSelector, categorySelector, linksSelector];
   }
 
-  if (!hasGroupLink && buttons.length < 3) {
-    buttons.push({
-      name: 'cta_url',
-      buttonParamsJson: JSON.stringify({
-        display_text: '👥 GROUP',
-        url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
-        merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
-      })
-    });
-  }
-
-  return buttons.slice(0, 3);
+  return [categorySelector, developerSelector, linksSelector];
 }
 
 module.exports = { randomizeMenuFont, normalizeStyledMenuText, completeMenuButtons };
