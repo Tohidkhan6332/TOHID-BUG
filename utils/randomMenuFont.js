@@ -67,8 +67,8 @@ function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
   ]);
 
   const linksSelector = makeList('🔗 SUPPORT & OFFICIAL LINKS', 'TOHID-AI LINKS', [
-    { title: '👥 SUPPORT GROUP', description: 'Join the official support group', id: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud' },
-    { title: '📢 OFFICIAL CHANNEL', description: 'Follow the official WhatsApp channel', id: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T' }
+    { title: '👥 SUPPORT GROUP', description: 'Join the official support group', id: prefix + 'supportgroup' },
+    { title: '📢 OFFICIAL CHANNEL', description: 'Follow the official WhatsApp channel', id: prefix + 'officialchannel' }
   ]);
 
   if (menuType === 'gamemenu') {
