@@ -7260,6 +7260,13 @@ case 'groupban': {
 ❖═━═══𖠁𐂃𖠁══━═❖
 
 ┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐀𝐌𝐄𝐒◆━┓
+┃ 🎮 GAME SELECTION
+┃ 📂 CATEGORY SELECTION
+┃ 👨‍💻 DEVELOPER CONTACT
+┃ 👥 SUPPORT GROUP
+┃ 📢 OFFICIAL CHANNEL
+┣━━━━━━━━━━━━━━━━━━
+
 │❖ ${prefix}snake — HTML Snake
 │❖ ${prefix}2048 — HTML 2048
 │❖ ${prefix}ttt — Tic Tac Toe
