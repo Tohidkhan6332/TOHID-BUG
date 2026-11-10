@@ -2,6 +2,7 @@
 
 const { listGames } = require('./index');
 const { profile, levelForXp, xpForNextLevel } = require('../../utils/TohidGameStats');
+const { randomizeMenuFont } = require('../../utils/randomMenuFont');
 
 const GAME_ROWS = [
   ['snake', '🎮 SNAKE', 'Classic HTML snake game'],
@@ -37,7 +38,7 @@ module.exports = {
   description: 'Open the TOHID Game Center',
   category: 'games',
 
-  async execute({ sock, from, reply, pushName, msg }) {
+  async execute({ sock, from, reply, pushName, msg, prefix }) {
     const p = profile(from, pushName || msg?.pushName || 'Player');
     const games = listGames();
     const level = levelForXp(p.xp);
@@ -53,8 +54,10 @@ module.exports = {
       '👥 Multiplayer: .challenge ttt @user\n\n' +
       '⚡ All game buttons are inside one native WhatsApp menu.';
 
+    const styledText = randomizeMenuFont(text, prefix || '.');
+
     try {
-      if (!sock?.relayMessage) return reply(text);
+      if (!sock?.relayMessage) return reply(styledText);
 
       const imageUrl = 'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg';
       let media = {};
@@ -80,7 +83,7 @@ module.exports = {
             hasMediaAttachment: Boolean(media?.imageMessage),
             ...media
           },
-          body: { text },
+          body: { text: styledText },
           nativeFlowMessage: {
             buttons: [
               {
@@ -137,7 +140,7 @@ module.exports = {
       return;
     } catch (error) {
       console.error('[GAME CENTER NATIVE FLOW]', error.stack || error.message);
-      return reply(text + '\n\n⚠️ Interactive menu failed, but the game commands remain available.');
+      return reply(styledText + '\n\n⚠️ Interactive menu failed, but the game commands remain available.');
     }
   }
 };
