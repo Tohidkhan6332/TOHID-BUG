@@ -51,41 +51,39 @@ function normalizeStyledMenuText(value) {
 function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
   const original = Array.isArray(existingButtons) ? existingButtons : [];
   const selectors = original.filter(button => button?.name === 'single_select');
-  const makeList = (title, sections) => ({
+  const parse = button => {
+    try { return typeof button.buttonParamsJson === 'string' ? JSON.parse(button.buttonParamsJson) : (button.buttonParamsJson || {}); }
+    catch (_) { return {}; }
+  };
+  const makeSelector = (title, sections) => ({
     name: 'single_select',
     buttonParamsJson: JSON.stringify({ title, sections })
   });
-  const categorySelector = selectors[0] || makeList('📂 CATEGORY SELECTION', [{
-    title: 'BOT CATEGORIES',
-    rows: [
+  const categoryData = selectors[0] ? parse(selectors[0]) : { sections: [{
+    title: 'BOT CATEGORIES', rows: [
       { title: '📚 ALL MENU', id: prefix + 'allmenu' },
       { title: '🎮 GAME MENU', id: prefix + 'gamemenu' },
       { title: '👥 GROUP MENU', id: prefix + 'groupmenu' }
     ]
+  }] };
+  const categorySections = Array.isArray(categoryData.sections) ? categoryData.sections : [];
+  const developerSelector = makeSelector('👨‍💻 DEVELOPER CONTACT', [{
+    title: 'CONTACT MR TOHID', rows: [
+      { title: '👨‍💻 OPEN DEVELOPER CONTACT', description: 'Developer profiles and contact', id: prefix + 'developercontact' }
+    ]
   }]);
-  const developerSelector = makeList('👨‍💻 DEVELOPER CONTACT', [{
-    title: 'CONTACT MR TOHID',
-    rows: [{ title: '👨‍💻 OPEN DEVELOPER CONTACT', description: 'Developer profiles and contact', id: prefix + 'developercontact' }]
-  }]);
-  const supportGroupButton = {
-    name: 'cta_url',
-    buttonParamsJson: JSON.stringify({
-      display_text: '👥 SUPPORT GROUP',
-      url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
-      merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
-    })
-  };
-  const officialChannelButton = {
-    name: 'cta_url',
-    buttonParamsJson: JSON.stringify({
-      display_text: '📢 OFFICIAL CHANNEL',
-      url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
-      merchant_url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
-    })
-  };
+  const supportGroupButton = { name: 'cta_url', buttonParamsJson: JSON.stringify({
+    display_text: '👥 GROUP',
+    url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
+    merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
+  }) };
+  const officialChannelButton = { name: 'cta_url', buttonParamsJson: JSON.stringify({
+    display_text: '📢 CHANNEL',
+    url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T',
+    merchant_url: 'https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T'
+  }) };
   if (menuType === 'gamemenu') {
-    const categoryParams = JSON.parse(categorySelector.buttonParamsJson);
-    const gameRows = [
+    const gameSection = { title: '🎮 GAME SELECTION', rows: [
       { title: '🐍 Snake', description: 'Interactive HTML game', id: prefix + 'snake' },
       { title: '🔢 2048', description: 'Number merge game', id: prefix + '2048' },
       { title: '⭕ Tic Tac Toe', description: 'Classic game', id: prefix + 'ttt' },
@@ -104,13 +102,11 @@ function completeMenuButtons(existingButtons, prefix = '.', menuType = '') {
       { title: '🔤 Scrabble', description: 'Word game', id: prefix + 'scrabble' },
       { title: '🔢 Sudoku', description: 'Puzzle game', id: prefix + 'sudoku' },
       { title: '🔀 Word Scramble', description: 'Word game', id: prefix + 'wordscramble' }
-    ];
-    const gameCategorySelector = makeList('🎮 GAME & CATEGORY SELECTION', [
-      { title: '🎮 GAME SELECTION', rows: gameRows },
-      ...categoryParams.sections
-    ]);
-    return [gameCategorySelector, developerSelector, supportGroupButton, officialChannelButton];
+    ] };
+    const combinedSelection = makeSelector('🎮 GAME & CATEGORY SELECTION', [gameSection, ...categorySections]);
+    return [combinedSelection, developerSelector, supportGroupButton, officialChannelButton];
   }
+  const categorySelector = makeSelector('📂 CATEGORY SELECTION', categorySections);
   return [categorySelector, developerSelector, supportGroupButton, officialChannelButton];
 }
 module.exports = { randomizeMenuFont, normalizeStyledMenuText, completeMenuButtons };
