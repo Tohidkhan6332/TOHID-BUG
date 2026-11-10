@@ -32,6 +32,7 @@ require('./setting/config');
 const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
+const { randomizeMenuFont } = require('./utils/randomMenuFont');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -5350,7 +5351,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                                 ...media
                             },
                             body: {
-                                text: categoryMenu
+                                text: randomizeMenuFont(categoryMenu, prefix)
                             },
                             nativeFlowMessage: {
                                 buttons: [
@@ -5435,7 +5436,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                     }, {});
                 } catch (err) {
                     console.log("❌ ERROR CATEGORY MENU:", err);
-                    await devtrust.sendMessage(m.chat, { text: categoryMenu }, { quoted: m });
+                    await devtrust.sendMessage(m.chat, { text: randomizeMenuFont(categoryMenu, prefix) }, { quoted: m });
                 }
             }
             break;
@@ -6048,7 +6049,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                         ...media
                       },
                       body: {
-                        text: menuText
+                        text: randomizeMenuFont(menuText, prefix)
                       },
                       nativeFlowMessage: {
                         buttons: [
@@ -6246,7 +6247,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -6571,7 +6572,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -6731,7 +6732,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -6908,7 +6909,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -7078,7 +7079,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -7297,7 +7298,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -7494,7 +7495,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -7685,7 +7686,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -7867,7 +7868,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -8052,7 +8053,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -8260,7 +8261,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -8424,7 +8425,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
@@ -8634,7 +8635,7 @@ try {
             ...media
           },
           body: {
-            text: menuText
+            text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
             buttons: [
