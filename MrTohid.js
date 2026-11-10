@@ -8647,40 +8647,23 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
-                name: "single_select",
+                name: 'single_select',
                 buttonParamsJson: JSON.stringify({
-                  sections: [
-                    {
-                      title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
-                      rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
-                      ]
-                    }
-                  ]
-                })
-              },
-              {
-                name: "cta_url",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "📢 CHANNEL",
-                  url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
+                  sections: [{
+                    title: '✨ CATEGORY SELECTION',
+                    rows: [
+                      { title: '📚 ALL MENU', id: prefix + 'allmenu' },
+                      { title: '🤖 AI MENU', id: prefix + 'aimenu' },
+                      { title: '🎮 GAME MENU', id: prefix + 'gamemenu' },
+                      { title: '👥 GROUP MENU', id: prefix + 'groupmenu' },
+                      { title: '📦 OTHER MENU', id: prefix + 'othermenu' }
+                    ]
+                  }]
                 })
               }
-            ]
+            ], prefix, 'othermenu')
           },
           contextInfo: {
             forwardingScore: 999,
