@@ -32,7 +32,7 @@ require('./setting/config');
 const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
-const { randomizeMenuFont, normalizeStyledMenuText } = require('./utils/randomMenuFont');
+const { randomizeMenuFont, normalizeStyledMenuText, completeMenuButtons } = require('./utils/randomMenuFont');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -5354,7 +5354,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                                 text: randomizeMenuFont(categoryMenu, prefix)
                             },
                             nativeFlowMessage: {
-                                buttons: [
+                                buttons: completeMenuButtons([
                                     {
                                         name: "single_select",
                                         buttonParamsJson: JSON.stringify({
@@ -5410,7 +5410,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                                             merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
                                         })
                                     }
-                                ]
+                                ], prefix)
                             },
                             contextInfo: {
                                 mentionedJid: [m.sender],
@@ -6052,7 +6052,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                         text: randomizeMenuFont(menuText, prefix)
                       },
                       nativeFlowMessage: {
-                        buttons: [
+                        buttons: completeMenuButtons([
                           {
                             name: "single_select",
                             buttonParamsJson: JSON.stringify({
@@ -6112,7 +6112,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                               merchant_url: "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud"
                             })
                           }
-                        ]
+                        ], prefix)
                       },
                       contextInfo: {
                         mentionedJid: [m.sender],
@@ -6250,7 +6250,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -6258,19 +6258,19 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -6284,44 +6284,44 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                     {
                       title: "✨ HTML / INTERACTIVE GAMES",
                       rows: [
-                        { title: "🐍 Snake", description: "Interactive HTML Snake", rowId: ".snake" },
-                        { title: "🔢 2048", description: "Interactive number-merge game", rowId: ".2048" },
-                        { title: "💻 Matrix", description: "Interactive HTML arcade", rowId: ".matrix" },
-                        { title: "👹 Doom", description: "Interactive HTML arcade", rowId: ".doom" },
-                        { title: "🧛 Vampire", description: "Interactive HTML arcade", rowId: ".vampire" },
-                        { title: "⚡ Cyber", description: "Interactive HTML arcade", rowId: ".cyber" },
-                        { title: "☠️ Curse Dash", description: "Interactive HTML game", rowId: ".cursedash" },
-                        { title: "💀 Danger Dash", description: "Interactive HTML game", rowId: ".dangerdash" },
-                        { title: "🩸 Curse Arena", description: "Interactive HTML game", rowId: ".cursearena" },
-                        { title: "🎹 Piano", description: "Interactive HTML game", rowId: ".piano" },
-                        { title: "🔤 Scrabble", description: "Interactive HTML word game", rowId: ".scrabble" },
-                        { title: "🔢 Sudoku", description: "Interactive HTML puzzle", rowId: ".sudoku" },
-                        { title: "🔀 Word Scramble", description: "Interactive HTML word game", rowId: ".wordscramble" }
+                        { title: "🐍 Snake", description: "Interactive HTML Snake", id: ".snake" },
+                        { title: "🔢 2048", description: "Interactive number-merge game", id: ".2048" },
+                        { title: "💻 Matrix", description: "Interactive HTML arcade", id: ".matrix" },
+                        { title: "👹 Doom", description: "Interactive HTML arcade", id: ".doom" },
+                        { title: "🧛 Vampire", description: "Interactive HTML arcade", id: ".vampire" },
+                        { title: "⚡ Cyber", description: "Interactive HTML arcade", id: ".cyber" },
+                        { title: "☠️ Curse Dash", description: "Interactive HTML game", id: ".cursedash" },
+                        { title: "💀 Danger Dash", description: "Interactive HTML game", id: ".dangerdash" },
+                        { title: "🩸 Curse Arena", description: "Interactive HTML game", id: ".cursearena" },
+                        { title: "🎹 Piano", description: "Interactive HTML game", id: ".piano" },
+                        { title: "🔤 Scrabble", description: "Interactive HTML word game", id: ".scrabble" },
+                        { title: "🔢 Sudoku", description: "Interactive HTML puzzle", id: ".sudoku" },
+                        { title: "🔀 Word Scramble", description: "Interactive HTML word game", id: ".wordscramble" }
                       ]
                     },
                     {
                       title: "🎯 SIMPLE / TEXT GAMES",
                       rows: [
-                        { title: "⭕ Tic Tac Toe", description: "Text / multiplayer game", rowId: ".ttt" },
-                        { title: "✊ Rock Paper Scissors", description: "Text / multiplayer game", rowId: ".rps" },
-                        { title: "🧠 Quiz", description: "Quick knowledge quiz", rowId: ".quiz" },
-                        { title: "➗ Math Rush", description: "Fast arithmetic", rowId: ".mathrush" },
-                        { title: "😀 Emoji Guess", description: "Guess the movie", rowId: ".emojiguess" },
-                        { title: "🎭 Truth or Dare", description: "Group-friendly game", rowId: ".truthordare" },
-                        { title: "🎲 Dice Battle", description: "Roll and battle", rowId: ".dicebattle" },
-                        { title: "🔮 Number Guess", description: "Guess the hidden number", rowId: ".numberguess" },
-                        { title: "🪙 Coin", description: "Heads or tails", rowId: ".coin" },
-                        { title: "⚔️ Coin Battle", description: "Coin battle", rowId: ".coinbattle" },
-                        { title: "🎲 Dice", description: "Simple dice roll", rowId: ".dice" },
-                        { title: "😀 Emoji Quiz", description: "Emoji quiz", rowId: ".emojiquiz" },
-                        { title: "🎯 Guess", description: "Guessing game", rowId: ".guess" },
-                        { title: "🪢 Hangman", description: "Word guessing game", rowId: ".hangman" },
-                        { title: "➕ Math", description: "Simple math game", rowId: ".math" },
-                        { title: "🔢 Number Battle", description: "Number battle", rowId: ".numberbattle" },
-                        { title: "⚔️ Num Battle", description: "Number battle", rowId: ".numbattle" },
-                        { title: "🧠 Math Fact", description: "Math fact game", rowId: ".mathfact" },
-                        { title: "🎮 RPSLS", description: "Rock Paper Scissors Lizard Spock", rowId: ".rpsls" },
-                        { title: "📚 Game Fact", description: "Random game fact", rowId: ".gamefact" }
+                        { title: "⭕ Tic Tac Toe", description: "Text / multiplayer game", id: ".ttt" },
+                        { title: "✊ Rock Paper Scissors", description: "Text / multiplayer game", id: ".rps" },
+                        { title: "🧠 Quiz", description: "Quick knowledge quiz", id: ".quiz" },
+                        { title: "➗ Math Rush", description: "Fast arithmetic", id: ".mathrush" },
+                        { title: "😀 Emoji Guess", description: "Guess the movie", id: ".emojiguess" },
+                        { title: "🎭 Truth or Dare", description: "Group-friendly game", id: ".truthordare" },
+                        { title: "🎲 Dice Battle", description: "Roll and battle", id: ".dicebattle" },
+                        { title: "🔮 Number Guess", description: "Guess the hidden number", id: ".numberguess" },
+                        { title: "🪙 Coin", description: "Heads or tails", id: ".coin" },
+                        { title: "⚔️ Coin Battle", description: "Coin battle", id: ".coinbattle" },
+                        { title: "🎲 Dice", description: "Simple dice roll", id: ".dice" },
+                        { title: "😀 Emoji Quiz", description: "Emoji quiz", id: ".emojiquiz" },
+                        { title: "🎯 Guess", description: "Guessing game", id: ".guess" },
+                        { title: "🪢 Hangman", description: "Word guessing game", id: ".hangman" },
+                        { title: "➕ Math", description: "Simple math game", id: ".math" },
+                        { title: "🔢 Number Battle", description: "Number battle", id: ".numberbattle" },
+                        { title: "⚔️ Num Battle", description: "Number battle", id: ".numbattle" },
+                        { title: "🧠 Math Fact", description: "Math fact game", id: ".mathfact" },
+                        { title: "🎮 RPSLS", description: "Rock Paper Scissors Lizard Spock", id: ".rpsls" },
+                        { title: "📚 Game Fact", description: "Random game fact", id: ".gamefact" }
                       ]
                     }
                   ]
@@ -6334,7 +6334,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -6575,7 +6575,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -6583,19 +6583,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -6608,7 +6608,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -6735,7 +6735,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -6743,19 +6743,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -6768,7 +6768,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -6912,7 +6912,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -6920,19 +6920,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -6945,7 +6945,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7082,7 +7082,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -7090,19 +7090,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -7115,7 +7115,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7301,7 +7301,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -7309,19 +7309,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -7334,7 +7334,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7498,7 +7498,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -7506,19 +7506,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -7531,7 +7531,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7689,7 +7689,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -7697,19 +7697,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -7722,7 +7722,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -7871,7 +7871,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -7879,19 +7879,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -7904,7 +7904,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -8056,7 +8056,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -8064,19 +8064,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -8089,7 +8089,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -8264,7 +8264,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -8272,19 +8272,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -8297,7 +8297,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
@@ -8428,7 +8428,7 @@ try {
             text: randomizeMenuFont(menuText, prefix)
           },
           nativeFlowMessage: {
-            buttons: [
+            buttons: completeMenuButtons([
               {
                 name: "single_select",
                 buttonParamsJson: JSON.stringify({
@@ -8436,19 +8436,19 @@ try {
                     {
                       title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
                       rows: [
-                        { title: "🤖 AI Menu", rowId: `.aimenu` },
-                        { title: "🎨 Anime Menu", rowId: `.animemenu` },
-                        { title: "🐛 Bug Menu", rowId: `.bugmenu` },
-                        { title: "📥 Download Menu", rowId: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", rowId: `.funmenu` },
-                        { title: "🎲 Game Menu", rowId: `.gamemenu` },
-                        { title: "👥 Group Menu", rowId: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", rowId: `.logomenu` },
-                        { title: "👑 Owner Menu", rowId: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", rowId: `.stickermenu` },
-                        { title: "🔧 Tools Menu", rowId: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", rowId: `.voicemenu` },
-                        { title: "📦 Other Menu", rowId: `.othermenu` }
+                        { title: "🤖 AI Menu", id: `.aimenu` },
+                        { title: "🎨 Anime Menu", id: `.animemenu` },
+                        { title: "🐛 Bug Menu", id: `.bugmenu` },
+                        { title: "📥 Download Menu", id: `.downloadmenu` },
+                        { title: "🎮 Fun Menu", id: `.funmenu` },
+                        { title: "🎲 Game Menu", id: `.gamemenu` },
+                        { title: "👥 Group Menu", id: `.groupmenu` },
+                        { title: "🏷️ Logo Menu", id: `.logomenu` },
+                        { title: "👑 Owner Menu", id: `.ownermenu` },
+                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
+                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
+                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
+                        { title: "📦 Other Menu", id: `.othermenu` }
                       ]
                     }
                   ]
@@ -8461,7 +8461,7 @@ try {
                   url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
                 })
               }
-            ]
+            ], prefix)
           },
           contextInfo: {
             forwardingScore: 999,
