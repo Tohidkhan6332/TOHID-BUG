@@ -63,7 +63,7 @@ function completeMenuButtons(existingButtons, prefix = '.') {
     }
   });
 
-  if (!hasQuickReply && buttons.length < 4) {
+  if (!hasQuickReply && buttons.length < 3) {
     buttons.push({
       name: 'quick_reply',
       buttonParamsJson: JSON.stringify({
@@ -84,7 +84,7 @@ function completeMenuButtons(existingButtons, prefix = '.') {
     });
   }
 
-  return buttons.slice(0, 4);
+  return buttons.slice(0, 3);
 }
 
 module.exports = { randomizeMenuFont, normalizeStyledMenuText, completeMenuButtons };
