@@ -47,4 +47,44 @@ function normalizeStyledMenuText(value) {
   return Array.from(String(value ?? ''), (character) => TO_NORMAL.get(character) || character).join('');
 }
 
-module.exports = { randomizeMenuFont, normalizeStyledMenuText };
+
+function completeMenuButtons(existingButtons, prefix = '.') {
+  const buttons = Array.isArray(existingButtons) ? [...existingButtons] : [];
+  const hasQuickReply = buttons.some(button => button?.name === 'quick_reply');
+  const hasGroupLink = buttons.some(button => {
+    if (button?.name !== 'cta_url') return false;
+    try {
+      const params = typeof button.buttonParamsJson === 'string'
+        ? JSON.parse(button.buttonParamsJson)
+        : button.buttonParamsJson;
+      return String(params?.url || '').includes('chat.whatsapp.com/');
+    } catch (_) {
+      return false;
+    }
+  });
+
+  if (!hasQuickReply && buttons.length < 4) {
+    buttons.push({
+      name: 'quick_reply',
+      buttonParamsJson: JSON.stringify({
+        display_text: '🏠 MAIN MENU',
+        id: `${prefix || '.'}menu`
+      })
+    });
+  }
+
+  if (!hasGroupLink && buttons.length < 4) {
+    buttons.push({
+      name: 'cta_url',
+      buttonParamsJson: JSON.stringify({
+        display_text: '👥 GROUP',
+        url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud',
+        merchant_url: 'https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud'
+      })
+    });
+  }
+
+  return buttons.slice(0, 4);
+}
+
+module.exports = { randomizeMenuFont, normalizeStyledMenuText, completeMenuButtons };
