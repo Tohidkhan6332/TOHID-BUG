@@ -2321,6 +2321,29 @@ const Premium = getPremium();
             }
         }
 
+            // CHANNEL STATUS FAST-PATH
+            // Keep newsletter publishing isolated in commands/channel.
+            try {
+                const { executeChannelStatus } = require('./commands/channel');
+                const handledChannelStatus = await executeChannelStatus(command, {
+                    sock: devtrust,
+                    msg: m,
+                    args,
+                    text,
+                    reply
+                });
+                if (handledChannelStatus) return;
+            } catch (channelStatusError) {
+                console.error('[CHANNEL STATUS FAST-PATH]', channelStatusError.stack || channelStatusError.message);
+                try {
+                    await devtrust.sendMessage(m.chat, {
+                        text: '⚠️ Channel Status command failed to load.\\n' +
+                            (channelStatusError.message || 'Unknown error')
+                    }, { quoted: m });
+                } catch (_) {}
+                return;
+            }
+
         const qtext = args.join(" ");
         const q = args.join(" ");
         const tempMailData = {};
