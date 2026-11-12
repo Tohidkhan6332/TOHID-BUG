@@ -2319,7 +2319,6 @@ const Premium = getPremium();
                 } catch (_) {}
                 return;
             }
-        }
 
             // CHANNEL STATUS FAST-PATH
             // Keep newsletter publishing isolated in commands/channel.
@@ -2337,12 +2336,13 @@ const Premium = getPremium();
                 console.error('[CHANNEL STATUS FAST-PATH]', channelStatusError.stack || channelStatusError.message);
                 try {
                     await devtrust.sendMessage(m.chat, {
-                        text: '⚠️ Channel Status command failed to load.\\n' +
+                        text: '⚠️ Channel Status command failed to load.\n' +
                             (channelStatusError.message || 'Unknown error')
                     }, { quoted: m });
                 } catch (_) {}
                 return;
             }
+        }
 
         const qtext = args.join(" ");
         const q = args.join(" ");
