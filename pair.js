@@ -1263,13 +1263,28 @@ function smsg(tohid, m, store) {
         m.chat = m.key.remoteJid
         m.fromMe = m.key.fromMe
         m.isGroup = m.chat.endsWith('@g.us')
-        // Prefer the socket's own JID for fromMe messages, but fall back to
-        // the message remote JID when WhatsApp exposes the account as a LID.
+        // Preserve the conversation JID for replies, but resolve the sender
+        // identity from WhatsApp's alternate PN JID when the primary JID is @lid.
+        // Baileys supplies remoteJidAlt in private chats and participantAlt in groups.
+        const alternateSenderJid = m.isGroup
+            ? (m.key.participantAlt || '')
+            : (m.key.remoteJidAlt || '');
+        const fallbackSenderJid = m.isGroup
+            ? (m.participant || m.key.participant || '')
+            : (m.key.remoteJid || m.chat || '');
+        const identityJid = typeof alternateSenderJid === 'string' &&
+            alternateSenderJid.endsWith('@s.whatsapp.net')
+            ? alternateSenderJid
+            : fallbackSenderJid;
         const ownJid = m.fromMe
             ? (tohid.user?.id || m.key.remoteJid || m.chat || '')
-            : (m.participant || m.key.participant || m.chat || '');
-        m.sender = tohid.decodeJid(ownJid) || m.key.remoteJid || '';
-        if (m.isGroup) m.participant = tohid.decodeJid(m.key.participant) || ''
+            : identityJid;
+        m.sender = tohid.decodeJid(ownJid) || identityJid || m.key.remoteJid || '';
+        if (m.isGroup) {
+            m.participant = tohid.decodeJid(
+                m.key.participantAlt || m.key.participant || ''
+            ) || '';
+        }
     }
     if (m.message) {
         // Normalize nested WhatsApp envelopes before command parsing.
