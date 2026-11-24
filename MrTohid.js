@@ -2483,7 +2483,7 @@ const Premium = getPremium();
                 console.warn('[COMMAND BLOCKED] Private mode rejected command:', command);
                 try {
                     await devtrust.sendMessage(m.chat, {
-                        text: '🔒 TOHID-AI is currently in SELF/PRIVATE mode.\\nThis WhatsApp account was not recognized as the owner.\\nPlease check WHATSAPP_OWNER_NUMBER and the LID mapping in the bot logs.'
+                        text: '🔒 TOHID-AI is currently in SELF/PRIVATE mode.\nThis WhatsApp account was not recognized as the owner.\nPlease check WHATSAPP_OWNER_NUMBER and the LID mapping in the bot logs.'
                     }, { quoted: m });
                 } catch (authReplyError) {
                     console.error('[COMMAND AUTH] Could not send private-mode notice:', authReplyError.stack || authReplyError.message);
@@ -2610,7 +2610,7 @@ const Premium = getPremium();
             } catch (groupCommandError) {
                 console.error('[GROUP COMMAND]', groupCommandError.stack || groupCommandError.message);
                 await devtrust.sendMessage(m.chat, {
-                    text: '⚠️ Group command failed.\\n\\n' + (groupCommandError.message || 'Unknown error')
+                    text: '⚠️ Group command failed.\n\n' + (groupCommandError.message || 'Unknown error')
                 }, { quoted: m }).catch(() => {});
                 return;
             }
