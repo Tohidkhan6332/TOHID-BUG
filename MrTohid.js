@@ -2468,23 +2468,23 @@ const Premium = getPremium();
 
             let fastReply;
             if (command === 'ping' || command === 'speed') {
-                fastReply = '⚡ TOHID-AI Ping\\n\\n📡 ' + latencyMs.toFixed(2) + ' ms';
+                fastReply = '⚡ TOHID-AI Ping\n\n📡 ' + latencyMs.toFixed(2) + ' ms';
             } else if (command === 'alive' || command === 'runtime') {
-                fastReply = '⚡ TOHID-AI is Alive\\n\\n⏱️ Uptime: ' + uptimeText +
-                    '\\n💾 Memory: ' + memoryMb + ' MB';
+                fastReply = '⚡ TOHID-AI is Alive\n\n⏱️ Uptime: ' + uptimeText +
+                    '\n💾 Memory: ' + memoryMb + ' MB';
             } else if (command === 'owner') {
-                fastReply = '👑 TOHID-AI OWNER\\n\\n' +
-                    'Name: MR TOHID\\n' +
-                    'WhatsApp: https://wa.me/' + WHATSAPP_OWNER_NUMBER + '\\n' +
-                    'Telegram: https://t.me/tohidkhan6332\\n' +
-                    'GitHub: https://github.com/tohidkhan6332\\n' +
-                    'Instagram: https://instagram.com/tohidkhan6332\\n' +
+                fastReply = '👑 TOHID-AI OWNER\n\n' +
+                    'Name: MR TOHID\n' +
+                    'WhatsApp: https://wa.me/' + WHATSAPP_OWNER_NUMBER + '\n' +
+                    'Telegram: https://t.me/tohidkhan6332\n' +
+                    'GitHub: https://github.com/tohidkhan6332\n' +
+                    'Instagram: https://instagram.com/tohidkhan6332\n' +
                     'Facebook: https://facebook.com/tohidkhan6332';
             } else {
-                fastReply = '📊 TOHID-AI STATUS\\n\\n' +
-                    'Mode: ' + (devtrust.public ? 'PUBLIC' : 'PRIVATE') + '\\n' +
-                    'Uptime: ' + uptimeText + '\\n' +
-                    'Memory: ' + memoryMb + ' MB\\n' +
+                fastReply = '📊 TOHID-AI STATUS\n\n' +
+                    'Mode: ' + (devtrust.public ? 'PUBLIC' : 'PRIVATE') + '\n' +
+                    'Uptime: ' + uptimeText + '\n' +
+                    'Memory: ' + memoryMb + ' MB\n' +
                     'Node.js: ' + process.version;
             }
 
@@ -2498,7 +2498,7 @@ const Premium = getPremium();
                     const confirmationJid = m.isGroup ? WHATSAPP_OWNER_JID : m.chat;
                     try {
                         await sendFastText(
-                            '✅ TOHID-BUG FIX VERIFIED\\nWhatsApp command response is working.\\nTest command: .' + command,
+                            '✅ TOHID-BUG FIX VERIFIED\nWhatsApp command response is working.\nTest command: .' + command,
                             confirmationJid
                         );
                         global.__TOHID_COMMAND_FIX_CONFIRMATION_SENT = true;
