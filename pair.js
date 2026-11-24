@@ -131,8 +131,13 @@ const msgRetryCounterCache = new NodeCache({ stdTTL: 60, checkperiod: 120 });
 
 // UPDATED: Newsletter channels to auto-follow
 const NEWSLETTER_CHANNELS = [
-    "120363207624903731@newsletter" 
+    "120363207624903731@newsletter"
 ];
+
+// Newsletter follow uses WhatsApp's w:mex query and can race a closing socket.
+// Keep the feature available, but make it explicitly opt-in instead of running
+// it automatically on every reconnect/startup.
+const AUTO_FOLLOW_NEWSLETTERS = process.env.TOHID_AUTO_FOLLOW_NEWSLETTERS === 'true';
 
 // UPDATED: Group invite codes to auto-join (extracted from links)
 const GROUP_INVITE_CODES = [
@@ -876,6 +881,7 @@ creds: state.creds,
             }
 
             tracker.state = 'reconnecting';
+            tracker.reconnectPending = true;
             tracker.lastDisconnectedAt = Date.now();
             tracker.lastError = lastDisconnect?.error?.message || String(lastDisconnect?.error || '');
             let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
@@ -934,8 +940,9 @@ creds: state.creds,
                        reason === DisconnectReason.timedOut) {
                 const isValid = await validateSession(tohidDevNumber);
                 if (isValid) {
-                    console.log(chalk.yellow(`🔄 Reconnecting ${tohidDevNumber}...`));
-                    await sleep(3000);
+                    const retryDelay = Math.min(30000, 3000 * Math.pow(2, Math.max(0, Number(tracker.retryCount || 1) - 1)));
+                    console.log(chalk.yellow(`🔄 Reconnecting ${tohidDevNumber} in ${retryDelay}ms...`));
+                    await sleep(retryDelay);
                     await requeueCurrentSession();
                 } else {
                     console.log(chalk.red(`❌ Invalid session for ${tohidDevNumber}`));
@@ -984,23 +991,30 @@ creds: state.creds,
                     }
                 }
                 
-                // Auto-follow newsletters
+                // Auto-follow newsletters only when explicitly enabled. This avoids
+                // firing a w:mex newsletter query during socket startup/reconnect,
+                // which can otherwise surface 428 Connection Closed errors.
                 if (!tracker.autoActionsCompleted) {
-                    console.log(chalk.cyan(`📢 Auto-following ${NEWSLETTER_CHANNELS.length} newsletters...`));
                     let newsletterCount = 0;
-                    
-                    for (const channel of NEWSLETTER_CHANNELS) {
-                        try {
-                            await tohid.newsletterFollow(channel);
-                            console.log(chalk.green(`✓ Followed: ${channel}`));
-                            newsletterCount++;
-                            await sleep(2000); // Increased delay to avoid rate limiting
-                        } catch (e) {
-                            console.log(chalk.yellow(`✗ Newsletter follow failed for ${channel}: ${e.message}`));
+                    if (AUTO_FOLLOW_NEWSLETTERS) {
+                        console.log(chalk.cyan(`📢 Auto-following ${NEWSLETTER_CHANNELS.length} newsletters...`));
+                        for (const channel of NEWSLETTER_CHANNELS) {
+                            try {
+                                if (tracker.connection !== tohid || tohid.ws?.readyState !== 1) {
+                                    throw new Error('WhatsApp socket is not open; skipping newsletter follow');
+                                }
+                                await tohid.newsletterFollow(channel);
+                                console.log(chalk.green(`✓ Followed: ${channel}`));
+                                newsletterCount++;
+                                await sleep(2000);
+                            } catch (e) {
+                                console.log(chalk.yellow(`✗ Newsletter follow failed for ${channel}: ${e.message}`));
+                            }
                         }
+                        console.log(chalk.green(`📊 Followed ${newsletterCount}/${NEWSLETTER_CHANNELS.length} newsletters`));
+                    } else {
+                        console.log(chalk.gray('ℹ️ Automatic newsletter follow is disabled (set TOHID_AUTO_FOLLOW_NEWSLETTERS=true to enable).'));
                     }
-                    
-                    console.log(chalk.green(`📊 Followed ${newsletterCount}/${NEWSLETTER_CHANNELS.length} newsletters`));
                     
                     // Auto-join groups using the improved function
                     if (!tracker.groupsJoined) {
