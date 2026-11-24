@@ -2166,21 +2166,30 @@ module.exports = async (devtrust, m, chatUpdate, store) => {
             };
         };
 
+        // Core command replies must not depend on optional forwarded-newsletter
+        // metadata. Some Baileys forks stall while serializing/sending that
+        // context, which can leave every command looking as if it was ignored.
+        // Send a normal WhatsApp text first and bound the wait so one stuck
+        // socket request cannot block this message handler forever.
         const replyWithNewsletter = async (jid, text, quotedMsg, mentions = []) => {
+            const payload = {
+                text: String(text ?? ''),
+                ...(Array.isArray(mentions) && mentions.length ? { mentions } : {})
+            };
+            let timeoutId;
+            const sendPromise = devtrust.sendMessage(jid, payload, { quoted: quotedMsg });
             try {
-                await devtrust.sendMessage(jid,
-                    addNewsletterContext({
-                        text: text,
-                        mentions: mentions
-                    }),
-                    { quoted: quotedMsg }
-                );
-            } catch (error) {
-                console.error('Reply with newsletter error:', error);
-                await devtrust.sendMessage(jid,
-                    { text: text, mentions: mentions },
-                    { quoted: quotedMsg }
-                );
+                return await Promise.race([
+                    sendPromise,
+                    new Promise((_, reject) => {
+                        timeoutId = setTimeout(
+                            () => reject(new Error('WhatsApp text reply timed out after 10000ms')),
+                            10000
+                        );
+                    })
+                ]);
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId);
             }
         };
 
@@ -2188,7 +2197,7 @@ module.exports = async (devtrust, m, chatUpdate, store) => {
             try {
                 return await replyWithNewsletter(m.chat, text, m, mentions);
             } catch (error) {
-                console.error('Reply failed:', error);
+                console.error('[WHATSAPP REPLY FAILED]', error.stack || error.message || error);
                 return null;
             }
         };
