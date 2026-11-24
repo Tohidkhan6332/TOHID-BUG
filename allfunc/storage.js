@@ -223,9 +223,31 @@ exports.smsg = (client, m, store) => {
         m.isBaileys = m.id.startsWith('BAE5') && m.id.length === 16
         m.chat = m.key.remoteJid
         m.fromMe = m.key.fromMe
-        m.isGroup = m.chat.endsWith('@g.us')
-        m.sender = client.decodeJid(m.fromMe && client.user.id || m.participant || m.key.participant || m.chat || '')
-        if (m.isGroup) m.participant = client.decodeJid(m.key.participant) || ''
+        m.isGroup = String(m.chat || '').endsWith('@g.us')
+
+        // WhatsApp LID mode can place an @lid address in remoteJid/participant
+        // while the corresponding phone-number JID is supplied in the *Alt
+        // field. Use the verified PN JID for identity/owner checks, but keep
+        // m.chat unchanged so replies still target the original conversation.
+        const alternateSenderJid = m.isGroup
+            ? (m.key.participantAlt || '')
+            : (m.key.remoteJidAlt || '');
+        const fallbackSenderJid = m.isGroup
+            ? (m.participant || m.key.participant || '')
+            : (m.key.remoteJid || '');
+        const identityJid = typeof alternateSenderJid === 'string' &&
+            alternateSenderJid.endsWith('@s.whatsapp.net')
+            ? alternateSenderJid
+            : fallbackSenderJid;
+
+        m.sender = client.decodeJid(
+            m.fromMe && client.user?.id || identityJid || ''
+        );
+        if (m.isGroup) {
+            m.participant = client.decodeJid(
+                m.key.participantAlt || m.key.participant || ''
+            ) || '';
+        }
     }
     if (m.message) {
         m.mtype = getContentType(m.message)
