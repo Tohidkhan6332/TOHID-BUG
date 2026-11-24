@@ -2427,6 +2427,119 @@ const Premium = getPremium();
         // be resolved to the phone-number JID yet.
         const messageFromOwner = Boolean(m.key?.fromMe || m.fromMe);
         const isCreator = messageFromOwner || ownerNumbers.has(senderNumber) || ownerNumbers.has(chatNumber);
+
+        // Keep the private-mode security boundary before any early response.
+        // Public commands remain available in private mode exactly as before.
+        if (!devtrust.public) {
+            const publicCmds = ['menu', 'allmenu', 'bugmenu'];
+            if (!isCreator && isCmd && !publicCmds.includes(command)) return;
+        }
+
+        // Critical WhatsApp status commands are answered before optional
+        // middleware (read receipts, anti-features, rich HTML, etc.). This
+        // prevents a slow ancillary operation from swallowing every command.
+        const FAST_STATUS_COMMANDS = new Set(['ping', 'speed', 'alive', 'runtime', 'owner', 'status']);
+        if (isCmd && FAST_STATUS_COMMANDS.has(command)) {
+            const sendFastText = async (message, jid = m.chat) => {
+                let timeoutId;
+                const pending = devtrust.sendMessage(jid, { text: String(message) }, { quoted: jid === m.chat ? m : undefined });
+                try {
+                    return await Promise.race([
+                        pending,
+                        new Promise((_, reject) => {
+                            timeoutId = setTimeout(() => reject(new Error('WhatsApp send timed out after 8000ms')), 8000);
+                        })
+                    ]);
+                } finally {
+                    if (timeoutId) clearTimeout(timeoutId);
+                }
+            };
+
+            const uptimeSeconds = Math.floor(process.uptime());
+            const uptimeText = [
+                Math.floor(uptimeSeconds / 86400) + 'd',
+                Math.floor((uptimeSeconds % 86400) / 3600) + 'h',
+                Math.floor((uptimeSeconds % 3600) / 60) + 'm',
+                (uptimeSeconds % 60) + 's'
+            ].join(' ');
+            const memoryMb = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
+            const startedAt = process.hrtime.bigint();
+            const latencyMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+
+            let fastReply;
+            if (command === 'ping' || command === 'speed') {
+                fastReply = '⚡ TOHID-AI Ping\\n\\n📡 ' + latencyMs.toFixed(2) + ' ms';
+            } else if (command === 'alive' || command === 'runtime') {
+                fastReply = '⚡ TOHID-AI is Alive\\n\\n⏱️ Uptime: ' + uptimeText +
+                    '\\n💾 Memory: ' + memoryMb + ' MB';
+            } else if (command === 'owner') {
+                fastReply = '👑 TOHID-AI OWNER\\n\\n' +
+                    'Name: MR TOHID\\n' +
+                    'WhatsApp: https://wa.me/' + WHATSAPP_OWNER_NUMBER + '\\n' +
+                    'Telegram: https://t.me/tohidkhan6332\\n' +
+                    'GitHub: https://github.com/tohidkhan6332\\n' +
+                    'Instagram: https://instagram.com/tohidkhan6332\\n' +
+                    'Facebook: https://facebook.com/tohidkhan6332';
+            } else {
+                fastReply = '📊 TOHID-AI STATUS\\n\\n' +
+                    'Mode: ' + (devtrust.public ? 'PUBLIC' : 'PRIVATE') + '\\n' +
+                    'Uptime: ' + uptimeText + '\\n' +
+                    'Memory: ' + memoryMb + ' MB\\n' +
+                    'Node.js: ' + process.version;
+            }
+
+            try {
+                await sendFastText(fastReply);
+                console.log('[FAST COMMAND] WhatsApp reply delivered:', command, '->', m.chat);
+
+                // One-time proof message: after a real .ping reply succeeds,
+                // send a separate DM confirming the command pipeline is alive.
+                if ((command === 'ping' || command === 'speed') && !global.__TOHID_COMMAND_FIX_CONFIRMATION_SENT) {
+                    const confirmationJid = m.isGroup ? WHATSAPP_OWNER_JID : m.chat;
+                    try {
+                        await sendFastText(
+                            '✅ TOHID-BUG FIX VERIFIED\\nWhatsApp command response is working.\\nTest command: .' + command,
+                            confirmationJid
+                        );
+                        global.__TOHID_COMMAND_FIX_CONFIRMATION_SENT = true;
+                        console.log('[FAST COMMAND] One-time verification DM delivered:', confirmationJid);
+                    } catch (confirmationError) {
+                        console.error('[FAST COMMAND] Verification DM failed:', confirmationError.stack || confirmationError.message);
+                    }
+                }
+            } catch (fastReplyError) {
+                console.error('[FAST COMMAND] Reply failed:', fastReplyError.stack || fastReplyError.message);
+            }
+
+            // Rich HTML is supplementary only; it must never delay the text reply.
+            try {
+                const statusModule = require('./commands/status');
+                const htmlTask = command === 'ping' || command === 'speed'
+                    ? statusModule.sendPing({ sock: devtrust, msg: m, latency: latencyMs })
+                    : command === 'alive' || command === 'runtime'
+                        ? statusModule.sendAlive({ sock: devtrust, msg: m, runtime: seconds => {
+                            const total = Math.floor(Number(seconds) || 0);
+                            return Math.floor(total / 86400) + 'd ' +
+                                Math.floor((total % 86400) / 3600) + 'h ' +
+                                Math.floor((total % 3600) / 60) + 'm ' + (total % 60) + 's';
+                        } })
+                        : command === 'owner'
+                            ? statusModule.sendOwner({ sock: devtrust, msg: m, number: WHATSAPP_OWNER_NUMBER })
+                            : statusModule.sendStatus({ sock: devtrust, msg: m, runtime: seconds => {
+                                const total = Math.floor(Number(seconds) || 0);
+                                return Math.floor(total / 86400) + 'd ' +
+                                    Math.floor((total % 86400) / 3600) + 'h ' +
+                                    Math.floor((total % 3600) / 60) + 'm ' + (total % 60) + 's';
+                            } });
+                Promise.resolve(htmlTask).catch(error =>
+                    console.error('[STATUS HTML] Supplementary card failed:', error.stack || error.message)
+                );
+            } catch (htmlError) {
+                console.error('[STATUS HTML] Could not start supplementary card:', htmlError.stack || htmlError.message);
+            }
+            return;
+        }
+
         // GROUP COMMAND FAST-PATH
         if (isCmd) {
             try {
@@ -3943,10 +4056,7 @@ if (userInputText && userInputText.trim().length > 0) {
 }
 // =========================================================================
 
-if (!devtrust.public) {
-    const publicCmds = ['menu', 'allmenu', 'bugmenu'];
-    if (!isCreator && isCmd && !publicCmds.includes(command)) return
-}
+// Private-mode authorization is enforced immediately after owner resolution above.
         const example = (teks) => {
             return `Usage : *${prefix + command}* ${teks}`
         }
@@ -4025,11 +4135,11 @@ if (getSetting(m.sender, "autobio", true)) {
         }
 
         if (getSetting(m.sender, "autoread", false)) {
-            try {
-                await devtrust.readMessages([m.key])
-            } catch (e) {
-                console.log("Auto-Read Error:", e)
-            }
+            // Read receipts are optional; never let a slow receipt request block
+            // command dispatch or the WhatsApp message handler.
+            Promise.resolve()
+                .then(() => devtrust.readMessages([m.key]))
+                .catch(e => console.log("Auto-Read Error:", e?.message || e));
         }
 
         // ======================[ BANNED USERS CHECK ]======================
