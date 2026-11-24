@@ -2320,20 +2320,6 @@ const Premium = getPremium();
                 return;
             }
 
-            // Load the channel module only for its own commands. This keeps all
-            // unrelated commands independent from the channel feature.
-            if (['cstatus', 'channelstatus', 'channelpost', 'cpost', 'cp'].includes(command)) {
-                try {
-                    const { executeChannelStatus } = require('./commands/channel');
-                    if (await executeChannelStatus(command, { sock: devtrust, msg: m, args, text, reply })) return;
-                } catch (channelError) {
-                    console.error('[CHANNEL COMMAND] Failed:', channelError.stack || channelError.message);
-                    await devtrust.sendMessage(m.chat, {
-                        text: 'Channel command failed: ' + (channelError.message || 'Unknown error')
-                    }, { quoted: m }).catch(() => {});
-                    return;
-                }
-            }
         }
 
         const qtext = args.join(" ");
