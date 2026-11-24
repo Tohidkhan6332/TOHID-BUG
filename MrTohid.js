@@ -2428,11 +2428,33 @@ const Premium = getPremium();
         const messageFromOwner = Boolean(m.key?.fromMe || m.fromMe);
         const isCreator = messageFromOwner || ownerNumbers.has(senderNumber) || ownerNumbers.has(chatNumber);
 
-        // Keep the private-mode security boundary before any early response.
-        // Public commands remain available in private mode exactly as before.
+        if (isCmd) {
+            const senderDomain = String(senderIdentityJid).split('@')[1] || 'unknown';
+            const alternatePnPresent = [
+                m.key?.senderPn,
+                m.key?.participantAlt,
+                m.key?.remoteJidAlt
+            ].some(jid => typeof jid === 'string' && jid.endsWith('@s.whatsapp.net'));
+            console.log(
+                '[COMMAND AUTH]',
+                JSON.stringify({
+                    command,
+                    publicMode: Boolean(devtrust.public),
+                    fromMe: messageFromOwner,
+                    senderDomain,
+                    alternatePnPresent,
+                    ownerMatched: isCreator
+                })
+            );
+        }
+
+        // Keep private mode secure: commands from non-owners are not executed.
         if (!devtrust.public) {
             const publicCmds = ['menu', 'allmenu', 'bugmenu'];
-            if (!isCreator && isCmd && !publicCmds.includes(command)) return;
+            if (!isCreator && isCmd && !publicCmds.includes(command)) {
+                console.warn('[COMMAND BLOCKED] Private mode rejected command:', command);
+                return;
+            }
         }
 
         // Critical WhatsApp status commands are answered before optional
