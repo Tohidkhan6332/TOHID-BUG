@@ -2312,7 +2312,7 @@ const Premium = getPremium();
                     '├ 📦 ' + prefix + 'othermenu',
                     '│',
                     '╰ Powered by TOHID-AI'
-                ].join('\\n');
+                ].join('\n');
                 try {
                     await devtrust.sendMessage(m.chat, { text: menuText }, { quoted: m });
                     console.log('[FAST MENU] Text menu delivered:', m.chat);
