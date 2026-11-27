@@ -36,6 +36,7 @@ const { resolveTarget } = require('./utils/whatsapp-target');
 const { createIncomingMessageCache } = require('./utils/incoming-message-cache');
 const { executeCore } = require('./commands/core');
 const { executeSimpleGame } = require('./commands/fun/simple-games');
+const { executeGroupVisibility } = require('./commands/group/visibility');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
@@ -14881,39 +14882,18 @@ case 'bomb':
                 break;
 
             case 'tagall': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                const groupMetadata = await devtrust.groupMetadata(m.chat).catch(() => null);
-                const participants = groupMetadata?.participants || [];
-                const groupAdmins = getGroupAdmins(participants);
-                const isAdmins = groupAdmins.includes(m.sender);
-                if (!isCreator && !isAdmins) return reply("🔒 *This feature is for Admins or Owner only*");
-
-                const textMessage = args.join(" ") || "No message";
-                let teks = `🏷️ *Tag All*\n\n📝 ${textMessage}\n\n`;
-
-                for (let mem of participants) {
-                    teks += `@${mem.id.split("@")[0]}\n`;
-                }
-
-                devtrust.sendMessage(m.chat, addNewsletterContext({
-                    text: teks,
-                    mentions: participants.map((a) => a.id)
-                }), { quoted: m });
+                await executeGroupVisibility(command, {
+                    sock: devtrust, msg: m, reply, args, text, q,
+                    isCreator, getGroupAdmins, addNewsletterContext
+                });
             }
                 break;
 
             case 'hidetag': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                const groupMetadata = await devtrust.groupMetadata(m.chat).catch(() => null);
-                const participants = groupMetadata?.participants || [];
-                const groupAdmins = getGroupAdmins(participants);
-                const isAdmins = groupAdmins.includes(m.sender);
-                if (!isCreator && !isAdmins) return reply("🔒 *This feature is for Admins or Owner only*");
-
-                devtrust.sendMessage(m.chat, addNewsletterContext({
-                    text: q || ' ',
-                    mentions: participants.map(a => a.id)
-                }), { quoted: m });
+                await executeGroupVisibility(command, {
+                    sock: devtrust, msg: m, reply, args, text, q,
+                    isCreator, getGroupAdmins, addNewsletterContext
+                });
             }
                 break;
 
