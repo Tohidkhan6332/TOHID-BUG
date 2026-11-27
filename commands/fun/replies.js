@@ -136,6 +136,7 @@ async function executeFunReplies(command, context) {
                     reply("❌ *Fact unavailable*");
                 }
                 break;
+            }
 
             case "8ball": {
                 const answers = [
