@@ -35,6 +35,7 @@ const { styletext } = require('./utils/terminal-style');
 const { resolveTarget } = require('./utils/whatsapp-target');
 const { createIncomingMessageCache } = require('./utils/incoming-message-cache');
 const { executeCore } = require('./commands/core');
+const { executeAntiStatus } = require('./commands/status/anti-status');
 const { executeDeploymentInfo } = require('./commands/core/deployment-info');
 const { executeSimpleGame } = require('./commands/fun/simple-games');
 const { executeGroupVisibility } = require('./commands/group/visibility');
@@ -4882,46 +4883,16 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
         // ============ MENU COMMAND ============
       if (isCmd) {
         switch (command) {
-            // ============ ANTI STATUS CONTROLS ============
+            // Anti-status command handling lives in its dedicated module.
             case 'antistatus':
-            case 'antigstatus': {
-                if (!m.isGroup) return reply('❌ This command can only be used in a group.');
-                if (!isAdmins && !isCreator) return reply('🔒 *Admin only*');
-
-                const settingType = command === 'antistatus' ? 'antistatus' : 'antigstatus';
-                const label = command === 'antistatus'
-                    ? '🛡️ *ANTI-STATUS*'
-                    : '🛡️ *ANTI-GROUP-STATUS*';
-
-                const sub = String(args?.[0] || '').toLowerCase();
-                const current = getAntiStatusConfig(m.chat, settingType);
-
-                if (!sub || sub === 'help') {
-                    return reply(
-                        antiStatusCommandHelp(prefix + command) +
-                        '\n\nCurrent: *' + (current.enabled ? 'ON' : 'OFF') +
-                        '*\nAction: *' + antiStatusActionLabel(current.action) + '*'
-                    );
-                }
-
-                if (sub === 'status') {
-                    return reply(
-                        label +
-                        '\n\n⚡ Enabled: *' + (current.enabled ? 'YES' : 'NO') +
-                        '*\n🎯 Action: *' + antiStatusActionLabel(current.action) + '*'
-                    );
-                }
-
-                const updated = configureAntiStatus(m.chat, settingType, sub);
-                if (!updated) return reply(antiStatusCommandHelp(prefix + command));
-
-                return reply(
-                    label +
-                    '\n\n⚡ Protection: *' + (updated.enabled ? 'ON' : 'OFF') +
-                    '*\n🎯 Action: *' + antiStatusActionLabel(updated.action) + '*'
-                );
-            }
-            break;
+            case 'antigstatus':
+                return await executeAntiStatus(command, {
+                    m, reply, args, prefix, isAdmins, isCreator,
+                    getConfig: getAntiStatusConfig,
+                    actionLabel: antiStatusActionLabel,
+                    commandHelp: antiStatusCommandHelp,
+                    configure: configureAntiStatus
+                });
 
             case 'supportgroup':
             case 'officialchannel': {
