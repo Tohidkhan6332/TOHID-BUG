@@ -184,6 +184,42 @@ async function executeInformation(command, context) {
                 }
             }
                 break;
+            case 'manga': {
+                if (!text) return reply(`📖 *Usage:* ${command} <manga name>`);
+
+                try {
+                    let res = await axios.get(`https://api.jikan.moe/v4/manga?q=${encodeURIComponent(text)}&limit=1`);
+                    let data = res.data.data[0];
+
+                    if (!data) return reply("🔍 *Manga not found* • Try a different title");
+
+                    let mangaInfo = `📚 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Manga*
+        
+📌 *${data.title}*
+━━━━━━━━━━━━
+📊 Score: ${data.score || "N/A"} ⭐
+📚 Volumes: ${data.volumes || "N/A"}
+📑 Chapters: ${data.chapters || "N/A"}
+📖 Status: ${data.status || "N/A"}
+
+📝 ${data.synopsis ? data.synopsis.substring(0, 300) + "..." : "No synopsis available"}
+
+🔗 ${data.url}`;
+
+                    await devtrust.sendMessage(m.chat,
+                        addNewsletterContext({
+                            image: { url: data.images.jpg.large_image_url },
+                            caption: mangaInfo
+                        }),
+                        { quoted: m }
+                    );
+                } catch (e) {
+                    console.error(e);
+                    reply("❌ *Manga fetch failed* • The manga gods are angry today");
+                }
+            }
+                break;
+
         default:
             return false;
     }
