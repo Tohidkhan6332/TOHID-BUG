@@ -43,6 +43,7 @@ const { executeGroupInfo } = require('./commands/group/info-settings');
 const { executeTextUtilities } = require('./commands/tools/text-utilities');
 const { executeFunReplies } = require('./commands/fun/replies');
 const { executeGeneralFun } = require('./commands/fun/general');
+const { executeOwnerInfo } = require('./commands/owner/info');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
@@ -10399,40 +10400,19 @@ break;
 
             
 
-            case "owner": {
-                const ownerNumber = WHATSAPP_OWNER_NUMBER;
-                await sendRichHtml({
-                    sock: devtrust,
-                    jid: m.chat,
-                    quoted: m,
-                    title: 'TOHID-AI OWNER',
-                    html: ownerHtml({
-                        number: ownerNumber,
-                        name: 'MR TOHID',
-                        telegram: 'https://t.me/Tohidkhan6332',
-                        channel: 'https://t.me/Tohidtech6332',
-                    }),
+            case 'owner': {
+                await executeOwnerInfo(command, {
+                    sock: devtrust, msg: m, WHATSAPP_OWNER_NUMBER,
+                    sendRichHtml, ownerHtml, addNewsletterContext
                 });
             }
                 break;
 
-            case "repo": {
-                const tgUsername = "t.me/Tohidkhan6332";
-                const tgChannel = "https://t.me/Tohidtech6332";
-                const waChannel = "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T";
-
-                let caption = `📂 * 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Repository *\n\n` +
-                    `🤖 Telegram: https://t.me/TohidAi_bot\n` +
-                    `👨‍💻 Developer: @Tohidkhan6332\n` +
-                    `📢 Updates:\n${tgChannel}\n${waChannel}`;
-
-                await devtrust.sendMessage(m.chat,
-                    addNewsletterContext({
-                        text: caption,
-                        mentions: [m.sender]
-                    }),
-                    { quoted: m }
-                );
+            case 'repo': {
+                await executeOwnerInfo(command, {
+                    sock: devtrust, msg: m, WHATSAPP_OWNER_NUMBER,
+                    sendRichHtml, ownerHtml, addNewsletterContext
+                });
             }
                 break;
 
