@@ -51,6 +51,7 @@ const { executeOwnerInfo } = require('./commands/owner/info');
 const { executeOwnerMedia } = require('./commands/owner/media');
 const { executeDeveloperContact } = require('./commands/owner/contact');
 const { executeInformation } = require('./commands/tools/information');
+const { executeChannelInfo } = require('./commands/tools/channel-info');
 const { executeCurrency } = require('./commands/tools/currency');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
@@ -12637,21 +12638,9 @@ break;
                 break;
 
             case 'idch': {
-                if (!isCreator) return reply("🔒 *Owner only*");
-                if (!text) return reply("🔗 *Example:* link channel");
-                if (!text.includes("https://whatsapp.com/channel/"))
-                    return reply("❌ *Invalid channel link*");
-
-                let result = text.split('https://whatsapp.com/channel/')[1];
-                let res = await devtrust.newsletterMetadata("invite", result);
-
-                let teks = `📢 *Channel Info*\n\n` +
-                    `🆔 ID: ${res.id}\n` +
-                    `👤 Name: ${res.name}\n` +
-                    `👥 Followers: ${res.subscribers}\n` +
-                    `✔️ Verified: ${res.verification == "VERIFIED" ? "Yes" : "No"}`;
-
-                return reply(teks);
+                await executeChannelInfo(command, {
+                    sock: devtrust, reply, text, isCreator
+                });
             }
                 break;
 
