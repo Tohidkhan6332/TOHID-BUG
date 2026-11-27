@@ -43,6 +43,7 @@ const { executeGroupAdmin } = require('./commands/group/admin');
 const { executeAdminList } = require('./commands/group/admin-list');
 const { executeGroupInfo } = require('./commands/group/info-settings');
 const { executeGroupModeration } = require('./commands/group/moderation');
+const { executeGroupProtection } = require('./commands/group/protection');
 const { executeTextUtilities } = require('./commands/tools/text-utilities');
 const { executeProfile } = require('./commands/tools/profile');
 const { executeLookupGames } = require('./commands/tools/lookup-games');
@@ -8372,59 +8373,12 @@ try {
             }
                 break;
 
-            // ======================[ 🔗 ANTI-LINK ]======================
+            // Group anti-link settings are handled in commands/group/protection.js.
             case 'antilink': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                if (!isAdmins && !isCreator) return reply("🔒 *Admins only*");
-
-                if (!args[0]) {
-                    // Check if this group has antilink settings
-                    const groupSettings = antilinkSettings[m.chat] || { enabled: false, action: 'delete' };
-                    const status = groupSettings.enabled ? 'ON ✅' : 'OFF ❌';
-                    const action = groupSettings.enabled ? groupSettings.action : '-';
-
-                    return reply(`🔗 *Anti-Link*\n\n` +
-                        `📌 *Usage:*\n` +
-                        `▸ ${prefix}antilink on - Enable (delete mode)\n` +
-                        `▸ ${prefix}antilink delete - Enable delete mode\n` +
-                        `▸ ${prefix}antilink kick - Enable kick mode\n` +
-                        `▸ ${prefix}antilink off - Disable\n\n` +
-                        `⚙️ *Status:* ${status}\n` +
-                        `⚙️ *Action:* ${action}\n\n` +
-                        `_When enabled, links will be ${groupSettings.action === 'kick' ? 'deleted and user kicked' : 'deleted'}_`);
-                }
-
-                // Handle ON command (default to delete mode)
-                if (args[0].toLowerCase() === 'on') {
-                    antilinkSettings[m.chat] = { enabled: true, action: 'delete' };
-                    saveAntilinkSettings(antilinkSettings);
-                    reply(`✅ *Anti-Link enabled (Delete mode)*\nLinks will be deleted automatically.`);
-                }
-                // Handle DELETE mode
-                else if (args[0].toLowerCase() === 'delete') {
-                    antilinkSettings[m.chat] = { enabled: true, action: 'delete' };
-                    saveAntilinkSettings(antilinkSettings);
-                    reply(`✅ *Anti-Link set to DELETE mode*\nLinks will be deleted.`);
-                }
-                // Handle KICK mode
-                else if (args[0].toLowerCase() === 'kick') {
-                    antilinkSettings[m.chat] = { enabled: true, action: 'kick' };
-                    saveAntilinkSettings(antilinkSettings);
-                    reply(`✅ *Anti-Link set to KICK mode*\nUsers who post links will be kicked.`);
-                }
-                // Handle OFF
-                else if (args[0].toLowerCase() === 'off') {
-                    if (antilinkSettings[m.chat]) {
-                        antilinkSettings[m.chat].enabled = false;
-                        saveAntilinkSettings(antilinkSettings);
-                        reply(`❌ *Anti-Link disabled for this group*`);
-                    } else {
-                        reply(`⚠️ *Anti-Link is already disabled*`);
-                    }
-                }
-                else {
-                    reply(`❌ *Invalid option. Use: on, delete, kick, or off*`);
-                }
+                await executeGroupProtection(command, {
+                    msg: m, reply, args, prefix, isAdmins, isCreator,
+                    antilinkSettings, saveAntilinkSettings, getSetting, setSetting
+                });
             }
                 break;
 
@@ -8457,132 +8411,15 @@ try {
                 break;
 
 
-            // ======================[ 🏷️ ANTI-TAG ]======================
-            case 'antitag': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                if (!isAdmins && !isCreator) return reply("🔒 *Admins only*");
-
-                if (!args[0]) {
-                    const config = getSetting(m.chat, "antitag", { enabled: false, action: 'delete' });
-                    return reply(`🏷️ *Anti-Tag*\n\n` +
-                        `📌 *Usage:*\n` +
-                        `▸ .antitag on - Enable (delete mode)\n` +
-                        `▸ .antitag delete - Enable delete mode\n` +
-                        `▸ .antitag kick - Enable kick mode\n` +
-                        `▸ .antitag off - Disable\n\n` +
-                        `⚙️ *Status:* ${config.enabled ? 'ON ✅' : 'OFF ❌'}\n` +
-                        `⚙️ *Action:* ${config.enabled ? config.action : '-'}`);
-                }
-
-                if (args[0] === 'on' || args[0] === 'delete') {
-                    setSetting(m.chat, "antitag", { enabled: true, action: 'delete' });
-                    reply(`✅ *Anti-Tag enabled (Delete mode)*\nMass tagging will be deleted`);
-                }
-                else if (args[0] === 'kick') {
-                    setSetting(m.chat, "antitag", { enabled: true, action: 'kick' });
-                    reply(`✅ *Anti-Tag enabled (Kick mode)*\nUsers who mass tag will be kicked`);
-                }
-                else if (args[0] === 'off') {
-                    setSetting(m.chat, "antitag", { enabled: false, action: 'delete' });
-                    reply(`❌ *Anti-Tag disabled*`);
-                }
-            }
-                break;
-
-            // ======================[ 🚫 ANTI-SPAM ]======================
-            case 'antispam': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                if (!isAdmins && !isCreator) return reply("🔒 *Admins only*");
-
-                if (!args[0]) {
-                    const config = getSetting(m.chat, "antispam", { enabled: false, action: 'delete' });
-                    return reply(`🚫 *Anti-Spam*\n\n` +
-                        `📌 *Usage:*\n` +
-                        `▸ .antispam on - Enable (delete mode)\n` +
-                        `▸ .antispam delete - Enable delete mode\n` +
-                        `▸ .antispam kick - Enable kick mode\n` +
-                        `▸ .antispam off - Disable\n\n` +
-                        `⚙️ *Status:* ${config.enabled ? 'ON ✅' : 'OFF ❌'}\n` +
-                        `⚙️ *Action:* ${config.enabled ? config.action : '-'}`);
-                }
-
-                if (args[0] === 'on' || args[0] === 'delete') {
-                    setSetting(m.chat, "antispam", { enabled: true, action: 'delete' });
-                    reply(`✅ *Anti-Spam enabled (Delete mode)*\nSpam messages will be deleted`);
-                }
-                else if (args[0] === 'kick') {
-                    setSetting(m.chat, "antispam", { enabled: true, action: 'kick' });
-                    reply(`✅ *Anti-Spam enabled (Kick mode)*\nUsers who spam will be kicked`);
-                }
-                else if (args[0] === 'off') {
-                    setSetting(m.chat, "antispam", { enabled: false, action: 'delete' });
-                    reply(`❌ *Anti-Spam disabled*`);
-                }
-            }
-                break;
-
-            // ======================[ 🤖 ANTI-BOT ]======================
-            case 'antibot': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                if (!isAdmins && !isCreator) return reply("🔒 *Admins only*");
-
-                if (!args[0]) {
-                    const config = getSetting(m.chat, "antibot", { enabled: false, action: 'delete' });
-                    return reply(`🤖 *Anti-Bot*\n\n` +
-                        `📌 *Usage:*\n` +
-                        `▸ .antibot on - Enable (delete mode)\n` +
-                        `▸ .antibot delete - Enable delete mode\n` +
-                        `▸ .antibot kick - Enable kick mode\n` +
-                        `▸ .antibot off - Disable\n\n` +
-                        `⚙️ *Status:* ${config.enabled ? 'ON ✅' : 'OFF ❌'}\n` +
-                        `⚙️ *Action:* ${config.enabled ? config.action : '-'}`);
-                }
-
-                if (args[0] === 'on' || args[0] === 'delete') {
-                    setSetting(m.chat, "antibot", { enabled: true, action: 'delete' });
-                    reply(`✅ *Anti-Bot enabled (Delete mode)*\nBot messages will be deleted`);
-                }
-                else if (args[0] === 'kick') {
-                    setSetting(m.chat, "antibot", { enabled: true, action: 'kick' });
-                    reply(`✅ *Anti-Bot enabled (Kick mode)*\nBots will be kicked`);
-                }
-                else if (args[0] === 'off') {
-                    setSetting(m.chat, "antibot", { enabled: false, action: 'delete' });
-                    reply(`❌ *Anti-Bot disabled*`);
-                }
-            }
-                break;
-
-            // ======================[ 💰 ANTI-BEG ]======================
+            // Group anti-abuse settings are handled in commands/group/protection.js.
+            case 'antitag':
+            case 'antispam':
+            case 'antibot':
             case 'antibeg': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                if (!isAdmins && !isCreator) return reply("🔒 *Admins only*");
-
-                if (!args[0]) {
-                    const config = getSetting(m.chat, "antibeg", { enabled: false, action: 'delete' });
-                    return reply(`💰 *Anti-Beg (Nigerian Style)*\n\n` +
-                        `📌 *Usage:*\n` +
-                        `▸ .antibeg on - Enable (delete mode)\n` +
-                        `▸ .antibeg delete - Enable delete mode\n` +
-                        `▸ .antibeg kick - Enable kick mode\n` +
-                        `▸ .antibeg off - Disable\n\n` +
-                        `⚙️ *Status:* ${config.enabled ? 'ON ✅' : 'OFF ❌'}\n` +
-                        `⚙️ *Action:* ${config.enabled ? config.action : '-'}\n\n` +
-                        `_Detects "send me money", "I dey suffer", etc_`);
-                }
-
-                if (args[0] === 'on' || args[0] === 'delete') {
-                    setSetting(m.chat, "antibeg", { enabled: true, action: 'delete' });
-                    reply(`✅ *Anti-Beg enabled (Delete mode)*\nBegging messages will be deleted`);
-                }
-                else if (args[0] === 'kick') {
-                    setSetting(m.chat, "antibeg", { enabled: true, action: 'kick' });
-                    reply(`✅ *Anti-Beg enabled (Kick mode)*\nUsers who beg will be kicked`);
-                }
-                else if (args[0] === 'off') {
-                    setSetting(m.chat, "antibeg", { enabled: false, action: 'delete' });
-                    reply(`❌ *Anti-Beg disabled*`);
-                }
+                await executeGroupProtection(command, {
+                    msg: m, reply, args, prefix, isAdmins, isCreator,
+                    antilinkSettings, saveAntilinkSettings, getSetting, setSetting
+                });
             }
                 break;
 
