@@ -11493,6 +11493,7 @@ case 'apkdl': {
             }
                 break;
 
+            case 'dictionary':
             case 'define': {
                 await executeInformation(command, {
                     sock: devtrust, msg: m, reply, text, prefix, axios,
@@ -11642,6 +11643,7 @@ case 'apkdl': {
             }
                 break;
 
+            case 'wikipedia':
             case 'wiki': {
                 await executeInformation(command, {
                     sock: devtrust, msg: m, reply, text, prefix, axios,
