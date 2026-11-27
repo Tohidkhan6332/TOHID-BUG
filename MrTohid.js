@@ -4832,23 +4832,22 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
             try {
                 const source = fs.readFileSync(__filename, 'utf8');
                 const start = source.indexOf('switch (command)');
-                const end = source.indexOf('\\n        }', start);
+                const end = source.indexOf('\n        }', start);
                 if (start < 0) return 0;
 
-                // Main command cases use exactly 12 spaces of indentation.
-                // Nested switch/case blocks use deeper indentation and are ignored.
+                // Count command aliases in the main dispatcher and extracted modules.
                 const body = end > start ? source.slice(start, end) : source.slice(start);
-                const matches = body.match(/^            case\\s+['"][^'"]+['"]\\s*:/gm) || [];
+                const mainCases = body.match(/^ {12}case\s+['"][^'"]+['"]\s*:/gm) || [];
                 const groupDir = path.join(__dirname, 'commands', 'group');
                 const groupFiles = fs.readdirSync(groupDir).filter(name => name.endsWith('.js'));
-                const moduleCases = groupFiles.flatMap(name => {
+                const groupCases = groupFiles.flatMap(name => {
                     const moduleSource = fs.readFileSync(path.join(groupDir, name), 'utf8');
-                    return moduleSource.match(/case\\s+['"][^'"]+['"]\\s*:/g) || [];
+                    return moduleSource.match(/case\s+['"][^'"]+['"]\s*:/g) || [];
                 });
-                global.__TOHID_COMMAND_COUNT_CACHE = new Set([...matches, ...moduleCases].map(x => x.trim())).size;
+                global.__TOHID_COMMAND_COUNT_CACHE = new Set([...mainCases, ...groupCases]).size;
             } catch (e) {
                 console.error('[COMMAND COUNT]', e.message);
-                global.__TOHID_COMMAND_COUNT_CACHE = 0;
+                return 0;
             }
             return global.__TOHID_COMMAND_COUNT_CACHE;
         }
