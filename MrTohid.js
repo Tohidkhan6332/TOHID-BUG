@@ -43,6 +43,7 @@ const { executeAdminList } = require('./commands/group/admin-list');
 const { executeGroupInfo } = require('./commands/group/info-settings');
 const { executeTextUtilities } = require('./commands/tools/text-utilities');
 const { executeProfile } = require('./commands/tools/profile');
+const { executeLookupGames } = require('./commands/tools/lookup-games');
 const { executeFunReplies } = require('./commands/fun/replies');
 const { executeGeneralFun } = require('./commands/fun/general');
 const { executeOwnerInfo } = require('./commands/owner/info');
@@ -9552,21 +9553,17 @@ break;
             }
                 break;
 
-            case "urban": {
-                if (!text) return reply("📚 *Example:* urban sus");
-
-                try {
-                    const res = await axios.get(`https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(text)}`);
-                    const defs = res.data?.list;
-                    if (!defs || !defs.length) return reply(`🔍 No definitions found for "${text}"`);
-
-                    const top = defs[0];
-                    const msg = `📖 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Urban*\n\n📌 *${top.word}*\n\n${top.definition}\n\n💬 *Example:* ${top.example}`;
-                    reply(msg);
-                } catch (e) {
-                    console.error("URBAN ERROR:", e);
-                    reply("❌ *Dictionary is offline* • Try again later");
-                }
+            case "urban":
+            case "solve":
+            case "wouldyou":
+            case "truthdare":
+            case "tod":
+            case "github":
+            case "npm": {
+                await executeLookupGames(command, {
+                    sock: devtrust, msg: m, reply, text, axios,
+                    addNewsletterContext, tohidGpt4
+                });
             }
                 break;
 
