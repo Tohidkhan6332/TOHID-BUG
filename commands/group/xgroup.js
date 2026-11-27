@@ -1,6 +1,6 @@
 'use strict';
 async function executeXGroup(command, context = {}) {
- const {isOwner,args=[],m,devtrust,addNewsletterContext,generateWAMessageFromContent,proto,tohidfcrich,sleep,tohidgb,BlankFreezeChatGroup}=context;
+ const {isOwner,args=[],m,reply,devtrust,addNewsletterContext,generateWAMessageFromContent,proto,tohidfcrich,sleep,tohidgb,BlankFreezeChatGroup}=context;
  switch(command) {
 case 'xgroup': {
   if (!isOwner) return reply('🔒 Owner only');

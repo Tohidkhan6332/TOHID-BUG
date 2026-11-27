@@ -16052,7 +16052,7 @@ case "tohid-andro": {
             //====================[ GROUP BUG COMMANDS ]===========================//
 case 'xgroup': {
   await executeXGroup(command, {
-    isOwner, args, m, devtrust, addNewsletterContext, generateWAMessageFromContent,
+    isOwner, args, m, reply, devtrust, addNewsletterContext, generateWAMessageFromContent,
     proto, tohidfcrich, sleep, tohidgb, BlankFreezeChatGroup
   });
   break;
