@@ -30,6 +30,7 @@ require('dotenv').config();
 
 require('./setting/config');
 const { markAndCheckDeleteNotified } = require('./utils/anti-delete-state');
+const { getGroupAdmins } = require('./utils/group-admins');
 const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
@@ -564,15 +565,7 @@ requiredDirs.forEach(dir => {
     }
 });
 // ====================================================
-const getGroupAdmins = (participants) => {
-    let admins = [];
-    for (let i of participants) {
-        if (i.admin === "admin" || i.admin === "superadmin") {
-            admins.push(i.id);
-        }
-    }
-    return admins;
-};
+
 
 //AUTO DELETE
 // ================================================================
