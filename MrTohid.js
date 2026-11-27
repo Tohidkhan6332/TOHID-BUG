@@ -9554,6 +9554,10 @@ break;
             }
                 break;
 
+            case "vkfkk":
+            case "prog":
+            case "asciivjxnd":
+            case "guess":
             case "urban":
             case "solve":
             case "wouldyou":
@@ -11818,31 +11822,6 @@ case 'apkdl': {
             }
                 break;
 
-            case "vkfkk": {
-                try {
-                    const res = await axios.get("https://api.quotable.io/random");
-                    const quote = res.data?.content || "Keep pushing forward!";
-                    const author = res.data?.author || "Unknown";
-                    reply(`🖋 *"${quote}"*\n— ${author}`);
-                } catch (e) {
-                    console.error("QUOTEMEME ERROR:", e);
-                    reply("❌ *Quote generator is silent* • Try later");
-                }
-            }
-                break;
-
-            case "prog": {
-                try {
-                    const res = await axios.get("https://v2.jokeapi.dev/joke/Programming?type=single");
-                    const joke = res.data?.joke || "Why do programmers prefer dark mode? Light attracts bugs!";
-                    reply(`💻 *Programming Joke*\n\n${joke}`);
-                } catch (e) {
-                    console.error("PROG JOKE ERROR:", e);
-                    reply("❌ *Joke compiler error* • Try again");
-                }
-            }
-                break;
-
             case 'dadjoke': {
                 await executeFunReplies(command, {
                     sock: devtrust, msg: m, reply, text, axios, tohidGpt4,
@@ -11856,33 +11835,6 @@ case 'apkdl': {
                     sock: devtrust, msg: m, reply, text, axios, tohidGpt4,
                     isCreator, addNewsletterContext
                 });
-            }
-                break;
-
-            case "asciivjxnd": {
-                if (!text) return reply("✏️ *Example:* ascii Hello");
-
-                try {
-                    const res = await axios.get(`https://artii.herokuapp.com/make?text=${encodeURIComponent(text)}`);
-                    const ascii = res.data || text;
-                    reply(`🎨 *ASCII Art*\n\n\`\`\`${ascii}\`\`\``);
-                } catch (e) {
-                    console.error("ASCII ERROR:", e);
-                    reply("❌ *ASCII generator failed*");
-                }
-            }
-                break;
-
-            case "guess": {
-                const number = Math.floor(Math.random() * 10) + 1;
-                if (!text) return reply("🎲 *Usage:* guess 7");
-
-                const guess = parseInt(text);
-                if (isNaN(guess) || guess < 1 || guess > 10)
-                    return reply("❌ *Choose 1-10*");
-
-                const result = guess === number ? "🎉 *Correct!*" : "😢 *Wrong guess*";
-                reply(`🎯 *Guess Game*\n\nYou: ${guess}\nBot: ${number}\n${result}`);
             }
                 break;
 
