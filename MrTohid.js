@@ -38,6 +38,7 @@ const { executeCore } = require('./commands/core');
 const { executeSimpleGame } = require('./commands/fun/simple-games');
 const { executeGroupVisibility } = require('./commands/group/visibility');
 const { executeGroupAdmin } = require('./commands/group/admin');
+const { executeAdminList } = require('./commands/group/admin-list');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
@@ -14589,21 +14590,10 @@ case 'bomb':
             case 'listadmin':
             case 'tagadmin':
             case 'admin': {
-                if (!isCreator) return reply("🔒 *Owner only*");
-                if (!m.isGroup) return reply("👥 *Groups only*");
-
-                const groupAdmins = participants.filter(p => p.admin);
-                const listAdmin = groupAdmins.map((v, i) => `${i + 1}. @${v.id.split('@')[0]}`).join('\n');
-                const owner = groupMetadata?.owner ||
-                    groupAdmins.find(p => p.admin === 'superadmin')?.id ||
-                    m.chat.split`-`[0] + '@s.whatsapp.net';
-
-                let text = `👑 *Admins*\n\n${listAdmin}`;
-
-                devtrust.sendMessage(m.chat, addNewsletterContext({
-                    text,
-                    mentions: [...groupAdmins.map(v => v.id), owner]
-                }), { quoted: m });
+                await executeAdminList({
+                    sock: devtrust, msg: m, reply, participants, groupMetadata,
+                    addNewsletterContext, isCreator
+                });
             }
                 break;
 
