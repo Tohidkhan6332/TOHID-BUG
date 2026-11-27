@@ -4,7 +4,13 @@
 
 function renderTicTacToeBoard(board) {
     const cells = board.map((v, i) => v || String(i + 1));
-    return `${cells[0]} | `${cells[1]} | `${cells[2]}\n---------\n`${cells[3]} | `${cells[4]} | `${cells[5]}\n---------\n`${cells[6]} | `${cells[7]} | `${cells[8]}`;
+    return [
+        cells.slice(0, 3).join(' | '),
+        '---------',
+        cells.slice(3, 6).join(' | '),
+        '---------',
+        cells.slice(6, 9).join(' | ')
+    ].join('\n');
 }
 
 function getTicTacToeWinner(board) {
