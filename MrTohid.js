@@ -11659,43 +11659,13 @@ case 'apkdl': {
                 break;
                 
 
-            case "bchcn": {
-                try {
-                    const res = await axios.get("https://some-random-api.ml/img/koala");
-                    const img = res.data?.link;
-                    if (!img) return reply("❌ *Koala hiding* • Try again");
-
-                    await devtrust.sendMessage(m.chat,
-                        addNewsletterContext({
-                            image: { url: img },
-                            caption: "🐨 *Random Koala*"
-                        }),
-                        { quoted: m }
-                    );
-                } catch (e) {
-                    console.error("KOALA ERROR:", e);
-                    reply("❌ *Koala fetch failed* • Eucalyptus shortage");
-                }
-            }
-                break;
-
-            case "hxjxjjkm": {
-                try {
-                    const res = await axios.get("https://some-random-api.ml/img/birb");
-                    const img = res.data?.link;
-                    if (!img) return reply("❌ *Bird flew away* • Try again");
-
-                    await devtrust.sendMessage(m.chat,
-                        addNewsletterContext({
-                            image: { url: img },
-                            caption: "🐦 *Random Bird*"
-                        }),
-                        { quoted: m }
-                    );
-                } catch (e) {
-                    console.error("BIRD ERROR:", e);
-                    reply("❌ *Bird migration failed* • Try later");
-                }
+            case "bchcn":
+            case "hxjxjjkm":
+            case "cbhcchhcx": {
+                await executeLookupGames(command, {
+                    sock: devtrust, msg: m, reply, text, axios,
+                    addNewsletterContext, tohidGpt4
+                });
             }
                 break;
 
@@ -11746,21 +11716,6 @@ case 'apkdl': {
                 });
             }
                 break;
-
-            case "cbhcchhcx": {
-                try {
-                    const res = await axios.get("https://type.fit/api/quotes");
-                    const quotes = res.data;
-                    const q = quotes[Math.floor(Math.random() * quotes.length)];
-                    reply(`🌟 *"${q.text}"*\n— ${q.author || "Unknown"}`);
-                } catch (e) {
-                    console.error("INSPIRE ERROR:", e);
-                    reply("❌ *Inspiration unavailable*");
-                }
-            }
-                break;
-
-            
 
             case 'dog': {
                 await executeGeneralFun(command, {
