@@ -62,6 +62,13 @@ async function executeGroupAdvanced(command, c = {}) {
   }catch(error){console.error('Group Status Error:',error);await sock.sendMessage(m.chat,{react:{text:'❌',key:m.key}});reply(\`⚠️ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Group Status*\\n\\nFailed: \${error.message}\`);}
   return true;
  }
+ case 'left': {
+  if (!m.isGroup) return reply('👥 *Groups only*');
+  const metadata=await sock.groupMetadata(m.chat).catch(()=>null);
+  const admins=(c.getGroupAdmins||(()=>[]))(metadata?.participants||[]);
+  if(!isCreator&&!admins.includes(m.sender))return reply('🔒 *This feature is for Admins or Owner only*');
+  await sock.groupLeave(m.chat).catch(()=>null);return true;
+ }
  default:return false;
  }
 }

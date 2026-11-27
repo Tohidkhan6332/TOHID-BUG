@@ -47,6 +47,8 @@ const { executeGroupProtection } = require('./commands/group/protection');
 const { executeGroupBan } = require('./commands/group/ban');
 const { executeGroupManagement } = require('./commands/group/management');
 const { executeGroupAdvanced } = require('./commands/group/advanced');
+const { executeGroupMenu } = require('./commands/group/menu');
+const { executeXGroup } = require('./commands/group/xgroup');
 const { executeTextUtilities } = require('./commands/tools/text-utilities');
 const { executeProfile } = require('./commands/tools/profile');
 const { executeLookupGames } = require('./commands/tools/lookup-games');
@@ -4837,7 +4839,13 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
                 // Nested switch/case blocks use deeper indentation and are ignored.
                 const body = end > start ? source.slice(start, end) : source.slice(start);
                 const matches = body.match(/^            case\\s+['"][^'"]+['"]\\s*:/gm) || [];
-                global.__TOHID_COMMAND_COUNT_CACHE = new Set(matches.map(x => x.trim())).size;
+                const groupDir = path.join(__dirname, 'commands', 'group');
+                const groupFiles = fs.readdirSync(groupDir).filter(name => name.endsWith('.js'));
+                const moduleCases = groupFiles.flatMap(name => {
+                    const moduleSource = fs.readFileSync(path.join(groupDir, name), 'utf8');
+                    return moduleSource.match(/case\\s+['"][^'"]+['"]\\s*:/g) || [];
+                });
+                global.__TOHID_COMMAND_COUNT_CACHE = new Set([...matches, ...moduleCases].map(x => x.trim())).size;
             } catch (e) {
                 console.error('[COMMAND COUNT]', e.message);
                 global.__TOHID_COMMAND_COUNT_CACHE = 0;
@@ -6982,198 +6990,12 @@ try {
 
             case 'groupmenu':
             case '𝐓𝐎𝐇𝐈𝐃 𝐀𝐈group': {
-            autoJoinGroup(devtrust, "https://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud").catch(err => console.error("Failed to auto join:", err));
-                await devtrust.sendMessage(m.chat, { react: { text: '🥀', key: m.key } });
-
-                const menuImages = [
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid.jpg',
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid1.jpg',
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid2.jpg',
-                    'https://raw.githubusercontent.com/Tohidkhan6332/TOHID-BUG/main/media/Tohid3.jpg'
-                ];
-
-                const randomImage = menuImages[Math.floor(Math.random() * menuImages.length)];
-                const uptime = formatUptime(process.uptime());
-                const totalMem = os.totalmem();
-                const freeMem = os.freemem();
-                const platform = os.platform();
-                const date = getLagosTime();
-                const readmore = String.fromCharCode(8206).repeat(4001);
-                const ramInfo = formatRam(totalMem, freeMem);
-                const moodEmoji = getMoodEmoji();
-                const totalCommands = countCommands();
-                const hour = date.getHours();
-                let greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
-
-                // Get professional features
-                const ownerName = getOwnerName();
-                const developerName = getDeveloperName();
-                const botVersion = getBotVersion();
-                const botMode = getBotMode();
-                const currentDateTime = getCurrentDateTime();
-
-                // ALPHABETICAL SECTIONS
-                const menuText = `
-┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔◆━┓
-┃ ⧎ ʜᴇʟʟᴏ  ${pushname}
-┃ ⧎ ʙᴏᴛ ɴᴀᴍᴇ 「 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* 」
-┃ ⧎ ᴠᴇʀsɪᴏɴ : *${botVersion}*
-┃ ⧎ ᴏᴡɴᴇʀ : *${ownerName}*
-┃ ⧎ ᴅᴇᴠᴇʟᴏᴘᴇʀ : *${developerName}*
-┃ ⧎ ᴍᴏᴅᴇ : *${botMode}*
-┃ ⧎ ʀᴜɴᴛɪᴍᴇ : ${uptime}
-┃ ⧎ ᴘʀᴇғɪx : 「 ${prefix} 」
-┃ ⧎ ᴘʟᴀᴛғᴏʀᴍ : ${platform}
-┃ ⧎ ʀᴀᴍ : ${ramInfo}
-┃ ⧎ ᴄᴏᴍᴍᴀɴᴅs : ${totalCommands} total
-┃ *${greeting}*, @${m?.sender?.split('@')?.[0] || 'User'}
-┃ \`ᴛᴏʜɪᴅ ᴀɪ ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ\`
-┃ 🕒 ${currentDateTime} ${moodEmoji}
-┗━━━━━━━━━━━━━━┛
-
-❖═━═══𖠁𐂃𖠁══━═❖
-♱  ${greeting}, *${pushname}*
-*ᴛᴏʜɪᴅ ᴀɪ* ᴀᴛ ʏᴏᴜʀ sᴇʀᴠɪᴄᴇ
-📱 *Pair TOHID-AI:* _https://t.me/TohidAi_bot
-❖═━═══𖠁𐂃𖠁══━═❖
-
-┏━◆𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 - 𝐆𝐑𝐎𝐔𝐏◆━┓
-│❖ ${prefix}add
-│❖ ${prefix}antibot
-│❖ ${prefix}antibadword
-│❖ ${prefix}antibeg
-│❖ ${prefix}antilink
-│❖ ${prefix}antispam
-│❖ ${prefix}antitag
-│❖ ${prefix}closetime
-│❖ ${prefix}creategc
-│❖ ${prefix}creategroup
-│❖ ${prefix}demote
-│❖ ${prefix}gcsettings
-│❖ ${prefix}goodbye
-│❖ ${prefix}groupinfo
-│❖ ${prefix}groupjid
-│❖ ${prefix}grouplink
-│❖ ${prefix}groupstatus
-│❖ ${prefix}gst
-│❖ ${prefix}gstatus
-│❖ ${prefix}hidetag
-│❖ ${prefix}invite
-│❖ ${prefix}kick
-│❖ ${prefix}kickadmins
-│❖ ${prefix}kickall
-│❖ ${prefix}left
-│❖ ${prefix}linkgc
-│❖ ${prefix}listadmin
-│❖ ${prefix}listadmins
-│❖ ${prefix}listonline
-│❖ ${prefix}members
-│❖ ${prefix}mute
-│❖ ${prefix}mutemember
-│❖ ${prefix}opentime
-│❖ ${prefix}poll
-│❖ ${prefix}promote
-│❖ ${prefix}resetlink
-│❖ ${prefix}revoke
-│❖ ${prefix}setdesc
-│❖ ${prefix}setgrouppp
-│❖ ${prefix}setname
-│❖ ${prefix}tag
-│❖ ${prefix}tagadmin
-│❖ ${prefix}tagall
-│❖ ${prefix}totalmembers
-│❖ ${prefix}totag
-│❖ ${prefix}unmute
-│❖ ${prefix}unmutemember
-┗━━━━━━━━━━━━━━┛
-
-⚙️ *©𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 𝚃𝙾𝙷𝙸𝙳-𝙰𝙸* | © 2026
-`;
-
-                // TRY-CATCH for image sending with fallback to text only
-try {
-  const media = await prepareWAMessageMedia(
-    { image: { url: randomImage } },
-    { upload: devtrust.waUploadToServer }
-  );
-
-  await devtrust.relayMessage(from, {
-    viewOnceMessage: {
-      message: {
-        interactiveMessage: {
-          header: {
-            hasMediaAttachment: true,
-            ...media
-          },
-          body: {
-            text: randomizeMenuFont(menuText, prefix)
-          },
-          nativeFlowMessage: {
-            buttons: completeMenuButtons([
-              {
-                name: "single_select",
-                buttonParamsJson: JSON.stringify({
-                  sections: [
-                    {
-                      title: "✨ 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨",
-                      rows: [
-                        { title: "🤖 AI Menu", id: `.aimenu` },
-                        { title: "🎨 Anime Menu", id: `.animemenu` },
-                        { title: "🐛 Bug Menu", id: `.bugmenu` },
-                        { title: "📥 Download Menu", id: `.downloadmenu` },
-                        { title: "🎮 Fun Menu", id: `.funmenu` },
-                        { title: "🎲 Game Menu", id: `.gamemenu` },
-                        { title: "👥 Group Menu", id: `.groupmenu` },
-                        { title: "🏷️ Logo Menu", id: `.logomenu` },
-                        { title: "👑 Owner Menu", id: `.ownermenu` },
-                        { title: "🏷️ Sticker Menu", id: `.stickermenu` },
-                        { title: "🔧 Tools Menu", id: `.toolsmenu` },
-                        { title: "🎙️ Voice Menu", id: `.voicemenu` },
-                        { title: "📦 Other Menu", id: `.othermenu` }
-                      ]
-                    }
-                  ]
-                })
-              },
-              {
-                name: "cta_url",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "📢 CHANNEL",
-                  url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
-                })
-              }
-            ], prefix, 'groupmenu')
-          },
-          contextInfo: {
-            forwardingScore: 999,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: "120363207624903731@newsletter",
-              newsletterName: "ＴＯＨＩＤ ＴＥＣＨ",
-              serverMessageId: -1
-            },
-            externalAdReply: {
-              title: "© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈",
-              body: "© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈",
-              thumbnailUrl: randomImage,
-              sourceUrl: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T",
-              mediaType: 1,
-              renderLargerThumbnail: true
-            }
-          }
-        }
-      }
-    }
-  }, {});
-
-} catch (err) {
-  console.log("❌ ERROR MENU:", err);
-
-  // 🔻 fallback biar gak kosong
-  await devtrust.sendMessage(from, {
-    text: "Failed to load the menu. Please try again or update WhatsApp."
-  });
-}
+                await executeGroupMenu(command, {
+                    devtrust, m, from, pushname, prefix, formatUptime, formatRam,
+                    getMoodEmoji, getLagosTime, getOwnerName, getDeveloperName,
+                    getBotVersion, getBotMode, getCurrentDateTime, countCommands,
+                    autoJoinGroup, prepareWAMessageMedia, randomizeMenuFont, completeMenuButtons
+                });
             }
                 break;
 
@@ -13376,14 +13198,7 @@ case 'bomb':
                 break;
 
             case 'left': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                const groupMetadata = await devtrust.groupMetadata(m.chat).catch(() => null);
-                const participants = groupMetadata?.participants || [];
-                const groupAdmins = getGroupAdmins(participants);
-                const isAdmins = groupAdmins.includes(m.sender);
-                if (!isCreator && !isAdmins) return reply("🔒 *This feature is for Admins or Owner only*");
-
-                await devtrust.groupLeave(m.chat).catch(() => null);
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, isCreator, getGroupAdmins });
             }
                 break;
 
@@ -16237,112 +16052,12 @@ case "tohid-andro": {
 
             //====================[ GROUP BUG COMMANDS ]===========================//
 case 'xgroup': {
-  if (!isOwner) return reply('🔒 Owner only');
-
-  const text = args[0];
-  let target = null;
-  let groupLink = text;
-
-  // ✅ kalau di group
-  if (m.isGroup) {
-    target = m.chat;
-  }
-
-  // ✅ kalau pakai link
-  if (!target && text && text.includes('chat.whatsapp.com')) {
-    try {
-      const code = text.split('chat.whatsapp.com/')[1];
-      const res = await devtrust.groupAcceptInvite(code);
-
-      target = res;
-
-      await devtrust.sendMessage(m.chat, addNewsletterContext({
-        text: '✅ Successfully joined the group!'
-      }), { quoted: m });
-
-    } catch (err) {
-      return devtrust.sendMessage(m.chat, addNewsletterContext({
-        text: '❌ Failed to join group.'
-      }), { quoted: m });
-    }
-  }
-
-  // ❌ kalau kosong
-  if (!target) {
-    return devtrust.sendMessage(m.chat, addNewsletterContext({
-      text: '⚠️ Use inside group or provide link.'
-    }), { quoted: m });
-  }
-
-  // 💎 BUTTON (ADA LINK GROUP)
-  const buttons = [
-    groupLink && groupLink.includes('chat.whatsapp.com') && {
-      name: "cta_url",
-      buttonParamsJson: JSON.stringify({
-        display_text: "🔗 Open Group Link",
-        url: groupLink
-      })
-    },
-    {
-      name: "cta_url",
-      buttonParamsJson: JSON.stringify({
-        display_text: "📢 Channel",
-        url: "https://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T"
-      })
-    }
-  ].filter(Boolean);
-
-  const caption = `╭─❍「 GROUP SENDER 」
-│ 📍 Target : ${target}
-│ ⚙️ Mode : Repeat
-│ ✓ Status : Running
-╰───────────────`;
-
-  const msg = generateWAMessageFromContent(m.chat, {
-    viewOnceMessage: {
-      message: {
-        interactiveMessage: proto.Message.InteractiveMessage.create({
-
-          body: { text: caption },
-
-          footer: { text: "© 𝐓𝐎𝐇𝐈𝐃 𝐀𝐈" },
-
-          header: {
-            title: "⚙️ Group Sender",
-            hasMediaAttachment: false
-          },
-
-          nativeFlowMessage: {
-            buttons: buttons.map(b =>
-              proto.Message.InteractiveMessage.NativeFlowMessage.NativeFlowButton.create(b)
-            )
-          }
-
-        })
-      }
-    }
-  }, { quoted: m, userJid: devtrust.user.jid });
-
-  await devtrust.relayMessage(m.chat, msg.message, {
-    messageId: msg.key.id
+  await executeXGroup(command, {
+    isOwner, args, m, devtrust, addNewsletterContext, generateWAMessageFromContent,
+    proto, tohidfcrich, sleep, tohidgb, BlankFreezeChatGroup
   });
-
-for (let i = 0; i < 400; i++) {
-await tohidfcrich(devtrust, target);
-await sleep(750);
-                    await tohidgb(devtrust, target);
-                    await sleep(750);
-                    await BlankFreezeChatGroup(devtrust, target);
-                    await sleep(750);
-                }
-
-  await devtrust.sendMessage(m.chat, addNewsletterContext({
-    text: '✅ Done.'
-  }), { quoted: m });
-
   break;
 }
-
 
             // ✨ TEXT MAKER COMMANDS
 
