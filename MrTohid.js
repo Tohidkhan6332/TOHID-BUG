@@ -31,7 +31,7 @@ require('dotenv').config();
 require('./setting/config');
 const { markAndCheckDeleteNotified } = require('./utils/anti-delete-state');
 const { unwrapMessage, findOriginalMsg, isAntiDeleteActive } = require('./utils/anti-delete-message');
-const { styletext, randomColor } = require('./utils/terminal-style');
+const { styletext } = require('./utils/terminal-style');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
