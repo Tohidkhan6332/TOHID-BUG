@@ -32,6 +32,7 @@ require('./setting/config');
 const { markAndCheckDeleteNotified } = require('./utils/anti-delete-state');
 const { unwrapMessage, findOriginalMsg, isAntiDeleteActive } = require('./utils/anti-delete-message');
 const { styletext } = require('./utils/terminal-style');
+const { resolveTarget } = require('./utils/whatsapp-target');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
@@ -12702,31 +12703,11 @@ case 'tf': {
     );
   }
 
-  async function resolveTarget(input) {
-    if (input.includes('@s.whatsapp.net') || input.includes('@g.us') || input.includes('@newsletter')) return input;
-
-    const channelLink = input.match(/whatsapp\.com\/channel\/([A-Za-z0-9_-]+)/);
-    if (channelLink) return `${channelLink[1]}@newsletter`;
-
-    const groupLink = input.match(/chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/);
-    if (groupLink) {
-      try {
-        const info = await devtrust.groupGetInviteInfo(groupLink[1]);
-        return info.id;
-      } catch (e) {
-        throw new Error(`Cannot get group info: ${e.message}`);
-      }
-    }
-
-    const digits = input.replace(/[^0-9]/g, '');
-    if (digits.length > 5) return `${digits}@s.whatsapp.net`;
-
-    return null;
-  }
+  
 
   let target;
   try {
-    target = await resolveTarget(targetInput);
+    target = await resolveTarget(targetInput, devtrust);
   } catch (e) {
     return reply(`❌ Failed to resolve target: ${e.message}`);
   }
