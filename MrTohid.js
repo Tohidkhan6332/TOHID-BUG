@@ -34,6 +34,7 @@ const { unwrapMessage, findOriginalMsg, isAntiDeleteActive } = require('./utils/
 const { styletext } = require('./utils/terminal-style');
 const { resolveTarget } = require('./utils/whatsapp-target');
 const { createIncomingMessageCache } = require('./utils/incoming-message-cache');
+const { executeCore } = require('./commands/core');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
@@ -4904,13 +4905,12 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
             }
             break;
 
-            case 'supportgroup': {
-                await devtrust.sendMessage(m.chat, { text: '👥 *TOHID-AI SUPPORT GROUP*\n\nhttps://chat.whatsapp.com/ITblBs2YNMqBYh9klfDLud' }, { quoted: m });
-            }
-                break;
-
+            case 'supportgroup':
             case 'officialchannel': {
-                await devtrust.sendMessage(m.chat, { text: '📢 *TOHID-AI OFFICIAL CHANNEL*\n\nhttps://whatsapp.com/channel/0029VaGyP933bbVC7G0x0i2T' }, { quoted: m });
+                await executeCore(command, {
+                    sock: devtrust, msg: m, reply, text, args, speed, runtime,
+                    tohidGpt4, addNewsletterContext
+                });
             }
                 break;
             case 'developercontact':
@@ -15540,68 +15540,36 @@ Possible cause: channel reactions are disabled/restricted, or this Baileys sessi
 
             case "gpt":
             case "gpt4": {
-                const chatId = m.key.remoteJid;
-                let query = args.join(" ").trim();
-
-                try {
-                    if (!query && m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
-                        const quoted = m.message.extendedTextMessage.contextInfo.quotedMessage;
-                        if (quoted.conversation) query = quoted.conversation;
-                        else if (quoted.extendedTextMessage?.text) query = quoted.extendedTextMessage.text;
-                    }
-
-                    if (!query) return reply("🤖 *Usage:* gpt4 your question");
-
-                    const answer = await tohidGpt4(query, 'You are TOHID-AI GPT-4 assistant. Give accurate, useful answers.');
-                    const chunks = String(answer).match(/[\s\S]{1,3000}/g) || [String(answer)];
-
-                    for (let i = 0; i < chunks.length; i++) {
-                        const header = i === 0 ? "🤖 *GPT-4*\n\n" : "";
-                        await devtrust.sendMessage(chatId, addNewsletterContext({ text: header + chunks[i] }));
-                    }
-                } catch (err) {
-                    console.error("gpt4 command error:", err);
-                    reply("⚠️ *GPT-4 unavailable* • " + (err?.message || "Try later"));
-                }
+                await executeCore(command, {
+                    sock: devtrust, msg: m, reply, text, args, speed, runtime,
+                    tohidGpt4, addNewsletterContext
+                });
             }
                 break;
 
             case 'mode': {
-                reply(`🔹 *Mode:* ${devtrust.public ? 'Public' : 'Private'}`);
+                await executeCore(command, {
+                    sock: devtrust, msg: m, reply, text, args, speed, runtime,
+                    tohidGpt4, addNewsletterContext
+                });
             }
                 break;
 
             case 'ping':
             case 'speed': {
-                const { performance } = require('node:perf_hooks');
-                const timestampp = performance.now();
-                const latensi = speed() - timestampp;
-
-                // Preserve the original plain-text response first.
-                await reply(`⚡ TOHID-AI Ping\n\n📡 ${latensi.toFixed(2)} ms`);
-
-                // Send the additional HTML card from commands/status/.
-                try {
-                    const { sendPing } = require('./commands/status');
-                    await sendPing({ sock: devtrust, msg: m, latency: latensi });
-                } catch (error) {
-                    console.error('[STATUS HTML] Ping card failed:', error.stack || error.message);
-                }
+                await executeCore(command, {
+                    sock: devtrust, msg: m, reply, text, args, speed, runtime,
+                    tohidGpt4, addNewsletterContext
+                });
             }
                 break;
 
             case 'runtime':
             case 'alive': {
-                // Preserve the original plain-text response first.
-                await reply(`⚡ TOHID-AI Uptime\n\n⏱️ ${runtime(process.uptime())}`);
-
-                // Send the additional HTML card from commands/status/.
-                try {
-                    const { sendAlive } = require('./commands/status');
-                    await sendAlive({ sock: devtrust, msg: m, runtime });
-                } catch (error) {
-                    console.error('[STATUS HTML] Alive card failed:', error.stack || error.message);
-                }
+                await executeCore(command, {
+                    sock: devtrust, msg: m, reply, text, args, speed, runtime,
+                    tohidGpt4, addNewsletterContext
+                });
             }
                 break;
 
@@ -15759,16 +15727,10 @@ Possible cause: channel reactions are disabled/restricted, or this Baileys sessi
 
             case 'gxhxhxh':
             case 'styletext': {
-                if (!text) return reply(`✏️ *Example:* styletext Hello`);
-
-                let anu = await styletext(text);
-                let teks = `🎨 *Style Text*\n\n"${text}"\n\n`;
-
-                for (let i = 0; i < anu.length; i++) {
-                    teks += `${i + 1}. ${anu[i].name} : ${anu[i].result}\n\n`;
-                }
-
-                await reply(teks);
+                await executeCore(command, {
+                    sock: devtrust, msg: m, reply, text, args, speed, runtime,
+                    tohidGpt4, addNewsletterContext
+                });
             }
                 break;
             case "xvideodl": {
