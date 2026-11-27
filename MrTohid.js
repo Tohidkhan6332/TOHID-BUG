@@ -42,6 +42,7 @@ const { executeGroupAdmin } = require('./commands/group/admin');
 const { executeAdminList } = require('./commands/group/admin-list');
 const { executeGroupInfo } = require('./commands/group/info-settings');
 const { executeTextUtilities } = require('./commands/tools/text-utilities');
+const { executeProfile } = require('./commands/tools/profile');
 const { executeFunReplies } = require('./commands/fun/replies');
 const { executeGeneralFun } = require('./commands/fun/general');
 const { executeOwnerInfo } = require('./commands/owner/info');
@@ -8557,30 +8558,12 @@ try {
             // ======================[ 🔍 WHOIS ]======================
             case 'whois':
             case 'profile': {
-                const user = m.mentionedJid[0] || m.quoted?.sender || m.sender;
-
-                let pp;
-                try {
-                    pp = await devtrust.profilePictureUrl(user, 'image');
-                } catch {
-                    pp = 'https://i.ibb.co/Jw3HdHnv/upload-1790713792397-6bec7590-jpg.jpg';
-                }
-
-                let name = await devtrust.getName(user);
-                let about = await devtrust.fetchStatus(user).catch(() => ({ status: 'No bio' }));
-
-                await devtrust.sendMessage(m.chat, addNewsletterContext({
-                    image: { url: pp },
-                    caption: `👤 *User Profile*\n\n` +
-                        `📛 *Name:* ${name}\n` +
-                        `📱 *Number:* ${user.split('@')[0]}\n` +
-                        `📝 *Bio:* ${about.status || 'No bio'}\n` +
-                        `🆔 *JID:* ${user}`
-                }), { quoted: m });
+                await executeProfile(command, {
+                    sock: devtrust, msg: m, addNewsletterContext
+                });
             }
                 break;
 
-            // ======================[ 👥 TOTAL MEMBERS ]======================
             case 'totalmembers':
             case 'members': {
                 await executeGroupInfo(command, {
