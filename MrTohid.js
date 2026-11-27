@@ -46,6 +46,7 @@ const { executeProfile } = require('./commands/tools/profile');
 const { executeLookupGames } = require('./commands/tools/lookup-games');
 const { executeFunReplies } = require('./commands/fun/replies');
 const { executeGeneralFun } = require('./commands/fun/general');
+const { executeMiniGames } = require('./commands/fun/mini-games');
 const { executeOwnerInfo } = require('./commands/owner/info');
 const { executeInformation } = require('./commands/tools/information');
 const { executeCurrency } = require('./commands/tools/currency');
@@ -11708,11 +11709,9 @@ case 'apkdl': {
             }
                 break;
 
-            case "math": {
-                const a = Math.floor(Math.random() * 50) + 1;
-                const b = Math.floor(Math.random() * 50) + 1;
-
-                reply(`➕ *Math Quiz*\n\n${a} + ${b} = ?\nReply: mathanswer number`);
+            case "math":
+            case "emojiquiz": {
+                await executeMiniGames(command, { sock: devtrust, msg: m, reply, text, axios, addNewsletterContext });
             }
                 break;
 
@@ -12689,22 +12688,7 @@ break;
                 break;
 
             case "rps": {
-                if (!text) return reply("🪨 *Choose:* rock, paper, scissors");
-
-                const choices = ["rock", "paper", "scissors"];
-                const userChoice = text.toLowerCase();
-                if (!choices.includes(userChoice))
-                    return reply("❌ *Invalid choice* • Use rock, paper, scissors");
-
-                const botChoice = choices[Math.floor(Math.random() * choices.length)];
-
-                let result = userChoice === botChoice ? "🤝 *Tie!*" :
-                    (userChoice === "rock" && botChoice === "scissors") ||
-                        (userChoice === "paper" && botChoice === "rock") ||
-                        (userChoice === "scissors" && botChoice === "paper")
-                        ? "🎉 *You win!*" : "😢 *You lose!*";
-
-                reply(`🪨 *RPS*\n\nYou: ${userChoice}\nBot: ${botChoice}\n${result}`);
+                await executeMiniGames(command, { sock: devtrust, msg: m, reply, text, axios, addNewsletterContext });
             }
                 break;
 
@@ -12725,22 +12709,7 @@ break;
                 break;
 
             case "meme": {
-                try {
-                    const res = await axios.get("https://meme-api.com/gimme");
-                    const meme = res.data;
-                    if (!meme?.url) return reply("❌ *Meme ran away*");
-
-                    await devtrust.sendMessage(m.chat,
-                        addNewsletterContext({
-                            image: { url: meme.url },
-                            caption: `😂 *${meme.title}*`
-                        }),
-                        { quoted: m }
-                    );
-                } catch (e) {
-                    console.error("MEME ERROR:", e);
-                    reply("❌ *Meme factory closed*");
-                }
+                await executeMiniGames(command, { sock: devtrust, msg: m, reply, text, axios, addNewsletterContext });
             }
                 break;
 
