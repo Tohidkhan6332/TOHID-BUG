@@ -29,6 +29,7 @@ require('dotenv').config();
  */
 
 require('./setting/config');
+const { markAndCheckDeleteNotified } = require('./utils/anti-delete-state');
 const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
@@ -605,16 +606,7 @@ global.notifiedDeletes = global.notifiedDeletes instanceof Set
     ? global.notifiedDeletes
     : new Set();
 
-function markAndCheckDeleteNotified(jid, msgId) {
-    const key = `${jid}_${msgId}`;
-    if (global.notifiedDeletes.has(key)) return true; // already notified
-    global.notifiedDeletes.add(key);
-    if (global.notifiedDeletes.size > 3000) {
-        const first = global.notifiedDeletes.values().next().value;
-        global.notifiedDeletes.delete(first);
-    }
-    return false;
-}
+
 
 // ── File helpers ──────────────────────────────────────────────
 function ensureDirs() {
