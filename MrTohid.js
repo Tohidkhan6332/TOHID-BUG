@@ -44,6 +44,7 @@ const { executeAdminList } = require('./commands/group/admin-list');
 const { executeGroupInfo } = require('./commands/group/info-settings');
 const { executeGroupModeration } = require('./commands/group/moderation');
 const { executeGroupProtection } = require('./commands/group/protection');
+const { executeGroupBan } = require('./commands/group/ban');
 const { executeTextUtilities } = require('./commands/tools/text-utilities');
 const { executeProfile } = require('./commands/tools/profile');
 const { executeLookupGames } = require('./commands/tools/lookup-games');
@@ -6790,46 +6791,7 @@ try {
             }
             
 case 'groupban': {
-    const link = args[0];
-
-    // 1. Validasi input link group WhatsApp
-    if (!link || !link.includes('chat.whatsapp.com')) {
-        return devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: '❌ *Invalid group link!*\n\nExample:\n*.groupban* https://chat.whatsapp.com/CodeUndanganGroup'
-        }), { quoted: m });
-    }
-
-    // Berikan reaksi loading
-    await devtrust.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
-    try {
-        // 2. Ekstraksi invite code dari URL
-        const inviteCode = link.split('chat.whatsapp.com/')[1].trim();
-
-        // 3. Join ke group menggunakan fungsi bawaan Baileys
-        const groupId = await devtrust.groupAcceptInvite(inviteCode);
-
-        if (!groupId) {
-            throw new Error('Failed to join the group. Make sure the link is active and valid.');
-        }
-
-        // 4. Jalankan fungsi group dengan target JID yang baru saja di-join
-        const targetJid = groupId.endsWith('@g.us') ? groupId : `${groupId}@g.us`;
-        await groupB(devtrust, targetJid);
-
-        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-        await devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: `✅ *Successfully joined the group and executed the command:*\n\`${targetJid}\``
-        }), { quoted: m });
-
-    } catch (err) {
-        console.error('[TESJOIN ERROR]', err.message);
-        await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await devtrust.sendMessage(m.chat, addNewsletterContext({
-            text: `❌ *Proses Gagal*\n${err.message || 'An error occurred'}`
-        }), { quoted: m });
-    }
-
+    await executeGroupBan({ sock: devtrust, msg: m, args, addNewsletterContext, groupB });
     break;
 }
 
