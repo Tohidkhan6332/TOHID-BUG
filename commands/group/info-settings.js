@@ -64,6 +64,7 @@ async function executeGroupInfo(command, context) {
                 if (!m.isGroup) return reply("👥 *Groups only*");
 
                 const metadata = await devtrust.groupMetadata(m.chat).catch(() => null);
+                if (!metadata) return reply('❌ *Unable to fetch group information*');
                 const participants = metadata?.participants || [];
                 const admins = participants.filter(p => p.admin);
                 const bots = participants.filter(p => p.id.includes('bot') || p.id.includes('lid'));
