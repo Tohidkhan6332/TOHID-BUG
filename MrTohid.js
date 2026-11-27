@@ -32,6 +32,7 @@ require('./setting/config');
 const { markAndCheckDeleteNotified } = require('./utils/anti-delete-state');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
+const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
 const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
@@ -5095,28 +5096,9 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
 
         // ============ MENU HELPER FUNCTIONS ============
 
-        function formatUptime(seconds) {
-            const days = Math.floor(seconds / (24 * 60 * 60));
-            seconds = seconds % (24 * 60 * 60);
-            const hours = Math.floor(seconds / (60 * 60));
-            seconds = seconds % (60 * 60);
-            const minutes = Math.floor(seconds / 60);
-            seconds = Math.floor(seconds % 60);
+        
 
-            let time = '';
-            if (days > 0) time += `${days}d `;
-            if (hours > 0) time += `${hours}h `;
-            if (minutes > 0) time += `${minutes}m `;
-            if (seconds > 0 || time === '') time += `${seconds}s`;
-            return time.trim();
-        }
-
-        function formatRam(total, free) {
-            const used = (total - free) / (1024 * 1024 * 1024);
-            const totalGb = total / (1024 * 1024 * 1024);
-            const percent = ((used / totalGb) * 100).toFixed(1);
-            return `${used.toFixed(1)}GB / ${totalGb.toFixed(1)}GB (${percent}%)`;
-        }
+        
 
         // Command count is cached globally because this helper lives inside
         // the message-processing scope and would otherwise be recreated for
@@ -5141,34 +5123,9 @@ devtrust.ev.on('messages.update', async (chatUpdate) => {
             return global.__TOHID_COMMAND_COUNT_CACHE;
         }
 
-        function getMoodEmoji() {
-            const hour = getLagosTime().getHours();
-            if (hour < 12) return '🌅';
-            if (hour < 18) return '☀️';
-            return '🌙';
-        }
+        
 
-        function getLagosTime() {
-            try {
-                const options = {
-                    timeZone: 'Asia/Kolkata',
-                    hour12: false,
-                    hour: 'numeric',
-                    minute: 'numeric'
-                };
-                const formatter = new Intl.DateTimeFormat('en-GB', options);
-                const parts = formatter.formatToParts(new Date());
-                const hour = parts.find(part => part.type === 'hour').value;
-                const minute = parts.find(part => part.type === 'minute').value;
-                const now = new Date();
-                const indiaDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-                return indiaDate;
-            } catch (error) {
-                const now = new Date();
-                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-                return new Date(utc + (3600000 * 1));
-            }
-        }
+        
 
 const TOTAL_COMMANDS = countCommands(); // tetap untuk logging/display
 const fileContent = fs.readFileSync(__filename).toString();
@@ -5191,12 +5148,7 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
             }
         };
 
-        function formatLagosTime() {
-            const lagosTime = getLagosTime();
-            const hours = lagosTime.getHours().toString().padStart(2, '0');
-            const minutes = lagosTime.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
-        }
+        
 
         // ============ GET PROFESSIONAL FEATURES ============
 
