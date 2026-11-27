@@ -31,6 +31,7 @@ require('dotenv').config();
 require('./setting/config');
 const { markAndCheckDeleteNotified } = require('./utils/anti-delete-state');
 const { unwrapMessage, findOriginalMsg, isAntiDeleteActive } = require('./utils/anti-delete-message');
+const { styletext, randomColor } = require('./utils/terminal-style');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
@@ -2348,36 +2349,10 @@ const Premium = getPremium();
         }
 
         // ============ STYLETEXT FUNCTION ============
-        async function styletext(text) {
-            return [
-                { name: 'Normal', result: text },
-                { name: 'Bold', result: '**' + text + '**' },
-                { name: 'Italic', result: '*' + text + '*' },
-                { name: 'Strikethrough', result: '~' + text + '~' },
-                { name: 'Monospace', result: '```' + text + '```' }
-            ];
-        }
+        
 
         // ============ RANDOM COLOR FUNCTION ============
-        function randomColor() {
-            const colors = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'greenBright', 'yellowBright'];
-            const colorIndex = Math.floor(Math.random() * colors.length);
-            const colorName = colors[colorIndex];
-
-            // Return chalk color function
-            switch (colorName) {
-                case 'red': return chalk.red;
-                case 'green': return chalk.green;
-                case 'yellow': return chalk.yellow;
-                case 'blue': return chalk.blue;
-                case 'magenta': return chalk.magenta;
-                case 'cyan': return chalk.cyan;
-                case 'white': return chalk.white;
-                case 'greenBright': return chalk.greenBright;
-                case 'yellowBright': return chalk.yellowBright;
-                default: return chalk.white;
-            }
-        }
+        
         // ==================================================
         
 //NEW FUNCTION
