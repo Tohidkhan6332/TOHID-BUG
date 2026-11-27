@@ -46,6 +46,7 @@ const { executeGroupModeration } = require('./commands/group/moderation');
 const { executeGroupProtection } = require('./commands/group/protection');
 const { executeGroupBan } = require('./commands/group/ban');
 const { executeGroupManagement } = require('./commands/group/management');
+const { executeGroupAdvanced } = require('./commands/group/advanced');
 const { executeTextUtilities } = require('./commands/tools/text-utilities');
 const { executeProfile } = require('./commands/tools/profile');
 const { executeLookupGames } = require('./commands/tools/lookup-games');
@@ -10693,50 +10694,12 @@ case 'apkdl': {
                 break;
 
             case 'kickadmins': {
-                if (!m.isGroup) return reply(m.group);
-                if (!isCreator && !isSudo)
-                    return reply('🔒 *Owner/Sudo only*');
-
-                let metadata = await devtrust.groupMetadata(m.chat).catch(() => null);
-                let participants = metadata?.participants || [];
-                let kicked = 0;
-
-                for (let member of participants) {
-                    if (member.id === botNumber) continue;
-                    if (member.id === m.sender) continue;
-
-                    if (member.admin === "superadmin" || member.admin === "admin") {
-                        await devtrust.groupParticipantsUpdate(m.chat, [member.id], 'remove');
-                        kicked++;
-                        await sleep(1500);
-                    }
-                }
-
-                reply(`✅ *${kicked} admins removed*`);
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, isCreator, isSudo, botNumber, sleep });
             }
                 break;
-                
-                
 
             case 'kickall': {
-                if (!m.isGroup) return reply(m.group);
-                if (!isCreator && !isSudo)
-                    return reply('🔒 *Owner/Sudo only*');
-
-                let metadata = await devtrust.groupMetadata(m.chat).catch(() => null);
-                let participants = metadata?.participants || [];
-                let kicked = 0;
-
-                for (let member of participants) {
-                    if (member.id === botNumber) continue;
-                    if (member.admin === "superadmin" || member.admin === "admin") continue;
-
-                    await devtrust.groupParticipantsUpdate(m.chat, [member.id], 'remove');
-                    kicked++;
-                    await sleep(1500);
-                }
-
-                reply(`✅ *${kicked} members removed*`);
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, isCreator, isSudo, botNumber, sleep });
             }
                 break;
 
@@ -12797,29 +12760,7 @@ if (!m.quoted) return await devtrust.sendMessage(m.chat,
 
             case 'creategc':
             case 'creategroup': {
-                if (!isCreator) return reply("🔒 *Owner only*");
-
-                const groupName = args.join(" ");
-                if (!groupName) return reply(`📝 *Usage:* ${prefix + command} Group Name`);
-
-                try {
-                    const cret = await devtrust.groupCreate(groupName, []);
-                    const code = await devtrust.groupInviteCode(cret.id);
-                    const link = `https://chat.whatsapp.com/${code}`;
-
-                    const teks = `✅ *Group Created*\n\n` +
-                        `💳 Name: ${cret.subject}\n` +
-                        `👤 Owner: @${cret.owner.split("@")[0]}\n` +
-                        `🔗 ${link}`;
-
-                    devtrust.sendMessage(m.chat, addNewsletterContext({
-                        text: teks,
-                        mentions: [cret.owner]
-                    }), { quoted: m });
-
-                } catch (e) {
-                    reply("❌ *Failed to create group*");
-                }
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, args, prefix, isCreator, addNewsletterContext });
             }
                 break;
 
@@ -13250,15 +13191,7 @@ case 'bomb':
                 break;
 
             case 'kick': {
-                if (!isCreator) return reply("🔒 *Owner only*");
-                if (!m.quoted) return reply("👤 *Tag or quote user to kick*");
-                if (!m.isGroup) return reply("👥 *Groups only*");
-
-                let users = m.mentionedJid[0] || m.quoted?.sender ||
-                    text.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-
-                await devtrust.groupParticipantsUpdate(m.chat, [users], 'remove');
-                reply("✅ *User kicked*");
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, text, isCreator });
             }
                 break;
 
@@ -13291,25 +13224,13 @@ case 'bomb':
 
             case 'linkgc':
             case 'grouplink': {
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                if (!isCreator && !isSudo) return reply('🔒 *Owner/Sudo only*');
-
-                let response = await devtrust.groupInviteCode(m.chat);
-                reply(`🔗 *Group Link*\nhttps://chat.whatsapp.com/${response}`);
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, isCreator, isSudo });
             }
                 break;
 
             case 'tag':
             case 'totag': {
-                if (!isCreator) return reply("🔒 *Owner only*");
-                if (!m.isGroup) return reply("👥 *Groups only*");
-                if (!isAdmins) return reply("👑 *Admin only*");
-                if (!m.quoted) return reply(`💬 *Reply to a message with ${prefix + command}*`);
-
-                devtrust.sendMessage(m.chat, {
-                    forward: m.quoted.fakeObj,
-                    mentions: participants.map(a => a.id)
-                });
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, prefix, isCreator, isAdmins, participants });
             }
                 break;
 
@@ -13406,145 +13327,7 @@ case 'bomb':
             case 'groupstatus':
             case 'gstatus':
             case 'gst': {
-                if (!m.isGroup) {
-                    return reply(`👥 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Group Status*\n\nThis command can only be used in groups.`);
-                }
-
-                try {
-                    await devtrust.sendMessage(m.chat, { react: { text: '📢', key: m.key } });
-
-                    // Check if replying to a message or providing text
-                    const quotedMsg = m.quoted;
-                    const textInput = text;
-
-                    if (!quotedMsg && !textInput) {
-                        return reply(`📢 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Group Status*\n\nReply to an image/video/audio or provide text to post as group status.\n\nExample: ${prefix}gstatus Hello group!`);
-                    }
-
-                    // Simple random ID generator
-                    function generateMessageId() {
-                        return '3EB0' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-                    }
-
-                    let statusInnerMessage = {};
-
-                    // ==========================================
-                    // 1. HANDLE TEXT STATUS (BLACK BACKGROUND)
-                    // ==========================================
-                    if (!quotedMsg && textInput) {
-                        statusInnerMessage = {
-                            extendedTextMessage: {
-                                text: textInput,
-                                backgroundArgb: 0xFF000000, // BLACK background
-                                textArgb: 0xFFFFFFFF, // White text
-                                font: 1,
-                                contextInfo: {
-                                    mentionedJid: [],
-                                    isGroupStatus: true
-                                }
-                            }
-                        };
-
-                        // Create and send status
-                        const statusPayload = {
-                            groupStatusMessageV2: {
-                                message: statusInnerMessage
-                            }
-                        };
-
-                        const statusId = generateMessageId();
-                        await devtrust.relayMessage(m.chat, statusPayload, { messageId: statusId });
-
-                        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-                        return reply(`📢 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Group Status*\n\nText status posted!`);
-                    }
-
-                    // ==========================================
-                    // 2. HANDLE QUOTED MEDIA/TEXT
-                    // ==========================================
-                    else if (quotedMsg) {
-                        // Check if it's a media message
-                        const mime = (quotedMsg.msg || quotedMsg).mimetype || '';
-
-                        // IMAGE STATUS
-                        if (/image/.test(mime)) {
-                            // Download image
-                            let media = await quotedMsg.download();
-
-                            // Send as image status
-                            await devtrust.sendMessage(m.chat, {
-                                image: media,
-                                caption: textInput || quotedMsg.caption || '',
-                                contextInfo: { isGroupStatus: true }
-                            });
-                        }
-
-                        // VIDEO STATUS
-                        else if (/video/.test(mime)) {
-                            // Download video
-                            let media = await quotedMsg.download();
-
-                            // Send as video status
-                            await devtrust.sendMessage(m.chat, {
-                                video: media,
-                                caption: textInput || quotedMsg.caption || '',
-                                contextInfo: { isGroupStatus: true }
-                            });
-                        }
-
-                        // AUDIO STATUS (NEW)
-                        else if (/audio/.test(mime)) {
-                            // Download audio
-                            let media = await quotedMsg.download();
-
-                            // Send as audio status
-                            await devtrust.sendMessage(m.chat, {
-                                audio: media,
-                                mimetype: 'audio/mpeg',
-                                ptt: false, // true for voice note
-                                contextInfo: { isGroupStatus: true }
-                            });
-                        }
-
-                        // TEXT STATUS (Quoted text - BLACK BACKGROUND)
-                        else if (quotedMsg.conversation || quotedMsg.text) {
-                            const textContent = quotedMsg.conversation || quotedMsg.text || textInput;
-
-                            statusInnerMessage = {
-                                extendedTextMessage: {
-                                    text: textContent,
-                                    backgroundArgb: 0xFF000000, // BLACK background
-                                    textArgb: 0xFFFFFFFF, // White text
-                                    font: 2,
-                                    contextInfo: {
-                                        mentionedJid: [],
-                                        isGroupStatus: true
-                                    }
-                                }
-                            };
-
-                            const statusPayload = {
-                                groupStatusMessageV2: {
-                                    message: statusInnerMessage
-                                }
-                            };
-
-                            const statusId = generateMessageId();
-                            await devtrust.relayMessage(m.chat, statusPayload, { messageId: statusId });
-
-                        } else {
-                            return reply(`❌ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Group Status*\n\nUnsupported media type. Reply to image, video, audio, or text only.`);
-                        }
-
-                        await devtrust.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-                        reply(`📢 *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Group Status*\n\nStatus posted!`);
-                    }
-
-                } catch (error) {
-                    console.error('Group Status Error:', error);
-                    await devtrust.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                    reply(`⚠️ *𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 Group Status*\n\nFailed: ${error.message}`);
-                }
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, text, prefix });
             }
                 break;
 
