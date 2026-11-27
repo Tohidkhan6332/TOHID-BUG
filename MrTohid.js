@@ -33,6 +33,7 @@ const { markAndCheckDeleteNotified } = require('./utils/anti-delete-state');
 const { getGroupAdmins } = require('./utils/group-admins');
 const { renderTicTacToeBoard, getTicTacToeWinner } = require('./utils/tictactoe');
 const { formatUptime, formatRam, getMoodEmoji, getLagosTime, formatLagosTime } = require('./utils/system-format');
+const { getOwnerName, getDeveloperName, getBotVersion, getCurrentDateTime } = require('./utils/bot-info');
 const { WHATSAPP_OWNER_NUMBER, WHATSAPP_OWNER_JID } = require('./setting/owner-config');
 const { ownerHtml } = require('./utils/status-html');
 const { sendRichHtml } = require('./utils/TohidGenai');
@@ -5152,37 +5153,17 @@ const caseNames = matches.map(match => match.match(/case '([^']+)'/)[1]);
 
         // ============ GET PROFESSIONAL FEATURES ============
 
-        function getOwnerName() {
-            return "𝕄ℝ 𝕋𝕆ℍ𝕀𝔻";
-        }
+        
 
-        function getDeveloperName() {
-            return "𝕄ℝ 𝕋𝕆ℍ𝕀𝔻";
-        }
+        
 
-        function getBotVersion() {
-            return "1.1";
-        }
+        
 
         function getBotMode() {
             return devtrust.public ? "PUBLIC" : "PRIVATE";
         }
 
-        function getCurrentDateTime() {
-            const date = new Date();
-            const options = {
-                timeZone: 'Asia/Kolkata',
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            };
-            return date.toLocaleString('en-IN', options) + ' IST';
-        }
+        
         // ============ MENU COMMAND ============
       if (isCmd) {
         switch (command) {
