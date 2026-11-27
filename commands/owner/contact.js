@@ -1,9 +1,9 @@
 'use strict';
 
 /** Developer contact card with URL buttons and a text fallback. */
-async function executeDeveloperContact(context) {
+async function executeDeveloperContact(command, context) {
     const { sock: devtrust, msg: m, prepareWAMessageMedia, WHATSAPP_OWNER_NUMBER } = context;
-    switch ('developercontact') {
+    switch (command) {
                     case 'developercontact':
                     case 'devcontact': {
                         const developerImages = [
