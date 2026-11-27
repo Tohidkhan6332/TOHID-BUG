@@ -35,6 +35,7 @@ const { styletext } = require('./utils/terminal-style');
 const { resolveTarget } = require('./utils/whatsapp-target');
 const { createIncomingMessageCache } = require('./utils/incoming-message-cache');
 const { executeCore } = require('./commands/core');
+const { executeDeploymentInfo } = require('./commands/core/deployment-info');
 const { executeSimpleGame } = require('./commands/fun/simple-games');
 const { executeGroupVisibility } = require('./commands/group/visibility');
 const { executeGroupAdmin } = require('./commands/group/admin');
@@ -8425,34 +8426,10 @@ try {
             // === Get Your Free Bot Command ===
             case 'getbot':
             case 'gellltbot':
-            case 'freebot': {
-                let botInfo =
-                    `*𝐓𝐎𝐇𝐈𝐃 𝐀𝐈 — Bot Deployment*
-
-Interested in deploying your own WhatsApp bot?
-The process is simple and takes less than 2 minutes.
-
-▸ Choose a bot from the available instances:
-  • https://t.me/TohidAi_bot
-  • https://t.me/TohidAi_bot
-
-▸ Start the bot and use:
-  /connect [your-number]
-
-▸ Your instance will be ready immediately.
-
-Use *${prefix}𝐓𝐎𝐇𝐈𝐃 𝐀𝐈* to see all menu.`;
-
-                reply(botInfo);
-            }
-                break;
+            case 'freebot':
             case 'test': {
-                let botInfo =
-                    '*ᴛᴏʜɪᴅ ᴀɪ ᴀʟᴡᴀʏs ᴛʜᴇʀᴇ ғᴏʀ ʏᴏᴜ 🚀🔥*'
-
-                reply(botInfo);
+                await executeDeploymentInfo(command, { reply, prefix });
             }
-
                 break;
 
             case 'groupjid':
