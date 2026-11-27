@@ -69,6 +69,13 @@ async function executeGroupAdvanced(command, c = {}) {
   if(!isCreator&&!admins.includes(m.sender))return reply('🔒 *This feature is for Admins or Owner only*');
   await sock.groupLeave(m.chat).catch(()=>null);return true;
  }
+ case 'resetlink': {
+  if (!isCreator) return reply('🔒 *Owner only*');
+  if (!m.isGroup) return reply('👥 *Groups only*');
+  await sock.groupRevokeInvite(m.chat);
+  reply('✅ *Group link reset*');
+  return true;
+ }
  default:return false;
  }
 }

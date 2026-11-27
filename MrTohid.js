@@ -9533,19 +9533,9 @@ break;
                 break;
 
             case "autoreact": {
-                if (!isAdmins && !isCreator)
-                    return reply('🔒 *Admins/Owner only*');
-
-                if (!args[0]) return reply("⚙️ *Usage:* autoreact on/off");
-                if (!m.isGroup) return reply("👥 *Groups only*");
-
-                if (args[0].toLowerCase() === "on") {
-                    setSetting(m.chat, "autoReact", true);
-                    reply("✅ *Auto react enabled* • Messages get random reactions");
-                } else if (args[0].toLowerCase() === "off") {
-                    setSetting(m.chat, "autoReact", false);
-                    reply("❌ *Auto react disabled*");
-                } else reply("⚙️ *Usage:* autoreact on/off");
+                await executeGroupProtection(command, {
+                    msg: m, reply, args, isAdmins, isCreator, isSudo, setSetting
+                });
             }
                 break;
 
@@ -9587,22 +9577,11 @@ break;
                 break;
 
             case "antibadword": {
-                if (!isCreator && !isSudo)
-                    return reply('🔒 *Owner/Sudo only*');
-
-                if (!args[0]) return reply("⚙️ *Usage:* antibadword on/off");
-
-                if (args[0].toLowerCase() === "on") {
-                    setSetting(m.chat, "feature.antibadword", true);
-                    reply("✅ *Anti bad word enabled* • Bad words filtered");
-                } else if (args[0].toLowerCase() === "off") {
-                    setSetting(m.chat, "feature.antibadword", false);
-                    reply("❌ *Anti bad word disabled*");
-                } else reply("⚙️ *Usage:* antibadword on/off");
+                await executeGroupProtection(command, {
+                    msg: m, reply, args, isCreator, isSudo, setSetting
+                });
             }
                 break;
-
-            
 
             case 'owner': {
                 await executeOwnerInfo(command, {
@@ -11899,11 +11878,7 @@ break;
                 break;
 
             case 'resetlink': {
-                if (!isCreator) return reply(`🔒 *Owner only*`);
-                if (!m.isGroup) return reply("👥 *Groups only*");
-
-                await devtrust.groupRevokeInvite(m.chat);
-                reply("✅ *Group link reset*");
+                await executeGroupAdvanced(command, { sock: devtrust, msg: m, reply, isCreator });
             }
                 break;
 

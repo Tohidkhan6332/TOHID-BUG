@@ -6,7 +6,7 @@
  */
 async function executeGroupProtection(command, context = {}) {
     const {
-        msg: m, reply, args = [], prefix = '.', isAdmins = false, isCreator = false,
+        msg: m, reply, args = [], prefix = '.', isAdmins = false, isCreator = false, isSudo = false,
         antilinkSettings = {}, saveAntilinkSettings = () => false,
         getSetting, setSetting
     } = context;
@@ -126,6 +126,31 @@ async function executeGroupProtection(command, context = {}) {
         }
             break;
 
+        case 'autoreact': {
+            if (!isAdmins && !isCreator) return reply('🔒 *Admins/Owner only*');
+            if (!args[0]) return reply("⚙️ *Usage:* autoreact on/off");
+            if (!m.isGroup) return reply("👥 *Groups only*");
+            if (args[0].toLowerCase() === "on") {
+                setSetting(m.chat, "autoReact", true);
+                reply("✅ *Auto react enabled* • Messages get random reactions");
+            } else if (args[0].toLowerCase() === "off") {
+                setSetting(m.chat, "autoReact", false);
+                reply("❌ *Auto react disabled*");
+            } else reply("⚙️ *Usage:* autoreact on/off");
+            return true;
+        }
+        case 'antibadword': {
+            if (!isCreator && !isSudo) return reply('🔒 *Owner/Sudo only*');
+            if (!args[0]) return reply("⚙️ *Usage:* antibadword on/off");
+            if (args[0].toLowerCase() === "on") {
+                setSetting(m.chat, "feature.antibadword", true);
+                reply("✅ *Anti bad word enabled* • Bad words filtered");
+            } else if (args[0].toLowerCase() === "off") {
+                setSetting(m.chat, "feature.antibadword", false);
+                reply("❌ *Anti bad word disabled*");
+            } else reply("⚙️ *Usage:* antibadword on/off");
+            return true;
+        }
         default:
             return false;
     }
